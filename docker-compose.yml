@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    env_file: .env
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    volumes:
+      - .:/app
+      - nutrition_data:/data
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  nutrition_data:

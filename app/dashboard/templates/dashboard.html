@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — {{ today }}{% endblock %}
+
+{% block content %}
+<h2>{{ today }}</h2>
+
+<section>
+    <h3>Daily Totals</h3>
+    <div class="totals-grid">
+        <div class="totals-card">
+            <div class="value">{{ totals.calories | int }}</div>
+            <div class="label">Calories (kcal)</div>
+        </div>
+        <div class="totals-card">
+            <div class="value">{{ totals.protein }}g</div>
+            <div class="label">Protein</div>
+        </div>
+        <div class="totals-card">
+            <div class="value">{{ totals.carbs }}g</div>
+            <div class="label">Carbs</div>
+        </div>
+        <div class="totals-card">
+            <div class="value">{{ totals.fat }}g</div>
+            <div class="label">Fat</div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h3>Meals Today ({{ totals.meal_count }})</h3>
+    {% if meals %}
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Description</th>
+                <th>Calories</th>
+                <th>Protein</th>
+                <th>Carbs</th>
+                <th>Fat</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for meal in meals %}
+            <tr>
+                <td>{{ meal.timestamp.strftime("%H:%M") }}</td>
+                <td>{{ meal.description }}</td>
+                <td>{{ meal.calories if meal.calories is not none else "—" }}</td>
+                <td>{{ (meal.protein | string + "g") if meal.protein is not none else "—" }}</td>
+                <td>{{ (meal.carbs | string + "g") if meal.carbs is not none else "—" }}</td>
+                <td>{{ (meal.fat | string + "g") if meal.fat is not none else "—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty">No meals logged today.</p>
+    {% endif %}
+</section>
+{% endblock %}
