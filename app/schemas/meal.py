@@ -1,6 +1,20 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 from pydantic import BaseModel
+
+
+class TextMealCreate(BaseModel):
+    text: str
+    log_date: Optional[date] = None
+
+
+class MealInput(BaseModel):
+    description: str
+    calories: Optional[float] = None
+    protein: Optional[float] = None
+    carbs: Optional[float] = None
+    fat: Optional[float] = None
+    log_date: Optional[date] = None
 
 
 class MealCreate(BaseModel):
@@ -9,7 +23,8 @@ class MealCreate(BaseModel):
     protein: Optional[float] = None
     carbs: Optional[float] = None
     fat: Optional[float] = None
-    user_id: str = "default"
+    user_id: str
+    timestamp: Optional[datetime] = None
 
 
 class MealRead(BaseModel):

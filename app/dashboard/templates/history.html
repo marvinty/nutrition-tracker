@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}History — {{ period_label }}{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <span class="who">Signed in as <strong>{{ username }}</strong></span>
+    <div class="actions">
+        <a href="/dashboard" class="btn">Dashboard</a>
+        <form method="post" action="/logout">
+            <button type="submit" class="btn">Log out</button>
+        </form>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="/history?view=week" class="tab{% if view == 'week' %} is-active{% endif %}">Week</a>
+    <a href="/history?view=month" class="tab{% if view == 'month' %} is-active{% endif %}">Month</a>
+</div>
+
+<div class="day-nav">
+    <a href="/history?view={{ view }}&d={{ prev_anchor }}" class="nav-btn">‹ Prev</a>
+    {% if next_anchor %}
+    <a href="/history?view={{ view }}&d={{ next_anchor }}" class="nav-btn">Next ›</a>
+    {% else %}
+    <span class="nav-btn is-disabled">Next ›</span>
+    {% endif %}
+</div>
+<h2>{{ period_label }}</h2>
+
+<section>
+    <h3>Average per day</h3>
+    <div class="totals-grid">
+        <div class="totals-card totals-card--cal">
+            <div class="value">{{ summary.avg.calories | int }}</div>
+            <div class="label">Calories (kcal)</div>
+        </div>
+        <div class="totals-card totals-card--protein">
+            <div class="value">{{ summary.avg.protein }}g</div>
+            <div class="label">Protein</div>
+        </div>
+        <div class="totals-card totals-card--carbs">
+            <div class="value">{{ summary.avg.carbs }}g</div>
+            <div class="label">Carbs</div>
+        </div>
+        <div class="totals-card totals-card--fat">
+            <div class="value">{{ summary.avg.fat }}g</div>
+            <div class="label">Fat</div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h3>Daily breakdown</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Calories</th>
+                <th>Protein</th>
+                <th>Carbs</th>
+                <th>Fat</th>
+                <th>Meals</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for day in series %}
+            <tr class="row-link" onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'">
+                <td>{{ day.date.strftime("%a, %b %d") }}</td>
+                <td>{{ day.calories | int }}</td>
+                <td>{{ day.protein }}g</td>
+                <td>{{ day.carbs }}g</td>
+                <td>{{ day.fat }}g</td>
+                <td>{{ day.meal_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td>Total ({{ summary.days }} days)</td>
+                <td>{{ summary.total.calories | int }}</td>
+                <td>{{ summary.total.protein }}g</td>
+                <td>{{ summary.total.carbs }}g</td>
+                <td>{{ summary.total.fat }}g</td>
+                <td>{{ summary.total.meal_count }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</section>
+{% endblock %}

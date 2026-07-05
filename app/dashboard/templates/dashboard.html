@@ -1,26 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard — {{ today }}{% endblock %}
+{% block title %}Dashboard — {{ selected_label }}{% endblock %}
 
 {% block content %}
-<h2>{{ today }}</h2>
+<div class="topbar">
+    <span class="who">Signed in as <strong>{{ username }}</strong></span>
+    <div class="actions">
+        <a href="/history" class="btn">History</a>
+        <form method="post" action="/logout">
+            <button type="submit" class="btn">Log out</button>
+        </form>
+    </div>
+</div>
+
+<div class="day-nav">
+    <a href="/dashboard?d={{ prev_date }}" class="nav-btn">‹ Prev</a>
+    <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}">
+    {% if next_date %}
+    <a href="/dashboard?d={{ next_date }}" class="nav-btn">Next ›</a>
+    {% else %}
+    <span class="nav-btn is-disabled">Next ›</span>
+    {% endif %}
+    {% if not is_today %}
+    <a href="/dashboard" class="nav-btn">Today</a>
+    {% endif %}
+</div>
+<h2>{{ selected_label }}{% if is_today %} (Today){% endif %}</h2>
+
+<section>
+    <h3>Log a Meal</h3>
+    <form id="text-meal-form" class="log-form">
+        <input type="text" id="meal-text-input" placeholder="e.g. grilled chicken breast with rice" required>
+        <button type="submit" id="text-submit-btn">Log</button>
+    </form>
+    <p id="text-status" class="status"></p>
+
+    <div class="log-form">
+        <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Record voice meal">Record Voice</button>
+        <span id="record-indicator" class="hidden">Recording…</span>
+    </div>
+    <p id="voice-status" class="status"></p>
+</section>
 
 <section>
     <h3>Daily Totals</h3>
     <div class="totals-grid">
-        <div class="totals-card">
+        <div class="totals-card totals-card--cal">
             <div class="value">{{ totals.calories | int }}</div>
             <div class="label">Calories (kcal)</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--protein">
             <div class="value">{{ totals.protein }}g</div>
             <div class="label">Protein</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--carbs">
             <div class="value">{{ totals.carbs }}g</div>
             <div class="label">Carbs</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--fat">
             <div class="value">{{ totals.fat }}g</div>
             <div class="label">Fat</div>
         </div>
@@ -28,7 +65,7 @@
 </section>
 
 <section>
-    <h3>Meals Today ({{ totals.meal_count }})</h3>
+    <h3>Meals{% if is_today %} Today{% endif %} ({{ totals.meal_count }})</h3>
     {% if meals %}
     <table>
         <thead>
@@ -43,8 +80,8 @@
         </thead>
         <tbody>
             {% for meal in meals %}
-            <tr>
-                <td>{{ meal.timestamp.strftime("%H:%M") }}</td>
+            <tr data-meal-id="{{ meal.id }}">
+                <td>{{ meal.timestamp | localtime }}</td>
                 <td>{{ meal.description }}</td>
                 <td>{{ meal.calories if meal.calories is not none else "—" }}</td>
                 <td>{{ (meal.protein | string + "g") if meal.protein is not none else "—" }}</td>
@@ -55,7 +92,110 @@
         </tbody>
     </table>
     {% else %}
-    <p class="empty">No meals logged today.</p>
+    <p class="empty">No meals logged{% if is_today %} today{% else %} on this day{% endif %}.</p>
     {% endif %}
 </section>
+
+<script>
+    const SELECTED_DATE = "{{ selected }}";
+
+    const datePicker = document.getElementById('date-picker');
+    datePicker.addEventListener('change', () => {
+        if (datePicker.value) window.location = `/dashboard?d=${datePicker.value}`;
+    });
+
+    const textForm = document.getElementById('text-meal-form');
+    textForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('meal-text-input');
+        const status = document.getElementById('text-status');
+        const btn = document.getElementById('text-submit-btn');
+        const text = input.value.trim();
+        if (!text) return;
+
+        btn.disabled = true;
+        status.textContent = 'Logging…';
+        status.className = 'status';
+        try {
+            const res = await fetch('/meals/text', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, log_date: SELECTED_DATE }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Request failed (${res.status})`);
+            }
+            window.location.reload();
+        } catch (err) {
+            status.textContent = err.message;
+            status.className = 'status error';
+            btn.disabled = false;
+        }
+    });
+
+    const recordBtn = document.getElementById('record-btn');
+    const indicator = document.getElementById('record-indicator');
+    const voiceStatus = document.getElementById('voice-status');
+    let mediaRecorder = null;
+    let chunks = [];
+    let isRecording = false;
+
+    recordBtn.addEventListener('click', async () => {
+        if (!isRecording) {
+            if (!navigator.mediaDevices || !window.MediaRecorder) {
+                voiceStatus.textContent = 'Voice recording requires HTTPS (or localhost) and browser support.';
+                voiceStatus.className = 'status error';
+                return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                chunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+                mediaRecorder.onstop = () => uploadRecording(new Blob(chunks, { type: 'audio/webm' }), stream);
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.textContent = 'Stop Recording';
+                recordBtn.setAttribute('aria-pressed', 'true');
+                indicator.classList.remove('hidden');
+                voiceStatus.textContent = '';
+            } catch (err) {
+                voiceStatus.textContent = 'Microphone permission denied or unavailable.';
+                voiceStatus.className = 'status error';
+            }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            recordBtn.textContent = 'Record Voice';
+            recordBtn.setAttribute('aria-pressed', 'false');
+            indicator.classList.add('hidden');
+        }
+    });
+
+    async function uploadRecording(blob, stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        recordBtn.disabled = true;
+        voiceStatus.textContent = 'Uploading…';
+        voiceStatus.className = 'status';
+        const formData = new FormData();
+        formData.append('file', blob, 'recording.webm');
+        formData.append('log_date', SELECTED_DATE);
+        try {
+            const res = await fetch('/audio', {
+                method: 'POST',
+                body: formData,
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Upload failed (${res.status})`);
+            }
+            window.location.reload();
+        } catch (err) {
+            voiceStatus.textContent = err.message;
+            voiceStatus.className = 'status error';
+            recordBtn.disabled = false;
+        }
+    }
+</script>
 {% endblock %}

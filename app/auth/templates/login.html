@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Login — Nutrition Tracker{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width: 380px; margin: 24px auto;">
+    <h2>Log in</h2>
+    {% if error %}
+    <p class="status error">{{ error }}</p>
+    {% endif %}
+    <form method="post" action="/login" class="log-form" style="flex-direction: column; align-items: stretch;">
+        <input type="text" name="username" placeholder="Username" autocomplete="username" required>
+        <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
+        <button type="submit">Log in</button>
+    </form>
+    <p style="margin-top: 16px; color: var(--text-muted);">
+        No account yet? <a href="/register">Register</a>
+    </p>
+</section>
+{% endblock %}

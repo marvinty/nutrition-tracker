@@ -7,8 +7,8 @@ def get_provider() -> LLMProvider:
         from app.providers.claude import ClaudeProvider
         return ClaudeProvider()
     elif settings.llm_provider == "openai":
-        from app.providers.openai import OpenAIProvider  # type: ignore[import]
-        return OpenAIProvider()
+        from app.providers.openai_llm import OpenAILLMProvider
+        return OpenAILLMProvider()
     elif settings.llm_provider == "gemini":
         from app.providers.gemini import GeminiProvider  # type: ignore[import]
         return GeminiProvider()

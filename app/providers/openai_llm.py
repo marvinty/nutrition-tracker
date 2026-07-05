@@ -1,6 +1,6 @@
 import json
 import re
-from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 from app.providers.base import LLMProvider, NutritionResult
 from app.core.config import settings
 
@@ -19,19 +19,20 @@ If a value cannot be determined, use null.
 Do not include any text outside the JSON object."""
 
 
-class ClaudeProvider(LLMProvider):
+class OpenAILLMProvider(LLMProvider):
     def __init__(self) -> None:
-        self._client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+        self._client = AsyncOpenAI(api_key=settings.openai_api_key)
 
     async def extract_nutrition(self, transcript: str) -> NutritionResult:
-        message = await self._client.messages.create(
-            model="claude-3-5-haiku-20241022",
+        response = await self._client.chat.completions.create(
+            model="gpt-4o-mini",
             max_tokens=256,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": transcript}],
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": transcript},
+            ],
         )
-        raw = message.content[0].text
-        # Strip accidental markdown code fences
+        raw = response.choices[0].message.content or ""
         cleaned = re.sub(r"```json?\s*|\s*```", "", raw).strip()
         data = json.loads(cleaned)
         return NutritionResult(
