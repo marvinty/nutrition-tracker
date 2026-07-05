@@ -3,26 +3,26 @@
 {% block title %}Dashboard — {{ selected_label }}{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-    <span style="color: #666;">Signed in as <strong>{{ username }}</strong></span>
-    <div style="display: flex; gap: 8px; align-items: center;">
-        <a href="/history" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">History</a>
-        <form method="post" action="/logout" style="margin: 0;">
-            <button type="submit" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; cursor: pointer;">Log out</button>
+<div class="topbar">
+    <span class="who">Signed in as <strong>{{ username }}</strong></span>
+    <div class="actions">
+        <a href="/history" class="btn">History</a>
+        <form method="post" action="/logout">
+            <button type="submit" class="btn">Log out</button>
         </form>
     </div>
 </div>
 
-<div class="day-nav" style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
-    <a href="/dashboard?d={{ prev_date }}" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">‹ Prev</a>
-    <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px;">
+<div class="day-nav">
+    <a href="/dashboard?d={{ prev_date }}" class="nav-btn">‹ Prev</a>
+    <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}">
     {% if next_date %}
-    <a href="/dashboard?d={{ next_date }}" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">Next ›</a>
+    <a href="/dashboard?d={{ next_date }}" class="nav-btn">Next ›</a>
     {% else %}
-    <span style="padding: 6px 12px; border: 1px solid #eee; border-radius: 8px; background: #fafafa; color: #bbb;">Next ›</span>
+    <span class="nav-btn is-disabled">Next ›</span>
     {% endif %}
     {% if not is_today %}
-    <a href="/dashboard" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">Today</a>
+    <a href="/dashboard" class="nav-btn">Today</a>
     {% endif %}
 </div>
 <h2>{{ selected_label }}{% if is_today %} (Today){% endif %}</h2>
@@ -36,7 +36,7 @@
     <p id="text-status" class="status"></p>
 
     <div class="log-form">
-        <button type="button" id="record-btn">Record Voice</button>
+        <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Record voice meal">Record Voice</button>
         <span id="record-indicator" class="hidden">Recording…</span>
     </div>
     <p id="voice-status" class="status"></p>
@@ -45,19 +45,19 @@
 <section>
     <h3>Daily Totals</h3>
     <div class="totals-grid">
-        <div class="totals-card">
+        <div class="totals-card totals-card--cal">
             <div class="value">{{ totals.calories | int }}</div>
             <div class="label">Calories (kcal)</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--protein">
             <div class="value">{{ totals.protein }}g</div>
             <div class="label">Protein</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--carbs">
             <div class="value">{{ totals.carbs }}g</div>
             <div class="label">Carbs</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--fat">
             <div class="value">{{ totals.fat }}g</div>
             <div class="label">Fat</div>
         </div>
@@ -157,6 +157,7 @@
                 mediaRecorder.start();
                 isRecording = true;
                 recordBtn.textContent = 'Stop Recording';
+                recordBtn.setAttribute('aria-pressed', 'true');
                 indicator.classList.remove('hidden');
                 voiceStatus.textContent = '';
             } catch (err) {
@@ -167,6 +168,7 @@
             mediaRecorder.stop();
             isRecording = false;
             recordBtn.textContent = 'Record Voice';
+            recordBtn.setAttribute('aria-pressed', 'false');
             indicator.classList.add('hidden');
         }
     });

@@ -3,27 +3,27 @@
 {% block title %}History — {{ period_label }}{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-    <span style="color: #666;">Signed in as <strong>{{ username }}</strong></span>
-    <div style="display: flex; gap: 8px; align-items: center;">
-        <a href="/dashboard" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">Dashboard</a>
-        <form method="post" action="/logout" style="margin: 0;">
-            <button type="submit" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; cursor: pointer;">Log out</button>
+<div class="topbar">
+    <span class="who">Signed in as <strong>{{ username }}</strong></span>
+    <div class="actions">
+        <a href="/dashboard" class="btn">Dashboard</a>
+        <form method="post" action="/logout">
+            <button type="submit" class="btn">Log out</button>
         </form>
     </div>
 </div>
 
-<div style="display: flex; gap: 8px; margin-bottom: 12px;">
-    <a href="/history?view=week" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; {% if view == 'week' %}background: #2563eb; color: #fff;{% else %}background: #fff; color: #555;{% endif %}">Week</a>
-    <a href="/history?view=month" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; {% if view == 'month' %}background: #2563eb; color: #fff;{% else %}background: #fff; color: #555;{% endif %}">Month</a>
+<div class="tabs">
+    <a href="/history?view=week" class="tab{% if view == 'week' %} is-active{% endif %}">Week</a>
+    <a href="/history?view=month" class="tab{% if view == 'month' %} is-active{% endif %}">Month</a>
 </div>
 
-<div class="day-nav" style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
-    <a href="/history?view={{ view }}&d={{ prev_anchor }}" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">‹ Prev</a>
+<div class="day-nav">
+    <a href="/history?view={{ view }}&d={{ prev_anchor }}" class="nav-btn">‹ Prev</a>
     {% if next_anchor %}
-    <a href="/history?view={{ view }}&d={{ next_anchor }}" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">Next ›</a>
+    <a href="/history?view={{ view }}&d={{ next_anchor }}" class="nav-btn">Next ›</a>
     {% else %}
-    <span style="padding: 6px 12px; border: 1px solid #eee; border-radius: 8px; background: #fafafa; color: #bbb;">Next ›</span>
+    <span class="nav-btn is-disabled">Next ›</span>
     {% endif %}
 </div>
 <h2>{{ period_label }}</h2>
@@ -31,19 +31,19 @@
 <section>
     <h3>Average per day</h3>
     <div class="totals-grid">
-        <div class="totals-card">
+        <div class="totals-card totals-card--cal">
             <div class="value">{{ summary.avg.calories | int }}</div>
             <div class="label">Calories (kcal)</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--protein">
             <div class="value">{{ summary.avg.protein }}g</div>
             <div class="label">Protein</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--carbs">
             <div class="value">{{ summary.avg.carbs }}g</div>
             <div class="label">Carbs</div>
         </div>
-        <div class="totals-card">
+        <div class="totals-card totals-card--fat">
             <div class="value">{{ summary.avg.fat }}g</div>
             <div class="label">Fat</div>
         </div>
@@ -65,7 +65,7 @@
         </thead>
         <tbody>
             {% for day in series %}
-            <tr onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'" style="cursor: pointer;">
+            <tr class="row-link" onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'">
                 <td>{{ day.date.strftime("%a, %b %d") }}</td>
                 <td>{{ day.calories | int }}</td>
                 <td>{{ day.protein }}g</td>
@@ -76,7 +76,7 @@
             {% endfor %}
         </tbody>
         <tfoot>
-            <tr style="font-weight: 700;">
+            <tr class="total-row">
                 <td>Total ({{ summary.days }} days)</td>
                 <td>{{ summary.total.calories | int }}</td>
                 <td>{{ summary.total.protein }}g</td>
