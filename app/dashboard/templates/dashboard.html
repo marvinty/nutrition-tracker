@@ -3,6 +3,12 @@
 {% block title %}Dashboard — {{ today }}{% endblock %}
 
 {% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+    <span style="color: #666;">Signed in as <strong>{{ username }}</strong></span>
+    <form method="post" action="/logout" style="margin: 0;">
+        <button type="submit" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; cursor: pointer;">Log out</button>
+    </form>
+</div>
 <h2>{{ today }}</h2>
 
 <section>
@@ -75,8 +81,6 @@
 </section>
 
 <script>
-    const USER_ID = "{{ user_id }}";
-
     const textForm = document.getElementById('text-meal-form');
     textForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -93,7 +97,7 @@
             const res = await fetch('/meals/text', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, user_id: USER_ID }),
+                body: JSON.stringify({ text }),
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
@@ -152,7 +156,7 @@
         const formData = new FormData();
         formData.append('file', blob, 'recording.webm');
         try {
-            const res = await fetch(`/audio?user_id=${encodeURIComponent(USER_ID)}`, {
+            const res = await fetch('/audio', {
                 method: 'POST',
                 body: formData,
             });

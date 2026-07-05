@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.deps import get_current_user
 from app.db.session import get_session
+from app.models.user import User
 from app.providers import get_provider
 from app.providers.base import LLMProvider
 from app.schemas.meal import AudioResponse, MealCreate
@@ -13,9 +15,9 @@ router = APIRouter(prefix="/audio", tags=["audio"])
 @router.post("", response_model=AudioResponse, status_code=201)
 async def process_audio(
     file: UploadFile = File(...),
-    user_id: str = Query(default="default"),
     session: AsyncSession = Depends(get_session),
     provider: LLMProvider = Depends(get_provider),
+    user: User = Depends(get_current_user),
 ) -> AudioResponse:
     audio_bytes = await file.read()
     if not audio_bytes:
@@ -34,7 +36,7 @@ async def process_audio(
     meal = await create_meal(
         session,
         MealCreate(
-            user_id=user_id,
+            user_id=user.username,
             description=nutrition.description,
             calories=nutrition.calories,
             protein=nutrition.protein,

@@ -5,7 +5,14 @@ from pydantic import BaseModel
 
 class TextMealCreate(BaseModel):
     text: str
-    user_id: str = "default"
+
+
+class MealInput(BaseModel):
+    description: str
+    calories: Optional[float] = None
+    protein: Optional[float] = None
+    carbs: Optional[float] = None
+    fat: Optional[float] = None
 
 
 class MealCreate(BaseModel):
@@ -14,7 +21,7 @@ class MealCreate(BaseModel):
     protein: Optional[float] = None
     carbs: Optional[float] = None
     fat: Optional[float] = None
-    user_id: str = "default"
+    user_id: str
 
 
 class MealRead(BaseModel):

@@ -6,9 +6,15 @@ Requirements:
     pip install -r client/requirements.txt
     brew install portaudio  # required on macOS before pip install pyaudio
 
+Authentication (required — the API now attributes every meal to a user):
+    Either provide a logon ticket directly:
+        API_TOKEN=<token> python client/simulate.py
+    or log in with credentials so the client fetches a ticket for you:
+        USERNAME=marvin PASSWORD=secret python client/simulate.py
+
 Usage:
-    python client/simulate.py
-    API_URL=http://192.168.1.10:8000 python client/simulate.py
+    API_TOKEN=<token> python client/simulate.py
+    API_URL=http://192.168.1.10:8000 USERNAME=marvin PASSWORD=secret python client/simulate.py
 """
 
 import os
@@ -21,6 +27,9 @@ import pyttsx3
 import requests
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
+API_TOKEN = os.getenv("API_TOKEN", "")
+USERNAME = os.getenv("USERNAME", "")
+PASSWORD = os.getenv("PASSWORD", "")
 SAMPLE_RATE = 16000
 CHANNELS = 1
 CHUNK = 1024
@@ -61,10 +70,34 @@ def record_audio(duration: int = RECORD_SECONDS) -> bytes:
         os.unlink(tmp_path)
 
 
-def post_audio(wav_bytes: bytes) -> dict:
+def get_auth_token() -> str:
+    """Return a logon ticket: use API_TOKEN if set, otherwise log in with credentials."""
+    if API_TOKEN:
+        return API_TOKEN
+    if USERNAME and PASSWORD:
+        response = requests.post(
+            f"{API_URL}/login",
+            data={"username": USERNAME, "password": PASSWORD},
+            allow_redirects=False,
+            timeout=30,
+        )
+        token = response.cookies.get("session")
+        if not token:
+            raise RuntimeError(
+                f"Login failed for user {USERNAME!r} (HTTP {response.status_code}). "
+                "Check the credentials."
+            )
+        return token
+    raise RuntimeError(
+        "No credentials provided. Set API_TOKEN, or USERNAME and PASSWORD."
+    )
+
+
+def post_audio(wav_bytes: bytes, token: str) -> dict:
     response = requests.post(
         f"{API_URL}/audio",
         files={"file": ("recording.wav", wav_bytes, "audio/wav")},
+        headers={"Authorization": f"Bearer {token}"},
         timeout=30,
     )
     response.raise_for_status()
@@ -82,9 +115,10 @@ def main() -> None:
     print(f"Endpoint: {API_URL}/audio")
     print("-" * 40)
     try:
+        token = get_auth_token()
         wav_bytes = record_audio()
         print("Sending to server...")
-        result = post_audio(wav_bytes)
+        result = post_audio(wav_bytes, token)
         print(f"\nResponse: {result}")
         summary = (
             f"Logged {result.get('description', 'meal')}. "
