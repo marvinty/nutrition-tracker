@@ -21,9 +21,9 @@ async def dashboard(
     meals = await list_meals(session, user_id=user_id, filter_date=today)
     totals = await get_daily_totals(session, user_id=user_id, for_date=today)
     return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
+        request=request,
+        name="dashboard.html",
+        context={
             "meals": meals,
             "totals": totals,
             "today": today.strftime("%A, %B %d %Y"),
