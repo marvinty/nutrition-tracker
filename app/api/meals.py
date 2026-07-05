@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_current_user
+from app.core.time import resolve_timestamp
 from app.db.session import get_session
 from app.models.user import User
 from app.providers import get_provider
@@ -13,14 +14,27 @@ from app.services.meal_service import create_meal, list_meals
 router = APIRouter(prefix="/meals", tags=["meals"])
 
 
+def _timestamp_for(log_date) -> Optional[datetime]:
+    try:
+        return resolve_timestamp(log_date)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @router.post("", response_model=MealRead, status_code=201)
 async def log_meal(
     body: MealInput,
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
 ) -> MealRead:
+    fields = body.model_dump(exclude={"log_date"})
     meal = await create_meal(
-        session, MealCreate(user_id=user.username, **body.model_dump())
+        session,
+        MealCreate(
+            user_id=user.username,
+            timestamp=_timestamp_for(body.log_date),
+            **fields,
+        ),
     )
     return meal
 
@@ -49,6 +63,7 @@ async def log_meal_from_text(
             protein=nutrition.protein,
             carbs=nutrition.carbs,
             fat=nutrition.fat,
+            timestamp=_timestamp_for(body.log_date),
         ),
     )
 

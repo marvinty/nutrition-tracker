@@ -1,15 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard — {{ today }}{% endblock %}
+{% block title %}Dashboard — {{ selected_label }}{% endblock %}
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
     <span style="color: #666;">Signed in as <strong>{{ username }}</strong></span>
-    <form method="post" action="/logout" style="margin: 0;">
-        <button type="submit" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; cursor: pointer;">Log out</button>
-    </form>
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <a href="/history" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">History</a>
+        <form method="post" action="/logout" style="margin: 0;">
+            <button type="submit" style="padding: 6px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; cursor: pointer;">Log out</button>
+        </form>
+    </div>
 </div>
-<h2>{{ today }}</h2>
+
+<div class="day-nav" style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+    <a href="/dashboard?d={{ prev_date }}" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">‹ Prev</a>
+    <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px;">
+    {% if next_date %}
+    <a href="/dashboard?d={{ next_date }}" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">Next ›</a>
+    {% else %}
+    <span style="padding: 6px 12px; border: 1px solid #eee; border-radius: 8px; background: #fafafa; color: #bbb;">Next ›</span>
+    {% endif %}
+    {% if not is_today %}
+    <a href="/dashboard" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #555; text-decoration: none;">Today</a>
+    {% endif %}
+</div>
+<h2>{{ selected_label }}{% if is_today %} (Today){% endif %}</h2>
 
 <section>
     <h3>Log a Meal</h3>
@@ -49,7 +65,7 @@
 </section>
 
 <section>
-    <h3>Meals Today ({{ totals.meal_count }})</h3>
+    <h3>Meals{% if is_today %} Today{% endif %} ({{ totals.meal_count }})</h3>
     {% if meals %}
     <table>
         <thead>
@@ -65,7 +81,7 @@
         <tbody>
             {% for meal in meals %}
             <tr data-meal-id="{{ meal.id }}">
-                <td>{{ meal.timestamp.strftime("%H:%M") }}</td>
+                <td>{{ meal.timestamp | localtime }}</td>
                 <td>{{ meal.description }}</td>
                 <td>{{ meal.calories if meal.calories is not none else "—" }}</td>
                 <td>{{ (meal.protein | string + "g") if meal.protein is not none else "—" }}</td>
@@ -76,11 +92,18 @@
         </tbody>
     </table>
     {% else %}
-    <p class="empty">No meals logged today.</p>
+    <p class="empty">No meals logged{% if is_today %} today{% else %} on this day{% endif %}.</p>
     {% endif %}
 </section>
 
 <script>
+    const SELECTED_DATE = "{{ selected }}";
+
+    const datePicker = document.getElementById('date-picker');
+    datePicker.addEventListener('change', () => {
+        if (datePicker.value) window.location = `/dashboard?d=${datePicker.value}`;
+    });
+
     const textForm = document.getElementById('text-meal-form');
     textForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -97,7 +120,7 @@
             const res = await fetch('/meals/text', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text }),
+                body: JSON.stringify({ text, log_date: SELECTED_DATE }),
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
@@ -155,6 +178,7 @@
         voiceStatus.className = 'status';
         const formData = new FormData();
         formData.append('file', blob, 'recording.webm');
+        formData.append('log_date', SELECTED_DATE);
         try {
             const res = await fetch('/audio', {
                 method: 'POST',
