@@ -3,6 +3,11 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class TextMealCreate(BaseModel):
+    text: str
+    user_id: str = "default"
+
+
 class MealCreate(BaseModel):
     description: str
     calories: Optional[float] = None

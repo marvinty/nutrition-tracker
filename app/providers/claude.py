@@ -5,7 +5,7 @@ from app.providers.base import LLMProvider, NutritionResult
 from app.core.config import settings
 
 SYSTEM_PROMPT = """You are a nutrition analysis assistant.
-The user will describe food they have eaten (from a voice transcription).
+The user will describe food they have eaten (typed or transcribed from speech).
 Extract: description, calories, protein, carbs, fat.
 Respond ONLY with a valid JSON object using these exact keys:
 {
