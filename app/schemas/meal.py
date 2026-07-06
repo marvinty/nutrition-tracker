@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel
 
 
@@ -40,11 +40,20 @@ class MealRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class AudioResponse(BaseModel):
-    transcript: str
-    description: str
-    calories: Optional[float]
-    protein: Optional[float]
-    carbs: Optional[float]
-    fat: Optional[float]
-    meal_id: int
+class ConversationMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ClarifyRequest(BaseModel):
+    messages: list[ConversationMessage]
+    log_date: Optional[date] = None
+
+
+class LogResponse(BaseModel):
+    status: Literal["complete", "needs_clarification"]
+    question: Optional[str] = None
+    # Full conversation so far, including the latest assistant question.
+    messages: list[ConversationMessage] = []
+    meal: Optional[MealRead] = None
+    transcript: Optional[str] = None  # only set on the first /audio call
