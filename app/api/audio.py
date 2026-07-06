@@ -8,23 +8,24 @@ from app.db.session import get_session
 from app.models.user import User
 from app.providers import get_provider
 from app.providers.base import LLMProvider
-from app.schemas.meal import AudioResponse, MealCreate
+from app.schemas.meal import LogResponse
 from app.services.audio_service import transcribe_audio
-from app.services.meal_service import create_meal
+from app.services.nutrition_flow import run_analysis
 
 router = APIRouter(prefix="/audio", tags=["audio"])
 
 
-@router.post("", response_model=AudioResponse, status_code=201)
+@router.post("", response_model=LogResponse)
 async def process_audio(
     file: UploadFile = File(...),
     log_date: Optional[date] = Form(None),
     session: AsyncSession = Depends(get_session),
     provider: LLMProvider = Depends(get_provider),
     user: User = Depends(get_current_user),
-) -> AudioResponse:
+) -> LogResponse:
+    # Validate log_date early so a bad date fails before transcription.
     try:
-        timestamp = resolve_timestamp(log_date)
+        resolve_timestamp(log_date)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -37,30 +38,12 @@ async def process_audio(
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Whisper transcription failed: {exc}") from exc
 
+    messages = [{"role": "user", "content": transcript}]
     try:
-        nutrition = await provider.extract_nutrition(transcript)
+        return await run_analysis(
+            provider, session, user, messages, log_date, transcript=transcript
+        )
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"LLM extraction failed: {exc}") from exc
-
-    meal = await create_meal(
-        session,
-        MealCreate(
-            user_id=user.username,
-            description=nutrition.description,
-            calories=nutrition.calories,
-            protein=nutrition.protein,
-            carbs=nutrition.carbs,
-            fat=nutrition.fat,
-            timestamp=timestamp,
-        ),
-    )
-
-    return AudioResponse(
-        transcript=transcript,
-        description=nutrition.description,
-        calories=nutrition.calories,
-        protein=nutrition.protein,
-        carbs=nutrition.carbs,
-        fat=nutrition.fat,
-        meal_id=meal.id,
-    )

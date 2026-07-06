@@ -8,8 +8,16 @@ from app.db.session import get_session
 from app.models.user import User
 from app.providers import get_provider
 from app.providers.base import LLMProvider
-from app.schemas.meal import MealCreate, MealInput, MealRead, TextMealCreate
+from app.schemas.meal import (
+    ClarifyRequest,
+    LogResponse,
+    MealCreate,
+    MealInput,
+    MealRead,
+    TextMealCreate,
+)
 from app.services.meal_service import create_meal, list_meals
+from app.services.nutrition_flow import run_analysis
 
 router = APIRouter(prefix="/meals", tags=["meals"])
 
@@ -39,33 +47,42 @@ async def log_meal(
     return meal
 
 
-@router.post("/text", response_model=MealRead, status_code=201)
+@router.post("/text", response_model=LogResponse)
 async def log_meal_from_text(
     body: TextMealCreate,
     session: AsyncSession = Depends(get_session),
     provider: LLMProvider = Depends(get_provider),
     user: User = Depends(get_current_user),
-) -> MealRead:
+) -> LogResponse:
     if not body.text.strip():
         raise HTTPException(status_code=400, detail="Text must not be empty")
 
+    messages = [{"role": "user", "content": body.text}]
     try:
-        nutrition = await provider.extract_nutrition(body.text)
+        return await run_analysis(provider, session, user, messages, body.log_date)
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"LLM extraction failed: {exc}") from exc
 
-    return await create_meal(
-        session,
-        MealCreate(
-            user_id=user.username,
-            description=nutrition.description,
-            calories=nutrition.calories,
-            protein=nutrition.protein,
-            carbs=nutrition.carbs,
-            fat=nutrition.fat,
-            timestamp=_timestamp_for(body.log_date),
-        ),
-    )
+
+@router.post("/clarify", response_model=LogResponse)
+async def clarify_meal(
+    body: ClarifyRequest,
+    session: AsyncSession = Depends(get_session),
+    provider: LLMProvider = Depends(get_provider),
+    user: User = Depends(get_current_user),
+) -> LogResponse:
+    if not body.messages:
+        raise HTTPException(status_code=400, detail="Conversation must not be empty")
+
+    messages = [m.model_dump() for m in body.messages]
+    try:
+        return await run_analysis(provider, session, user, messages, body.log_date)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"LLM extraction failed: {exc}") from exc
 
 
 @router.get("", response_model=list[MealRead])

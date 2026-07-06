@@ -1,43 +1,25 @@
-import json
-import re
 from anthropic import AsyncAnthropic
-from app.providers.base import LLMProvider, NutritionResult
+from app.providers.base import (
+    AnalysisResult,
+    LLMProvider,
+    build_system_prompt,
+    parse_analysis,
+)
 from app.core.config import settings
-
-SYSTEM_PROMPT = """You are a nutrition analysis assistant.
-The user will describe food they have eaten (typed or transcribed from speech).
-Extract: description, calories, protein, carbs, fat.
-Respond ONLY with a valid JSON object using these exact keys:
-{
-  "description": "...",
-  "calories": 0.0,
-  "protein": 0.0,
-  "carbs": 0.0,
-  "fat": 0.0
-}
-If a value cannot be determined, use null.
-Do not include any text outside the JSON object."""
 
 
 class ClaudeProvider(LLMProvider):
     def __init__(self) -> None:
         self._client = AsyncAnthropic(api_key=settings.anthropic_api_key)
 
-    async def extract_nutrition(self, transcript: str) -> NutritionResult:
+    async def analyze(
+        self, messages: list[dict], allow_questions: bool
+    ) -> AnalysisResult:
         message = await self._client.messages.create(
             model="claude-3-5-haiku-20241022",
             max_tokens=256,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": transcript}],
+            system=build_system_prompt(allow_questions),
+            messages=messages,
         )
         raw = message.content[0].text
-        # Strip accidental markdown code fences
-        cleaned = re.sub(r"```json?\s*|\s*```", "", raw).strip()
-        data = json.loads(cleaned)
-        return NutritionResult(
-            description=data.get("description", transcript),
-            calories=data.get("calories"),
-            protein=data.get("protein"),
-            carbs=data.get("carbs"),
-            fat=data.get("fat"),
-        )
+        return parse_analysis(raw, messages, allow_questions)
