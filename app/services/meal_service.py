@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.time import day_bounds, to_local
 from app.models.meal import Meal
-from app.schemas.meal import MealCreate
+from app.schemas.meal import MealCreate, MealUpdate
 
 
 async def create_meal(session: AsyncSession, data: MealCreate) -> Meal:
@@ -16,6 +16,35 @@ async def create_meal(session: AsyncSession, data: MealCreate) -> Meal:
     await session.commit()
     await session.refresh(meal)
     return meal
+
+
+async def get_meal(session: AsyncSession, meal_id: int, user_id: str) -> Optional[Meal]:
+    result = await session.execute(
+        select(Meal).where(Meal.id == meal_id, Meal.user_id == user_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def update_meal(
+    session: AsyncSession, meal_id: int, user_id: str, data: MealUpdate
+) -> Optional[Meal]:
+    meal = await get_meal(session, meal_id, user_id)
+    if meal is None:
+        return None
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(meal, field, value)
+    await session.commit()
+    await session.refresh(meal)
+    return meal
+
+
+async def delete_meal(session: AsyncSession, meal_id: int, user_id: str) -> bool:
+    meal = await get_meal(session, meal_id, user_id)
+    if meal is None:
+        return False
+    await session.delete(meal)
+    await session.commit()
+    return True
 
 
 async def list_meals(

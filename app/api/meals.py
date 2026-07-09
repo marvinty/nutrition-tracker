@@ -14,9 +14,10 @@ from app.schemas.meal import (
     MealCreate,
     MealInput,
     MealRead,
+    MealUpdate,
     TextMealCreate,
 )
-from app.services.meal_service import create_meal, list_meals
+from app.services.meal_service import create_meal, delete_meal, list_meals, update_meal
 from app.services.nutrition_flow import run_analysis
 
 router = APIRouter(prefix="/meals", tags=["meals"])
@@ -92,3 +93,26 @@ async def get_meals(
     user: User = Depends(get_current_user),
 ) -> list[MealRead]:
     return await list_meals(session, user_id=user.username, filter_date=filter_date)
+
+
+@router.patch("/{meal_id}", response_model=MealRead)
+async def edit_meal(
+    meal_id: int,
+    body: MealUpdate,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> MealRead:
+    meal = await update_meal(session, meal_id, user.username, body)
+    if meal is None:
+        raise HTTPException(status_code=404, detail="Meal not found")
+    return meal
+
+
+@router.delete("/{meal_id}", status_code=204)
+async def remove_meal(
+    meal_id: int,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> None:
+    if not await delete_meal(session, meal_id, user.username):
+        raise HTTPException(status_code=404, detail="Meal not found")

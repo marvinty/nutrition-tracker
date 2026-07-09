@@ -17,6 +17,14 @@ class MealInput(BaseModel):
     log_date: Optional[date] = None
 
 
+class MealUpdate(BaseModel):
+    description: Optional[str] = None
+    calories: Optional[float] = None
+    protein: Optional[float] = None
+    carbs: Optional[float] = None
+    fat: Optional[float] = None
+
+
 class MealCreate(BaseModel):
     description: str
     calories: Optional[float] = None
