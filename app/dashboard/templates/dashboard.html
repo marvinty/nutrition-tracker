@@ -3,107 +3,99 @@
 {% block title %}Dashboard — {{ selected_label }}{% endblock %}
 
 {% block content %}
-<div class="topbar">
-    <span class="who">Signed in as <strong>{{ username }}</strong></span>
-    <div class="actions">
-        <a href="/history" class="btn">History</a>
-        <form method="post" action="/logout">
-            <button type="submit" class="btn">Log out</button>
-        </form>
-    </div>
-</div>
-
-<div class="day-nav">
-    <a href="/dashboard?d={{ prev_date }}" class="nav-btn">‹ Prev</a>
-    <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}">
-    {% if next_date %}
-    <a href="/dashboard?d={{ next_date }}" class="nav-btn">Next ›</a>
-    {% else %}
-    <span class="nav-btn is-disabled">Next ›</span>
-    {% endif %}
-    {% if not is_today %}
-    <a href="/dashboard" class="nav-btn">Today</a>
-    {% endif %}
-</div>
-<h2>{{ selected_label }}{% if is_today %} (Today){% endif %}</h2>
-
-<section>
-    <h3>Log a Meal</h3>
-    <form id="text-meal-form" class="log-form">
-        <input type="text" id="meal-text-input" placeholder="e.g. grilled chicken breast with rice" required>
-        <button type="submit" id="text-submit-btn">Log</button>
-    </form>
-    <p id="text-status" class="status"></p>
-
-    <div class="log-form">
-        <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Record voice meal">Record Voice</button>
-        <span id="record-indicator" class="hidden">Recording…</span>
-    </div>
-    <p id="voice-status" class="status"></p>
-
-    <div id="clarify-box" class="clarify hidden">
-        <p id="clarify-question" class="clarify-question"></p>
-        <form id="clarify-form" class="log-form">
-            <input type="text" id="clarify-input" placeholder="Your answer…" autocomplete="off" required>
-            <button type="submit" id="clarify-submit-btn">Answer</button>
-        </form>
-        <p id="clarify-status" class="status"></p>
-    </div>
-</section>
-
-<section>
-    <h3>Daily Totals</h3>
-    <div class="totals-grid">
-        <div class="totals-card totals-card--cal">
-            <div class="value">{{ totals.calories | int }}</div>
-            <div class="label">Calories (kcal)</div>
-        </div>
-        <div class="totals-card totals-card--protein">
-            <div class="value">{{ totals.protein }}g</div>
-            <div class="label">Protein</div>
-        </div>
-        <div class="totals-card totals-card--carbs">
-            <div class="value">{{ totals.carbs }}g</div>
-            <div class="label">Carbs</div>
-        </div>
-        <div class="totals-card totals-card--fat">
-            <div class="value">{{ totals.fat }}g</div>
-            <div class="label">Fat</div>
+<div class="page-card">
+    <div class="card-top">
+        <div class="topbar">
+            <span class="who">Signed in as <strong>{{ username }}</strong></span>
+            <div class="actions">
+                <a href="/history" class="pill pill--soft">History</a>
+                <form method="post" action="/logout">
+                    <button type="submit" class="pill">Log out</button>
+                </form>
+            </div>
         </div>
     </div>
-</section>
 
-<section>
-    <h3>Meals{% if is_today %} Today{% endif %} ({{ totals.meal_count }})</h3>
-    {% if meals %}
-    <table>
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Description</th>
-                <th>Calories</th>
-                <th>Protein</th>
-                <th>Carbs</th>
-                <th>Fat</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="card-body">
+        <div class="day-nav">
+            <a href="/dashboard?d={{ prev_date }}" class="nav-btn">‹</a>
+            {% if next_date %}
+            <a href="/dashboard?d={{ next_date }}" class="nav-btn">›</a>
+            {% else %}
+            <span class="nav-btn is-disabled">›</span>
+            {% endif %}
+            <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}">
+            {% if not is_today %}
+            <a href="/dashboard" class="nav-btn">Today</a>
+            {% endif %}
+        </div>
+        <h2 class="page-title">{{ selected_label }}{% if is_today %} (Today){% endif %}</h2>
+
+        <div class="log-panel">
+            <form id="text-meal-form" class="log-form">
+                <input type="text" id="meal-text-input" placeholder="e.g. grilled chicken breast with rice" required>
+                <button type="submit" id="text-submit-btn">Log</button>
+            </form>
+            <p id="text-status" class="status"></p>
+
+            <div class="log-form">
+                <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Record voice meal">Record Voice</button>
+                <span id="record-indicator" class="hidden">Recording…</span>
+            </div>
+            <p id="voice-status" class="status"></p>
+
+            <div id="clarify-box" class="clarify hidden">
+                <p id="clarify-question" class="clarify-question"></p>
+                <form id="clarify-form" class="log-form">
+                    <input type="text" id="clarify-input" placeholder="Your answer…" autocomplete="off" required>
+                    <button type="submit" id="clarify-submit-btn">Answer</button>
+                </form>
+                <p id="clarify-status" class="status"></p>
+            </div>
+        </div>
+
+        <div class="totals-grid">
+            <div class="totals-card totals-card--cal">
+                <div class="value">{{ totals.calories | int }}</div>
+                <div class="label">kcal</div>
+            </div>
+            <div class="totals-card">
+                <div class="value">{{ totals.protein }}g</div>
+                <div class="label">Protein</div>
+            </div>
+            <div class="totals-card">
+                <div class="value">{{ totals.carbs }}g</div>
+                <div class="label">Carbs</div>
+            </div>
+            <div class="totals-card">
+                <div class="value">{{ totals.fat }}g</div>
+                <div class="label">Fat</div>
+            </div>
+        </div>
+
+        <h3>Meals{% if is_today %} Today{% endif %} ({{ totals.meal_count }})</h3>
+        {% if meals %}
+        <div class="row-list">
             {% for meal in meals %}
-            <tr data-meal-id="{{ meal.id }}">
-                <td>{{ meal.timestamp | localtime }}</td>
-                <td>{{ meal.description }}</td>
-                <td>{{ meal.calories if meal.calories is not none else "—" }}</td>
-                <td>{{ (meal.protein | string + "g") if meal.protein is not none else "—" }}</td>
-                <td>{{ (meal.carbs | string + "g") if meal.carbs is not none else "—" }}</td>
-                <td>{{ (meal.fat | string + "g") if meal.fat is not none else "—" }}</td>
-            </tr>
+            <div class="row-item" data-meal-id="{{ meal.id }}">
+                <span class="row-time">{{ meal.timestamp | localtime }}</span>
+                <div class="row-main">
+                    <div class="row-title">{{ meal.description }}</div>
+                    <div class="row-sub">
+                        {{ (meal.protein | string + "g P") if meal.protein is not none else "—" }} ·
+                        {{ (meal.carbs | string + "g C") if meal.carbs is not none else "—" }} ·
+                        {{ (meal.fat | string + "g F") if meal.fat is not none else "—" }}
+                    </div>
+                </div>
+                <span class="row-cal">{{ meal.calories if meal.calories is not none else "—" }} kcal</span>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p class="empty">No meals logged{% if is_today %} today{% else %} on this day{% endif %}.</p>
-    {% endif %}
-</section>
+        </div>
+        {% else %}
+        <p class="empty">No meals logged{% if is_today %} today{% else %} on this day{% endif %}.</p>
+        {% endif %}
+    </div>
+</div>
 
 <script>
     const SELECTED_DATE = "{{ selected }}";
