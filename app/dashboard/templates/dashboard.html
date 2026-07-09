@@ -88,7 +88,39 @@
                     </div>
                 </div>
                 <span class="row-cal">{{ meal.calories if meal.calories is not none else "—" }} kcal</span>
+                <div class="row-actions">
+                    <button type="button" class="row-btn" data-action="edit">Edit</button>
+                </div>
             </div>
+            <form class="row-edit hidden" data-meal-id="{{ meal.id }}">
+                <input type="text" class="row-edit__desc" value="{{ meal.description }}" placeholder="Description" required>
+                <div class="row-edit__macros">
+                    <div class="row-edit__field">
+                        <label>kcal</label>
+                        <input type="number" step="any" name="calories" value="{{ meal.calories if meal.calories is not none else '' }}">
+                    </div>
+                    <div class="row-edit__field">
+                        <label>Protein</label>
+                        <input type="number" step="any" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}">
+                    </div>
+                    <div class="row-edit__field">
+                        <label>Carbs</label>
+                        <input type="number" step="any" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
+                    </div>
+                    <div class="row-edit__field">
+                        <label>Fat</label>
+                        <input type="number" step="any" name="fat" value="{{ meal.fat if meal.fat is not none else '' }}">
+                    </div>
+                </div>
+                <div class="row-edit__actions">
+                    <button type="submit" class="row-edit__save">Save</button>
+                    <button type="button" class="row-edit__cancel" data-action="cancel">Cancel</button>
+                    <span class="status"></span>
+                    <button type="button" class="row-edit__delete" data-action="delete" aria-label="Delete entry" title="Delete">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            </form>
             {% endfor %}
         </div>
         {% else %}
@@ -263,5 +295,88 @@
             recordBtn.disabled = false;
         }
     }
+
+    // Edit / delete existing meals.
+    function editFormFor(id) {
+        return document.querySelector(`.row-edit[data-meal-id="${id}"]`);
+    }
+    function rowItemFor(id) {
+        return document.querySelector(`.row-item[data-meal-id="${id}"]`);
+    }
+
+    document.querySelectorAll('.row-item .row-actions').forEach((actions) => {
+        const item = actions.closest('.row-item');
+        const id = item.dataset.mealId;
+        actions.querySelector('[data-action="edit"]').addEventListener('click', () => {
+            const form = editFormFor(id);
+            item.classList.add('hidden');
+            form.classList.remove('hidden');
+        });
+    });
+
+    document.querySelectorAll('.row-edit').forEach((form) => {
+        const id = form.dataset.mealId;
+        const status = form.querySelector('.status');
+        const saveBtn = form.querySelector('.row-edit__save');
+
+        form.querySelector('[data-action="cancel"]').addEventListener('click', () => {
+            form.classList.add('hidden');
+            rowItemFor(id).classList.remove('hidden');
+            status.textContent = '';
+            status.className = 'status';
+        });
+
+        form.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+            if (!confirm('Delete this entry?')) return;
+            status.textContent = 'Deleting…';
+            status.className = 'status';
+            try {
+                const res = await fetch(`/meals/${id}`, { method: 'DELETE' });
+                if (!res.ok && res.status !== 204) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || `Request failed (${res.status})`);
+                }
+                window.location.reload();
+            } catch (err) {
+                status.textContent = err.message;
+                status.className = 'status error';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const num = (name) => {
+                const v = form.querySelector(`input[name="${name}"]`).value.trim();
+                return v === '' ? null : parseFloat(v);
+            };
+            const payload = {
+                description: form.querySelector('.row-edit__desc').value.trim(),
+                calories: num('calories'),
+                protein: num('protein'),
+                carbs: num('carbs'),
+                fat: num('fat'),
+            };
+            saveBtn.disabled = true;
+            status.textContent = 'Saving…';
+            status.className = 'status';
+            try {
+                const res = await fetch(`/meals/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || `Request failed (${res.status})`);
+                }
+                window.location.reload();
+            } catch (err) {
+                status.textContent = err.message;
+                status.className = 'status error';
+            } finally {
+                saveBtn.disabled = false;
+            }
+        });
+    });
 </script>
 {% endblock %}

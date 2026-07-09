@@ -263,6 +263,82 @@
         .row-item--total .row-macros,
         .row-item--total .row-count { font-weight: 600; color: var(--accent-text); }
 
+        .row-actions { display: flex; gap: 4px; flex-shrink: 0; }
+        .row-btn {
+            border: none;
+            background: none;
+            color: var(--text-subtle);
+            font: inherit;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+        }
+        .row-btn:hover { background: var(--surface-2); color: var(--text); }
+
+        .row-edit {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: var(--surface-white);
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+        .row-edit.hidden { display: none; }
+        .row-edit__desc {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            font: inherit;
+            font-size: 14px;
+            background: var(--surface-white);
+            color: var(--text);
+        }
+        .row-edit__macros { display: flex; gap: 8px; flex-wrap: wrap; }
+        .row-edit__field { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 64px; }
+        .row-edit__field label { font-size: 11px; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; }
+        .row-edit__field input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            font: inherit;
+            font-size: 13px;
+            background: var(--surface-white);
+            color: var(--text);
+        }
+        .row-edit__desc:focus-visible,
+        .row-edit__field input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .row-edit__actions { display: flex; gap: 8px; align-items: center; }
+        .row-edit__actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--r-sm);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .row-edit__save { background: var(--accent); color: #fff; }
+        .row-edit__save:hover:not(:disabled) { background: var(--accent-hover); }
+        .row-edit__save:disabled { background: var(--accent-soft); color: #fff; cursor: not-allowed; }
+        .row-edit__cancel { background: var(--surface-2); color: var(--text-muted); }
+        .row-edit__cancel:hover { background: var(--border); }
+        .row-edit__delete {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border: none;
+            background: none;
+            color: var(--text-subtle);
+            border-radius: var(--r-sm);
+            cursor: pointer;
+        }
+        .row-edit__delete:hover { background: var(--accent-soft-2); color: var(--danger); }
+        .row-edit .status { flex: 1; margin: 0; }
+
         .auth-title { font-size: 26px; margin: 0 0 28px; }
         .auth-form { display: flex; flex-direction: column; gap: 14px; }
         .auth-form input {
