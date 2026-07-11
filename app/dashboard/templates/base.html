@@ -236,6 +236,69 @@
         .totals-grid--compact .totals-card { padding: 16px 8px; }
         .totals-grid--compact .totals-card .value { font-size: 22px; }
 
+        /* Macro goal progress (dashboard totals cards) */
+        .goal-meta { font-size: 10px; color: var(--text-subtle); margin-top: 6px; letter-spacing: 0.02em; }
+        .totals-card--cal .goal-meta { color: #a3705d; }
+        .goal-bar {
+            height: 5px;
+            border-radius: 3px;
+            background: var(--border);
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .goal-bar__fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--accent);
+            transition: width .2s ease;
+        }
+        .goal-bar__fill--over { background: var(--danger); }
+
+        /* Goal adherence (history) */
+        .adherence {
+            background: var(--accent-soft-2);
+            border-radius: var(--r-md);
+            padding: 12px 16px;
+            margin-bottom: 28px;
+            font-size: 0.9rem;
+            color: var(--accent-text);
+        }
+        .adherence strong { color: var(--accent-cal); }
+        .adherence-target { color: var(--text-subtle); font-size: 0.82rem; }
+        .goal-tick { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+
+        /* Goals form (Ziele page) */
+        .goals-form { margin-top: 4px; }
+        .goals-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .goals-field { display: flex; flex-direction: column; gap: 4px; }
+        .goals-field label { font-size: 11px; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; }
+        .goals-field input {
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            font: inherit;
+            font-size: 0.95rem;
+            background: var(--surface-white);
+            color: var(--text);
+        }
+        .goals-field input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .goals-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+        .goals-actions button {
+            padding: 0 22px;
+            height: 42px;
+            border: none;
+            border-radius: var(--r-sm);
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .goals-actions button:hover:not(:disabled) { background: var(--accent-hover); }
+        .goals-actions button:disabled { background: var(--accent-soft); color: #fff; cursor: not-allowed; }
+        .goals-actions .status { margin: 0; }
+
         .empty { color: var(--text-subtle); font-style: italic; font-size: 0.9rem; }
 
         .row-list { display: flex; flex-direction: column; gap: 8px; }

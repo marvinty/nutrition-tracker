@@ -8,6 +8,7 @@
         <div class="topbar">
             <span class="who">Angemeldet als <strong>{{ username }}</strong></span>
             <div class="actions">
+                <a href="/goals" class="pill pill--soft">Ziele</a>
                 <a href="/recipes" class="pill pill--soft">Rezepte</a>
                 <a href="/history" class="pill pill--soft">Verlauf</a>
                 <form method="post" action="/logout">
@@ -59,18 +60,34 @@
             <div class="totals-card totals-card--cal">
                 <div class="value">{{ totals.calories | int }}</div>
                 <div class="label">kcal</div>
+                {% if progress.calories %}
+                <div class="goal-meta">Ziel {{ progress.calories.target | int }} · {{ progress.calories.percent }}%</div>
+                <div class="goal-bar"><div class="goal-bar__fill{% if progress.calories.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.calories.bar_pct }}%"></div></div>
+                {% endif %}
             </div>
             <div class="totals-card">
                 <div class="value">{{ totals.protein }}g</div>
                 <div class="label">Protein</div>
+                {% if progress.protein %}
+                <div class="goal-meta">Ziel {{ progress.protein.target }}g · {{ progress.protein.percent }}%</div>
+                <div class="goal-bar"><div class="goal-bar__fill{% if progress.protein.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.protein.bar_pct }}%"></div></div>
+                {% endif %}
             </div>
             <div class="totals-card">
                 <div class="value">{{ totals.carbs }}g</div>
                 <div class="label">Carbs</div>
+                {% if progress.carbs %}
+                <div class="goal-meta">Ziel {{ progress.carbs.target }}g · {{ progress.carbs.percent }}%</div>
+                <div class="goal-bar"><div class="goal-bar__fill{% if progress.carbs.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.carbs.bar_pct }}%"></div></div>
+                {% endif %}
             </div>
             <div class="totals-card">
                 <div class="value">{{ totals.fat }}g</div>
                 <div class="label">Fett</div>
+                {% if progress.fat %}
+                <div class="goal-meta">Ziel {{ progress.fat.target }}g · {{ progress.fat.percent }}%</div>
+                <div class="goal-bar"><div class="goal-bar__fill{% if progress.fat.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.fat.bar_pct }}%"></div></div>
+                {% endif %}
             </div>
         </div>
 

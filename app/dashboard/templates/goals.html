@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Makro-Ziele{% endblock %}
+
+{% block content %}
+<div class="page-card">
+    <div class="card-top">
+        <div class="topbar">
+            <span class="who">Angemeldet als <strong>{{ username }}</strong></span>
+            <div class="actions">
+                <a href="/dashboard" class="pill pill--soft">Dashboard</a>
+                <a href="/recipes" class="pill pill--soft">Rezepte</a>
+                <a href="/history" class="pill pill--soft">Verlauf</a>
+                <form method="post" action="/logout">
+                    <button type="submit" class="pill">Abmelden</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <h2 class="page-title">Makro-Ziele</h2>
+
+        <div class="log-panel">
+            <p class="rp-hint">Tagesziele für deinen Kraftsport-Fokus. Leer lassen = kein Ziel für dieses Makro. Der Fortschritt erscheint auf dem Dashboard.</p>
+            <form id="goals-form" class="goals-form">
+                <div class="goals-grid">
+                    <div class="goals-field">
+                        <label for="goal-calories">kcal</label>
+                        <input type="number" step="any" min="0" id="goal-calories" placeholder="kein Ziel"
+                               value="{{ goal.calories if goal and goal.calories is not none else '' }}">
+                    </div>
+                    <div class="goals-field">
+                        <label for="goal-protein">Protein (g)</label>
+                        <input type="number" step="any" min="0" id="goal-protein" placeholder="kein Ziel"
+                               value="{{ goal.protein if goal and goal.protein is not none else '' }}">
+                    </div>
+                    <div class="goals-field">
+                        <label for="goal-carbs">Carbs (g)</label>
+                        <input type="number" step="any" min="0" id="goal-carbs" placeholder="kein Ziel"
+                               value="{{ goal.carbs if goal and goal.carbs is not none else '' }}">
+                    </div>
+                    <div class="goals-field">
+                        <label for="goal-fat">Fett (g)</label>
+                        <input type="number" step="any" min="0" id="goal-fat" placeholder="kein Ziel"
+                               value="{{ goal.fat if goal and goal.fat is not none else '' }}">
+                    </div>
+                </div>
+                <div class="goals-actions">
+                    <button type="submit" id="goals-btn">Speichern</button>
+                    <span id="goals-status" class="status"></span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('goals-form');
+    const btn = document.getElementById('goals-btn');
+    const status = document.getElementById('goals-status');
+
+    function num(id) {
+        const v = document.getElementById(id).value.trim();
+        return v === '' ? null : parseFloat(v);
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            calories: num('goal-calories'),
+            protein: num('goal-protein'),
+            carbs: num('goal-carbs'),
+            fat: num('goal-fat'),
+        };
+        btn.disabled = true;
+        status.textContent = 'Wird gespeichert…';
+        status.className = 'status';
+        try {
+            const res = await fetch('/api/goals', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Request failed (${res.status})`);
+            }
+            status.textContent = 'Gespeichert ✓';
+        } catch (err) {
+            status.textContent = err.message;
+            status.className = 'status error';
+        } finally {
+            btn.disabled = false;
+        }
+    });
+</script>
+{% endblock %}

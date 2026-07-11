@@ -21,6 +21,11 @@ from app.services.meal_service import (
     get_period_summary,
     list_meals,
 )
+from app.services.goal_service import (
+    build_progress,
+    get_goal,
+    period_adherence,
+)
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
@@ -44,12 +49,15 @@ async def dashboard(
     is_today = selected == today
     meals = await list_meals(session, user_id=user.username, filter_date=selected)
     totals = await get_daily_totals(session, user_id=user.username, for_date=selected)
+    goal = await get_goal(session, user.username)
+    progress = build_progress(totals, goal)
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
         context={
             "meals": meals,
             "totals": totals,
+            "progress": progress,
             "selected": selected.isoformat(),
             "selected_label": format_long(selected),
             "is_today": is_today,
@@ -74,6 +82,25 @@ async def recipes_page(
         context={
             "username": user.username,
             "today": today_local().isoformat(),
+        },
+    )
+
+
+@router.get("/goals")
+async def goals_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    user: Optional[User] = Depends(resolve_user),
+):
+    if user is None:
+        return RedirectResponse(url="/login", status_code=303)
+    goal = await get_goal(session, user.username)
+    return templates.TemplateResponse(
+        request=request,
+        name="goals.html",
+        context={
+            "username": user.username,
+            "goal": goal,
         },
     )
 
@@ -123,6 +150,8 @@ async def history(
     start, end, prev_anchor, next_anchor = _period_range(view, anchor)
     series = await get_daily_series(session, user_id=user.username, start=start, end=end)
     summary = get_period_summary(series)
+    goal = await get_goal(session, user.username)
+    adherence = period_adherence(series, goal)
 
     if view == "month":
         period_label = format_month_year(start)
@@ -136,6 +165,7 @@ async def history(
             "view": view,
             "series": series,
             "summary": summary,
+            "adherence": adherence,
             "period_label": period_label,
             "prev_anchor": prev_anchor.isoformat(),
             "next_anchor": None if end >= today else next_anchor.isoformat(),
