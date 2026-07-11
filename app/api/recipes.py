@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_user
+from app.core.deps import enforce_voice_quota, get_current_user
 from app.core.time import resolve_timestamp
 from app.db.session import get_session
 from app.models.user import User
@@ -134,7 +134,7 @@ async def add_ingredient_audio(
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_session),
     provider: LLMProvider = Depends(get_provider),
-    user: User = Depends(get_current_user),
+    user: User = Depends(enforce_voice_quota),
 ) -> RecipeRead:
     recipe = await _require_recipe(session, recipe_id, user.username)
     audio_bytes = await file.read()

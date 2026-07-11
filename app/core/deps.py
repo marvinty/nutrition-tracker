@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.db.session import get_session
 from app.models.user import User
 from app.services.auth_service import get_user_by_token
+from app.services.usage_service import check_and_increment_voice
 
 
 def _extract_token(request: Request) -> Optional[str]:
@@ -35,4 +36,14 @@ async def get_current_user(user: Optional[User] = Depends(resolve_user)) -> User
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    return user
+
+
+async def enforce_voice_quota(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> User:
+    """Like ``get_current_user`` but also counts the call against the user's daily
+    voice quota, raising 429 when exceeded. Use on the transcription endpoints."""
+    await check_and_increment_voice(session, user.username, settings.voice_daily_limit)
     return user
