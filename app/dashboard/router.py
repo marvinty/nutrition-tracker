@@ -6,6 +6,12 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import resolve_user
+from app.core.dates_de import (
+    format_day_month,
+    format_long,
+    format_month_year,
+    format_short_weekday,
+)
 from app.core.time import to_local, today_local
 from app.db.session import get_session
 from app.models.user import User
@@ -18,6 +24,7 @@ from app.services.meal_service import (
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
+templates.env.filters["de_short"] = format_short_weekday
 router = APIRouter(tags=["dashboard"])
 
 
@@ -44,7 +51,7 @@ async def dashboard(
             "meals": meals,
             "totals": totals,
             "selected": selected.isoformat(),
-            "selected_label": selected.strftime("%A, %B %d %Y"),
+            "selected_label": format_long(selected),
             "is_today": is_today,
             "prev_date": (selected - timedelta(days=1)).isoformat(),
             "next_date": None if is_today else (selected + timedelta(days=1)).isoformat(),
@@ -118,9 +125,9 @@ async def history(
     summary = get_period_summary(series)
 
     if view == "month":
-        period_label = start.strftime("%B %Y")
+        period_label = format_month_year(start)
     else:
-        period_label = f"{start.strftime('%b %d')} – {end.strftime('%b %d, %Y')}"
+        period_label = f"{format_day_month(start)} – {format_day_month(end, with_year=True)}"
 
     return templates.TemplateResponse(
         request=request,

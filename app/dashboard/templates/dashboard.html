@@ -6,12 +6,12 @@
 <div class="page-card">
     <div class="card-top">
         <div class="topbar">
-            <span class="who">Signed in as <strong>{{ username }}</strong></span>
+            <span class="who">Angemeldet als <strong>{{ username }}</strong></span>
             <div class="actions">
-                <a href="/recipes" class="pill pill--soft">Recipes</a>
-                <a href="/history" class="pill pill--soft">History</a>
+                <a href="/recipes" class="pill pill--soft">Rezepte</a>
+                <a href="/history" class="pill pill--soft">Verlauf</a>
                 <form method="post" action="/logout">
-                    <button type="submit" class="pill">Log out</button>
+                    <button type="submit" class="pill">Abmelden</button>
                 </form>
             </div>
         </div>
@@ -27,29 +27,29 @@
             {% endif %}
             <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}">
             {% if not is_today %}
-            <a href="/dashboard" class="nav-btn">Today</a>
+            <a href="/dashboard" class="nav-btn">Heute</a>
             {% endif %}
         </div>
-        <h2 class="page-title">{{ selected_label }}{% if is_today %} (Today){% endif %}</h2>
+        <h2 class="page-title">{{ selected_label }}{% if is_today %} (Heute){% endif %}</h2>
 
         <div class="log-panel">
             <form id="text-meal-form" class="log-form">
-                <input type="text" id="meal-text-input" placeholder="e.g. grilled chicken breast with rice" required>
-                <button type="submit" id="text-submit-btn">Log</button>
+                <input type="text" id="meal-text-input" placeholder="z.B. gegrilltes Hähnchen mit Reis" required>
+                <button type="submit" id="text-submit-btn">Loggen</button>
             </form>
             <p id="text-status" class="status"></p>
 
             <div class="log-form">
-                <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Record voice meal">Record Voice</button>
-                <span id="record-indicator" class="hidden">Recording…</span>
+                <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen">Sprachaufnahme</button>
+                <span id="record-indicator" class="hidden">Aufnahme läuft…</span>
             </div>
             <p id="voice-status" class="status"></p>
 
             <div id="clarify-box" class="clarify hidden">
                 <p id="clarify-question" class="clarify-question"></p>
                 <form id="clarify-form" class="log-form">
-                    <input type="text" id="clarify-input" placeholder="Your answer…" autocomplete="off" required>
-                    <button type="submit" id="clarify-submit-btn">Answer</button>
+                    <input type="text" id="clarify-input" placeholder="Deine Antwort…" autocomplete="off" required>
+                    <button type="submit" id="clarify-submit-btn">Antworten</button>
                 </form>
                 <p id="clarify-status" class="status"></p>
             </div>
@@ -70,11 +70,11 @@
             </div>
             <div class="totals-card">
                 <div class="value">{{ totals.fat }}g</div>
-                <div class="label">Fat</div>
+                <div class="label">Fett</div>
             </div>
         </div>
 
-        <h3>Meals{% if is_today %} Today{% endif %} ({{ totals.meal_count }})</h3>
+        <h3>Mahlzeiten{% if is_today %} heute{% endif %} ({{ totals.meal_count }})</h3>
         {% if meals %}
         <div class="row-list">
             {% for meal in meals %}
@@ -90,11 +90,11 @@
                 </div>
                 <span class="row-cal">{{ meal.calories if meal.calories is not none else "—" }} kcal</span>
                 <div class="row-actions">
-                    <button type="button" class="row-btn" data-action="edit">Edit</button>
+                    <button type="button" class="row-btn" data-action="edit">Bearbeiten</button>
                 </div>
             </div>
             <form class="row-edit hidden" data-meal-id="{{ meal.id }}">
-                <input type="text" class="row-edit__desc" value="{{ meal.description }}" placeholder="Description" required>
+                <input type="text" class="row-edit__desc" value="{{ meal.description }}" placeholder="Beschreibung" required>
                 <div class="row-edit__macros">
                     <div class="row-edit__field">
                         <label>kcal</label>
@@ -109,15 +109,15 @@
                         <input type="number" step="any" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
                     </div>
                     <div class="row-edit__field">
-                        <label>Fat</label>
+                        <label>Fett</label>
                         <input type="number" step="any" name="fat" value="{{ meal.fat if meal.fat is not none else '' }}">
                     </div>
                 </div>
                 <div class="row-edit__actions">
-                    <button type="submit" class="row-edit__save">Save</button>
-                    <button type="button" class="row-edit__cancel" data-action="cancel">Cancel</button>
+                    <button type="submit" class="row-edit__save">Speichern</button>
+                    <button type="button" class="row-edit__cancel" data-action="cancel">Abbrechen</button>
                     <span class="status"></span>
-                    <button type="button" class="row-edit__delete" data-action="delete" aria-label="Delete entry" title="Delete">
+                    <button type="button" class="row-edit__delete" data-action="delete" aria-label="Eintrag löschen" title="Löschen">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     </button>
                 </div>
@@ -125,7 +125,7 @@
             {% endfor %}
         </div>
         {% else %}
-        <p class="empty">No meals logged{% if is_today %} today{% else %} on this day{% endif %}.</p>
+        <p class="empty">Keine Mahlzeiten{% if is_today %} heute{% else %} an diesem Tag{% endif %} erfasst.</p>
         {% endif %}
     </div>
 </div>
@@ -157,7 +157,7 @@
     function handleLogResponse(data) {
         if (data.status === 'needs_clarification') {
             convo = data.messages || [];
-            clarifyQuestion.textContent = data.question || 'Can you add a bit more detail?';
+            clarifyQuestion.textContent = data.question || 'Kannst du etwas mehr Detail hinzufügen?';
             clarifyBox.classList.remove('hidden');
             clarifyInput.value = '';
             clarifyInput.focus();
@@ -178,7 +178,7 @@
         if (!text) return;
 
         btn.disabled = true;
-        status.textContent = 'Logging…';
+        status.textContent = 'Wird geloggt…';
         status.className = 'status';
         hideClarify();
         try {
@@ -208,7 +208,7 @@
 
         convo.push({ role: 'user', content: answer });
         clarifySubmitBtn.disabled = true;
-        clarifyStatus.textContent = 'Sending…';
+        clarifyStatus.textContent = 'Wird gesendet…';
         clarifyStatus.className = 'status';
         try {
             const res = await fetch('/meals/clarify', {
@@ -240,7 +240,7 @@
     recordBtn.addEventListener('click', async () => {
         if (!isRecording) {
             if (!navigator.mediaDevices || !window.MediaRecorder) {
-                voiceStatus.textContent = 'Voice recording requires HTTPS (or localhost) and browser support.';
+                voiceStatus.textContent = 'Sprachaufnahme erfordert HTTPS (oder localhost) und Browser-Unterstützung.';
                 voiceStatus.className = 'status error';
                 return;
             }
@@ -252,18 +252,18 @@
                 mediaRecorder.onstop = () => uploadRecording(new Blob(chunks, { type: 'audio/webm' }), stream);
                 mediaRecorder.start();
                 isRecording = true;
-                recordBtn.textContent = 'Stop Recording';
+                recordBtn.textContent = 'Aufnahme stoppen';
                 recordBtn.setAttribute('aria-pressed', 'true');
                 indicator.classList.remove('hidden');
                 voiceStatus.textContent = '';
             } catch (err) {
-                voiceStatus.textContent = 'Microphone permission denied or unavailable.';
+                voiceStatus.textContent = 'Mikrofon-Zugriff verweigert oder nicht verfügbar.';
                 voiceStatus.className = 'status error';
             }
         } else {
             mediaRecorder.stop();
             isRecording = false;
-            recordBtn.textContent = 'Record Voice';
+            recordBtn.textContent = 'Sprachaufnahme';
             recordBtn.setAttribute('aria-pressed', 'false');
             indicator.classList.add('hidden');
         }
@@ -272,7 +272,7 @@
     async function uploadRecording(blob, stream) {
         stream.getTracks().forEach((t) => t.stop());
         recordBtn.disabled = true;
-        voiceStatus.textContent = 'Uploading…';
+        voiceStatus.textContent = 'Wird hochgeladen…';
         voiceStatus.className = 'status';
         hideClarify();
         const formData = new FormData();
@@ -285,7 +285,7 @@
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || `Upload failed (${res.status})`);
+                throw new Error(err.detail || `Upload fehlgeschlagen (${res.status})`);
             }
             voiceStatus.textContent = '';
             handleLogResponse(await res.json());
@@ -328,8 +328,8 @@
         });
 
         form.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-            if (!confirm('Delete this entry?')) return;
-            status.textContent = 'Deleting…';
+            if (!confirm('Diesen Eintrag löschen?')) return;
+            status.textContent = 'Wird gelöscht…';
             status.className = 'status';
             try {
                 const res = await fetch(`/meals/${id}`, { method: 'DELETE' });
@@ -358,7 +358,7 @@
                 fat: num('fat'),
             };
             saveBtn.disabled = true;
-            status.textContent = 'Saving…';
+            status.textContent = 'Wird gespeichert…';
             status.className = 'status';
             try {
                 const res = await fetch(`/meals/${id}`, {
