@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}Recipes{% endblock %}
+
+{% block content %}
+<style>
+    .rp-hint { color: var(--text-subtle); font-size: 0.82rem; margin: 8px 0 0; }
+    .rp-active-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+    .rp-badge { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+    .rp-name { font-family: var(--serif); font-size: 1.25rem; margin: 4px 0 0; color: var(--text); }
+    .rp-servings { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .rp-servings label { font-size: 12px; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; }
+    input.rp-num {
+        width: 72px; padding: 8px 10px; border: 1px solid var(--border);
+        border-radius: var(--r-sm); font: inherit; font-size: 14px;
+        background: var(--surface-white); color: var(--text);
+    }
+    input.rp-num:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .rp-macros { font-size: 13px; color: var(--text-muted); }
+    .rp-macros strong { color: var(--accent-cal); font-weight: 600; }
+    .rp-ing-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+    .rp-ing {
+        display: flex; align-items: center; gap: 12px;
+        background: var(--surface-white); border-radius: 12px; padding: 10px 14px;
+    }
+    .rp-ing__main { flex: 1; min-width: 0; }
+    .rp-ing__desc { font-size: 14px; color: var(--text); }
+    .rp-ing__sub { font-size: 12px; color: var(--text-subtle); margin-top: 2px; }
+    .rp-ing__cal { font-size: 13px; font-weight: 500; color: var(--accent-cal); white-space: nowrap; }
+    .rp-ing__del {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px; padding: 0; border: none; background: none;
+        color: var(--text-subtle); border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1;
+    }
+    .rp-ing__del:hover { background: var(--accent-soft-2); color: var(--danger); }
+    .rp-total { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; }
+    .rp-card {
+        display: flex; flex-direction: column; gap: 10px;
+        background: var(--surface-white); border-radius: 14px; padding: 14px 16px;
+    }
+    .rp-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .rp-card__name { font-family: var(--serif); font-size: 1.05rem; color: var(--text); }
+    .rp-card__meta { font-size: 12px; color: var(--text-subtle); }
+    .rp-card__macros { font-size: 13px; color: var(--text-muted); }
+    .rp-track { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .rp-track label { font-size: 12px; color: var(--text-subtle); }
+    .rp-track button {
+        padding: 8px 16px; border: none; border-radius: var(--r-sm);
+        background: var(--accent); color: #fff; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+    }
+    .rp-track button:hover:not(:disabled) { background: var(--accent-hover); }
+    .rp-track button.rp-ghost { background: var(--surface-2); color: var(--text-muted); }
+    .rp-track button.rp-ghost:hover { background: var(--border); }
+    .rp-track button.rp-danger { background: none; color: var(--text-subtle); }
+    .rp-track button.rp-danger:hover { color: var(--danger); background: var(--accent-soft-2); }
+    .rp-track .status { flex-basis: 100%; margin: 0; }
+</style>
+
+<div class="page-card">
+    <div class="card-top">
+        <div class="topbar">
+            <span class="who">Signed in as <strong>{{ username }}</strong></span>
+            <div class="actions">
+                <a href="/dashboard" class="pill pill--soft">Dashboard</a>
+                <a href="/history" class="pill pill--soft">History</a>
+                <form method="post" action="/logout">
+                    <button type="submit" class="pill">Log out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <h2 class="page-title">Recipes</h2>
+
+        <div class="log-panel">
+            <div id="create-box">
+                <form id="create-form" class="log-form">
+                    <input type="text" id="recipe-name" placeholder="Recipe name, e.g. Spaghetti Bolognese" required>
+                    <input type="number" id="recipe-servings" class="rp-num" min="1" value="1" aria-label="Portions">
+                    <button type="submit" id="create-btn">Start</button>
+                </form>
+                <p class="rp-hint">Start recipe mode, then dictate ingredients by text or voice while you cook — you can name several at once ("200g pasta and 20g olive oil") and they're tracked separately. It stays on until you press Done.</p>
+                <p id="create-status" class="status"></p>
+            </div>
+
+            <div id="active-box" class="hidden">
+                <div class="rp-active-head">
+                    <div>
+                        <span class="rp-badge">● Recipe mode</span>
+                        <div id="active-name" class="rp-name"></div>
+                    </div>
+                    <button type="button" id="finish-btn" class="pill pill--soft">Done</button>
+                </div>
+
+                <div class="rp-servings">
+                    <label for="active-servings">Portions</label>
+                    <input type="number" id="active-servings" class="rp-num" min="1" value="1">
+                    <span id="active-per" class="rp-macros"></span>
+                </div>
+
+                <form id="ingredient-form" class="log-form">
+                    <input type="text" id="ingredient-input" placeholder="e.g. 200g pasta and 20g olive oil" autocomplete="off">
+                    <button type="submit" id="ingredient-btn">Add</button>
+                </form>
+                <div class="log-form">
+                    <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Record voice ingredient">Record Voice</button>
+                    <span id="record-indicator" class="hidden">Recording…</span>
+                </div>
+                <p id="ingredient-status" class="status"></p>
+
+                <div id="ingredient-list" class="rp-ing-list"></div>
+                <p class="rp-total" id="active-total"></p>
+            </div>
+        </div>
+
+        <h3>Saved recipes</h3>
+        <div id="recipes-list" class="row-list"></div>
+        <p id="recipes-empty" class="empty hidden">No recipes yet.</p>
+    </div>
+</div>
+
+<script>
+    const TODAY = "{{ today }}";
+
+    // ---------- helpers ----------
+    async function api(url, options) {
+        const res = await fetch(url, options);
+        if (!res.ok && res.status !== 204) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || `Request failed (${res.status})`);
+        }
+        return res.status === 204 ? null : res.json();
+    }
+    function macroLine(m) {
+        return `${Math.round(m.calories)} kcal · ${m.protein}g P · ${m.carbs}g C · ${m.fat}g F`;
+    }
+    function el(tag, cls, text) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text !== undefined) e.textContent = text;
+        return e;
+    }
+
+    // ---------- active recipe (recipe mode) ----------
+    let active = null;  // the RecipeRead currently being built, or null
+
+    const createBox = document.getElementById('create-box');
+    const activeBox = document.getElementById('active-box');
+    const activeName = document.getElementById('active-name');
+    const activeServings = document.getElementById('active-servings');
+    const activePer = document.getElementById('active-per');
+    const activeTotal = document.getElementById('active-total');
+    const ingredientList = document.getElementById('ingredient-list');
+
+    function enterRecipeMode(recipe) {
+        active = recipe;
+        createBox.classList.add('hidden');
+        activeBox.classList.remove('hidden');
+        renderActive();
+        document.getElementById('ingredient-input').focus();
+    }
+    function exitRecipeMode() {
+        active = null;
+        activeBox.classList.add('hidden');
+        createBox.classList.remove('hidden');
+        document.getElementById('create-form').reset();
+        document.getElementById('recipe-servings').value = 1;
+        loadRecipes();
+    }
+    function renderActive() {
+        activeName.textContent = active.name;
+        activeServings.value = active.servings;
+        activePer.innerHTML = active.ingredients.length
+            ? `per portion: <strong>${macroLine(active.per_portion)}</strong>`
+            : 'per portion: —';
+        activeTotal.textContent = active.ingredients.length
+            ? `Recipe total (${active.ingredients.length} ingredient${active.ingredients.length === 1 ? '' : 's'}): ${macroLine(active.total)}`
+            : '';
+        ingredientList.replaceChildren();
+        active.ingredients.forEach((ing) => {
+            const row = el('div', 'rp-ing');
+            const main = el('div', 'rp-ing__main');
+            main.appendChild(el('div', 'rp-ing__desc', ing.description));
+            const sub = [
+                ing.protein != null ? `${ing.protein}g P` : '—',
+                ing.carbs != null ? `${ing.carbs}g C` : '—',
+                ing.fat != null ? `${ing.fat}g F` : '—',
+            ].join(' · ');
+            main.appendChild(el('div', 'rp-ing__sub', sub));
+            row.appendChild(main);
+            row.appendChild(el('span', 'rp-ing__cal', ing.calories != null ? `${ing.calories} kcal` : '—'));
+            const del = el('button', 'rp-ing__del', '×');
+            del.title = 'Remove ingredient';
+            del.addEventListener('click', () => removeIngredient(ing.id));
+            row.appendChild(del);
+            ingredientList.appendChild(row);
+        });
+    }
+
+    // create recipe -> start recipe mode
+    document.getElementById('create-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('recipe-name').value.trim();
+        const servings = parseInt(document.getElementById('recipe-servings').value, 10) || 1;
+        const status = document.getElementById('create-status');
+        const btn = document.getElementById('create-btn');
+        if (!name) return;
+        btn.disabled = true;
+        status.textContent = 'Starting…';
+        status.className = 'status';
+        try {
+            const recipe = await api('/api/recipes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, servings }),
+            });
+            status.textContent = '';
+            enterRecipeMode(recipe);
+        } catch (err) {
+            status.textContent = err.message;
+            status.className = 'status error';
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    document.getElementById('finish-btn').addEventListener('click', exitRecipeMode);
+
+    // change portions
+    activeServings.addEventListener('change', async () => {
+        const servings = parseInt(activeServings.value, 10) || 1;
+        try {
+            active = await api(`/api/recipes/${active.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ servings }),
+            });
+            renderActive();
+        } catch (err) {
+            document.getElementById('ingredient-status').textContent = err.message;
+            document.getElementById('ingredient-status').className = 'status error';
+        }
+    });
+
+    // add ingredient by text
+    const ingredientStatus = document.getElementById('ingredient-status');
+    document.getElementById('ingredient-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('ingredient-input');
+        const btn = document.getElementById('ingredient-btn');
+        const text = input.value.trim();
+        if (!text) return;
+        btn.disabled = true;
+        ingredientStatus.textContent = 'Estimating…';
+        ingredientStatus.className = 'status';
+        try {
+            active = await api(`/api/recipes/${active.id}/ingredients/text`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+            });
+            input.value = '';
+            ingredientStatus.textContent = '';
+            renderActive();
+            input.focus();
+        } catch (err) {
+            ingredientStatus.textContent = err.message;
+            ingredientStatus.className = 'status error';
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    async function removeIngredient(ingredientId) {
+        try {
+            await api(`/api/recipes/${active.id}/ingredients/${ingredientId}`, { method: 'DELETE' });
+            active = await api(`/api/recipes/${active.id}`);
+            renderActive();
+        } catch (err) {
+            ingredientStatus.textContent = err.message;
+            ingredientStatus.className = 'status error';
+        }
+    }
+
+    // add ingredient by voice
+    const recordBtn = document.getElementById('record-btn');
+    const indicator = document.getElementById('record-indicator');
+    let mediaRecorder = null, chunks = [], isRecording = false;
+
+    recordBtn.addEventListener('click', async () => {
+        if (!isRecording) {
+            if (!navigator.mediaDevices || !window.MediaRecorder) {
+                ingredientStatus.textContent = 'Voice recording requires HTTPS (or localhost) and browser support.';
+                ingredientStatus.className = 'status error';
+                return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                chunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+                mediaRecorder.onstop = () => uploadIngredient(new Blob(chunks, { type: 'audio/webm' }), stream);
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.textContent = 'Stop Recording';
+                recordBtn.setAttribute('aria-pressed', 'true');
+                indicator.classList.remove('hidden');
+                ingredientStatus.textContent = '';
+                ingredientStatus.className = 'status';
+            } catch (err) {
+                ingredientStatus.textContent = 'Microphone permission denied or unavailable.';
+                ingredientStatus.className = 'status error';
+            }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            recordBtn.textContent = 'Record Voice';
+            recordBtn.setAttribute('aria-pressed', 'false');
+            indicator.classList.add('hidden');
+        }
+    });
+
+    async function uploadIngredient(blob, stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        recordBtn.disabled = true;
+        ingredientStatus.textContent = 'Transcribing…';
+        ingredientStatus.className = 'status';
+        const formData = new FormData();
+        formData.append('file', blob, 'recording.webm');
+        try {
+            active = await api(`/api/recipes/${active.id}/ingredients/audio`, { method: 'POST', body: formData });
+            ingredientStatus.textContent = '';
+            renderActive();
+        } catch (err) {
+            ingredientStatus.textContent = err.message;
+            ingredientStatus.className = 'status error';
+        } finally {
+            recordBtn.disabled = false;
+        }
+    }
+
+    // ---------- saved recipes ----------
+    const recipesList = document.getElementById('recipes-list');
+    const recipesEmpty = document.getElementById('recipes-empty');
+
+    async function loadRecipes() {
+        let recipes;
+        try {
+            recipes = await api('/api/recipes');
+        } catch (err) {
+            recipesList.replaceChildren();
+            recipesEmpty.textContent = err.message;
+            recipesEmpty.classList.remove('hidden');
+            return;
+        }
+        recipesList.replaceChildren();
+        recipesEmpty.classList.toggle('hidden', recipes.length > 0);
+        recipes.forEach((r) => recipesList.appendChild(recipeCard(r)));
+    }
+
+    function recipeCard(r) {
+        const card = el('div', 'rp-card');
+
+        const head = el('div', 'rp-card__head');
+        head.appendChild(el('span', 'rp-card__name', r.name));
+        head.appendChild(el('span', 'rp-card__meta', `${r.servings} portion${r.servings === 1 ? '' : 's'} · ${r.ingredients.length} ingredient${r.ingredients.length === 1 ? '' : 's'}`));
+        card.appendChild(head);
+
+        card.appendChild(el('div', 'rp-card__macros', r.ingredients.length
+            ? `Per portion: ${macroLine(r.per_portion)}`
+            : 'No ingredients yet'));
+
+        const track = el('div', 'rp-track');
+        track.appendChild(el('label', null, 'Track'));
+        const portions = el('input', 'rp-num');
+        portions.type = 'number'; portions.min = '0.25'; portions.step = '0.25'; portions.value = '1';
+        track.appendChild(portions);
+        const dateInput = el('input');
+        dateInput.type = 'date'; dateInput.value = TODAY; dateInput.max = TODAY;
+        track.appendChild(dateInput);
+        const logBtn = el('button', null, 'Log portion');
+        track.appendChild(logBtn);
+        const continueBtn = el('button', 'rp-ghost', 'Continue editing');
+        track.appendChild(continueBtn);
+        const delBtn = el('button', 'rp-danger', 'Delete');
+        track.appendChild(delBtn);
+        const status = el('p', 'status');
+        track.appendChild(status);
+        card.appendChild(track);
+
+        logBtn.addEventListener('click', async () => {
+            const p = parseFloat(portions.value);
+            if (!p || p <= 0) { status.textContent = 'Enter a portion count.'; status.className = 'status error'; return; }
+            logBtn.disabled = true;
+            status.textContent = 'Logging…'; status.className = 'status';
+            try {
+                await api(`/api/recipes/${r.id}/log`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ portions: p, log_date: dateInput.value || null }),
+                });
+                status.textContent = `Logged ${p} portion(s) → diary`;
+                status.className = 'status';
+            } catch (err) {
+                status.textContent = err.message; status.className = 'status error';
+            } finally {
+                logBtn.disabled = false;
+            }
+        });
+
+        continueBtn.addEventListener('click', () => enterRecipeMode(r));
+
+        delBtn.addEventListener('click', async () => {
+            if (!confirm(`Delete recipe "${r.name}"?`)) return;
+            try {
+                await api(`/api/recipes/${r.id}`, { method: 'DELETE' });
+                loadRecipes();
+            } catch (err) {
+                status.textContent = err.message; status.className = 'status error';
+            }
+        });
+
+        return card;
+    }
+
+    loadRecipes();
+</script>
+{% endblock %}

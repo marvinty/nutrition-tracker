@@ -33,6 +33,10 @@ _JSON_SHAPE = """{
 
 _QUESTION_SHAPE = """{"type": "question", "question": "..."}"""
 
+_INGREDIENTS_SHAPE = """[
+  {"description": "...", "calories": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
+]"""
+
 
 def build_system_prompt(allow_questions: bool) -> str:
     """System prompt for the nutrition analysis conversation.
@@ -66,6 +70,67 @@ def build_system_prompt(allow_questions: bool) -> str:
         "Use this shape:\n"
         f"{_JSON_SHAPE}"
     )
+
+
+def build_ingredients_prompt() -> str:
+    """System prompt for extracting one or more recipe ingredients at once.
+
+    Used by recipe mode: the user may name several ingredients in a single
+    utterance (e.g. "200g pasta and 20g olive oil"), which must be returned as
+    separate entries so they are tracked individually.
+    """
+    return (
+        "You extract recipe ingredients from a single utterance (typed or transcribed from speech).\n"
+        "The user may name ONE or SEVERAL ingredients at once, e.g. \"200g pasta and 20g olive oil\".\n"
+        "Split them into SEPARATE ingredients: one array entry per distinct ingredient the user named.\n"
+        "Do NOT decompose a single named dish (e.g. \"spaghetti bolognese\") into its components — "
+        "keep that as one entry.\n"
+        "For each ingredient estimate its nutrition (grams for protein/carbs/fat, kcal for calories) "
+        "from the stated amount and typical values. Never ask questions; always estimate.\n"
+        "Respond ONLY with a single valid JSON array and no text outside it, using this shape:\n"
+        f"{_INGREDIENTS_SHAPE}"
+    )
+
+
+def parse_ingredients(raw: str, fallback_text: str) -> list[NutritionResult]:
+    """Parse a raw LLM response into a list of ingredient NutritionResults.
+
+    Tolerates a bare array, a ``{"ingredients": [...]}`` wrapper, or a single
+    result object. Falls back to one best-effort entry (the raw text, null
+    macros) if the response is unparseable or empty.
+    """
+    fallback = [NutritionResult(fallback_text, None, None, None, None)]
+    cleaned = re.sub(r"```json?\s*|\s*```", "", raw or "").strip()
+    try:
+        data = json.loads(cleaned)
+    except (json.JSONDecodeError, TypeError):
+        return fallback
+
+    if isinstance(data, dict):
+        if isinstance(data.get("ingredients"), list):
+            data = data["ingredients"]
+        else:
+            data = [data]
+    if not isinstance(data, list):
+        return fallback
+
+    results: list[NutritionResult] = []
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        description = (item.get("description") or "").strip()
+        if not description:
+            continue
+        results.append(
+            NutritionResult(
+                description=description,
+                calories=item.get("calories"),
+                protein=item.get("protein"),
+                carbs=item.get("carbs"),
+                fat=item.get("fat"),
+            )
+        )
+    return results or fallback
 
 
 def _last_user_text(messages: list[dict]) -> str:
@@ -123,5 +188,15 @@ class LLMProvider(ABC):
 
         When ``allow_questions`` is False the provider must return a
         NutritionResult (estimating any missing values).
+        """
+        ...
+
+    @abstractmethod
+    async def extract_ingredients(self, text: str) -> list[NutritionResult]:
+        """
+        Split a single utterance into one or more recipe ingredients, each with
+        estimated nutrition. Used by recipe mode so that e.g. "200g pasta and
+        20g olive oil" is tracked as two separate ingredients. Never asks
+        questions; always estimates.
         """
         ...

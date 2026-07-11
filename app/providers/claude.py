@@ -2,8 +2,11 @@ from anthropic import AsyncAnthropic
 from app.providers.base import (
     AnalysisResult,
     LLMProvider,
+    NutritionResult,
+    build_ingredients_prompt,
     build_system_prompt,
     parse_analysis,
+    parse_ingredients,
 )
 from app.core.config import settings
 
@@ -23,3 +26,13 @@ class ClaudeProvider(LLMProvider):
         )
         raw = message.content[0].text
         return parse_analysis(raw, messages, allow_questions)
+
+    async def extract_ingredients(self, text: str) -> list[NutritionResult]:
+        message = await self._client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=512,
+            system=build_ingredients_prompt(),
+            messages=[{"role": "user", "content": text}],
+        )
+        raw = message.content[0].text
+        return parse_ingredients(raw, text)

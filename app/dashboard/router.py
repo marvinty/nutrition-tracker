@@ -54,6 +54,23 @@ async def dashboard(
     )
 
 
+@router.get("/recipes")
+async def recipes_page(
+    request: Request,
+    user: Optional[User] = Depends(resolve_user),
+):
+    if user is None:
+        return RedirectResponse(url="/login", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="recipes.html",
+        context={
+            "username": user.username,
+            "today": today_local().isoformat(),
+        },
+    )
+
+
 def _first_of_month(d: date) -> date:
     return d.replace(day=1)
 
