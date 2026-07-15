@@ -3,6 +3,8 @@ from app.models.meal import Meal  # noqa: F401 — must import to register with 
 from app.models.recipe import Recipe, RecipeIngredient  # noqa: F401 — register with Base.metadata
 from app.models.user import User  # noqa: F401 — must import to register with Base.metadata
 from app.models.auth_token import AuthToken  # noqa: F401 — must import to register with Base.metadata
+from app.models.macro_goal import MacroGoal  # noqa: F401 — must import to register with Base.metadata
+from app.models.voice_usage import VoiceUsage  # noqa: F401 — must import to register with Base.metadata
 from app.db.session import engine
 
 

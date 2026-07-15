@@ -9,6 +9,7 @@
             <span class="who">Angemeldet als <strong>{{ username }}</strong></span>
             <div class="actions">
                 <a href="/dashboard" class="pill pill--soft">Dashboard</a>
+                <a href="/goals" class="pill pill--soft">Ziele</a>
                 <a href="/recipes" class="pill pill--soft">Rezepte</a>
                 <form method="post" action="/logout">
                     <button type="submit" class="pill">Abmelden</button>
@@ -53,12 +54,22 @@
             </div>
         </div>
 
+        {% if adherence %}
+        <div class="adherence">
+            <strong>{{ adherence.protein_hit }}/{{ adherence.logged_days }}</strong> Tage Proteinziel erreicht
+            <span class="adherence-target">(≥ {{ adherence.protein_target }}g)</span>
+        </div>
+        {% endif %}
+
         <h3>Tage im Detail</h3>
         <div class="row-list">
             {% for day in series %}
             <div class="row-item row-item--link" onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'">
                 <span class="row-day">{{ day.date | de_short }}</span>
                 <span class="row-macros">{{ day.calories | int }} kcal · {{ day.protein }}g P · {{ day.carbs }}g C · {{ day.fat }}g F</span>
+                {% if adherence and day.meal_count > 0 and day.protein >= adherence.protein_target %}
+                <span class="goal-tick" title="Proteinziel erreicht">✓</span>
+                {% endif %}
                 <span class="row-count">{{ day.meal_count }} Mahlz.</span>
             </div>
             {% endfor %}
