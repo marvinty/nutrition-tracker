@@ -433,7 +433,32 @@
         .auth-footer a { color: var(--accent-cal); }
 
         @media (max-width: 600px) {
+            body { padding: 20px 12px; gap: 20px; }
+            .card-top { padding: 24px 18px 0; }
+            .card-body { padding: 16px 18px 28px; }
+            .card-body--auth { padding: 32px 22px; }
+            .page-card--narrow { width: 100%; }
+            .topbar .actions { flex-wrap: wrap; }
+            h2.page-title { font-size: 1.4rem; margin: 4px 0 20px; }
             .totals-grid { grid-template-columns: repeat(2, 1fr); }
+            /* Allow 2-col goals inputs to shrink within their grid cells */
+            .goals-field { min-width: 0; }
+            .goals-field input { width: 100%; }
+            /* Let flex text inputs shrink so their submit button stays visible */
+            .log-form input[type="text"],
+            .log-form input[type="password"] { min-width: 0; }
+
+            /* History rows: day + count on line 1, full macros on line 2 */
+            .row-item { flex-wrap: wrap; column-gap: 10px; row-gap: 2px; }
+            .row-day { width: auto; }
+            .row-macros { flex-basis: 100%; order: 3; }
+            .goal-tick { order: 2; }
+            .row-count { order: 2; }
+        }
+
+        @media (max-width: 400px) {
+            .totals-card .value { font-size: 22px; }
+            .totals-grid--compact .totals-card .value { font-size: 20px; }
         }
     </style>
 </head>

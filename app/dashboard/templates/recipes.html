@@ -54,6 +54,13 @@
     .rp-track button.rp-danger { background: none; color: var(--text-subtle); }
     .rp-track button.rp-danger:hover { color: var(--danger); background: var(--accent-soft-2); }
     .rp-track .status { flex-basis: 100%; margin: 0; }
+
+    @media (max-width: 600px) {
+        /* Erstellformular umbrechen: Name volle Breite, Portionen + Button darunter */
+        #create-form { flex-wrap: wrap; }
+        #create-form #recipe-name { flex-basis: 100%; }
+        .rp-track input[type="date"] { flex: 1; min-width: 130px; }
+    }
 </style>
 
 <div class="page-card">
