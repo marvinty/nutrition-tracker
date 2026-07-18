@@ -59,6 +59,7 @@ make stop   # bring down the stack
 | `POST` | `/audio` | Upload audio → transcribe → extract macros → save meal |
 | `POST` | `/meals` | Manually log a meal |
 | `GET`  | `/meals` | List meals (`?user_id=&filter_date=YYYY-MM-DD`) |
+| `GET`  | `/api/usage` | Today's AI credit budget (`used`, `limit`, `remaining`, `tier`, `system_available`) |
 | `GET`  | `/dashboard` | Web UI showing today's meals and macro totals |
 
 ### POST /audio
@@ -170,3 +171,36 @@ All settings are read from `.env` (see `.env.example`):
 | `LLM_PROVIDER` | `claude` | Active LLM provider (`claude`, `openai`, `gemini`) |
 | `DATABASE_URL` | `sqlite+aiosqlite:////data/nutrition.db` | SQLAlchemy async DB URL |
 | `APP_PORT` | `8000` | Host port exposed by Docker |
+| `TIER_DAILY_CREDITS` | `{"free": 20, "pro": 300}` | Daily AI credit budget per user tier |
+| `CREDIT_COSTS` | `{"text": 1, "clarify": 1, "voice": 3}` | Credits each action spends |
+| `GLOBAL_DAILY_CREDITS` | `500` | App-wide daily ceiling across all users |
+| `SIGNUP_CODE` | — | Invite code required to register; empty = open signup |
+
+### Cost protection
+
+Every endpoint that reaches an LLM or Whisper spends credits from a per-user daily
+budget that resets at local midnight. Actions are weighted — a voice log costs more
+than a text log because it pays for transcription *and* the analysis that follows.
+Exceeding the budget returns `429` with a German message that the UI shows as-is.
+
+The budget comes from the user's `tier` column (default `free`). There is no billing
+yet, so promote by hand:
+
+```bash
+sqlite3 /data/nutrition.db "UPDATE user SET tier='pro' WHERE username='marvin'"
+```
+
+Two further layers sit on top, because per-user limits alone cannot stop a burst of
+new signups or a client stuck in a retry loop:
+
+- **`GLOBAL_DAILY_CREDITS`** is an app-wide ceiling tracked under a `__global__` row in
+  the same table. Keep it well above normal usage — it is a circuit breaker, not a
+  rationing tool. When it trips, *every* user is locked out until local midnight; that
+  is the deliberate trade against a surprise bill. The 429 message is worded differently
+  from the per-user one so the two cases are distinguishable in the logs.
+- **`SIGNUP_CODE`** closes registration. Without it, anyone can create accounts and spend
+  free credits, and the ceiling only limits how bad that gets. Leave it unset only for
+  local dev — the app logs a warning on every boot while signup is open.
+
+Neither protects you from a bug in this app's own limiting code. Set a spend limit in the
+Anthropic Console as the backstop that does not depend on it.

@@ -6,7 +6,16 @@
 <div class="page-card">
     <div class="card-top">
         <div class="topbar">
-            <span class="who">Angemeldet als <strong>{{ username }}</strong></span>
+            <span class="who">
+                Angemeldet als <strong>{{ username }}</strong>
+                · <span id="credit-line" {% if not credits.system_available %}class="credit-line--blocked"{% endif %}>
+                    {%- if not credits.system_available -%}
+                    Systemlimit erreicht — heute keine KI-Analysen
+                    {%- else -%}
+                    noch {{ credits.remaining }} von {{ credits.limit }} Credits heute
+                    {%- endif -%}
+                </span>
+            </span>
             <div class="actions">
                 <a href="/goals" class="pill pill--soft">Ziele</a>
                 <a href="/recipes" class="pill pill--soft">Rezepte</a>
@@ -170,9 +179,27 @@
         clarifyStatus.className = 'status';
     }
 
+    // A completed log reloads the page, which re-renders the credit line server-side.
+    // A clarification round doesn't, so refresh it here — those cost credits too.
+    async function refreshCredits() {
+        try {
+            const res = await fetch('/api/usage');
+            if (!res.ok) return;
+            const u = await res.json();
+            const line = document.getElementById('credit-line');
+            line.textContent = u.system_available
+                ? `noch ${u.remaining} von ${u.limit} Credits heute`
+                : 'Systemlimit erreicht — heute keine KI-Analysen';
+            line.classList.toggle('credit-line--blocked', !u.system_available);
+        } catch (err) {
+            /* the line is cosmetic — leave the stale value rather than break logging */
+        }
+    }
+
     // Handle a LogResponse from /meals/text, /audio, or /meals/clarify.
     function handleLogResponse(data) {
         if (data.status === 'needs_clarification') {
+            refreshCredits();
             convo = data.messages || [];
             clarifyQuestion.textContent = data.question || 'Kannst du etwas mehr Detail hinzufügen?';
             clarifyBox.classList.remove('hidden');

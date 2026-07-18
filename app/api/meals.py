@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, require_credits
 from app.core.time import resolve_timestamp
 from app.db.session import get_session
 from app.models.user import User
@@ -53,7 +53,7 @@ async def log_meal_from_text(
     body: TextMealCreate,
     session: AsyncSession = Depends(get_session),
     provider: LLMProvider = Depends(get_provider),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_credits("text")),
 ) -> LogResponse:
     if not body.text.strip():
         raise HTTPException(status_code=400, detail="Text must not be empty")
@@ -72,7 +72,7 @@ async def clarify_meal(
     body: ClarifyRequest,
     session: AsyncSession = Depends(get_session),
     provider: LLMProvider = Depends(get_provider),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_credits("clarify")),
 ) -> LogResponse:
     if not body.messages:
         raise HTTPException(status_code=400, detail="Conversation must not be empty")

@@ -2,7 +2,7 @@ from datetime import date
 from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.deps import enforce_voice_quota
+from app.core.deps import require_credits
 from app.core.time import resolve_timestamp
 from app.db.session import get_session
 from app.models.user import User
@@ -21,7 +21,7 @@ async def process_audio(
     log_date: Optional[date] = Form(None),
     session: AsyncSession = Depends(get_session),
     provider: LLMProvider = Depends(get_provider),
-    user: User = Depends(enforce_voice_quota),
+    user: User = Depends(require_credits("voice")),
 ) -> LogResponse:
     # Validate log_date early so a bad date fails before transcription.
     try:

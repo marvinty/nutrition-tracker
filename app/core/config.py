@@ -8,7 +8,20 @@ class Settings(BaseSettings):
     llm_provider: Literal["claude", "openai", "gemini"] = "claude"
     whisper_provider: Literal["local", "openai"] = "local"
     whisper_model: str = "base"  # local only: tiny | base | small | medium | large
-    voice_daily_limit: int = 30  # max voice/transcription calls per user per local day
+    # Cost protection: each AI call spends credits from a daily per-user budget that
+    # depends on the user's tier. An unknown tier falls back to "free", so a typo in
+    # the DB can never hand out an unlimited budget.
+    tier_daily_credits: dict[str, int] = {"free": 20, "pro": 300}
+    # Voice costs more because it pays for transcription *and* the LLM analysis.
+    credit_costs: dict[str, int] = {"text": 1, "clarify": 1, "voice": 3}
+    # App-wide ceiling across all users. A circuit breaker, not a rationing tool:
+    # keep it well above the expected daily sum so it only trips when something is
+    # wrong (a signup burst, a client stuck in a retry loop). Tripping it locks out
+    # every user until local midnight — the deliberate trade against a surprise bill.
+    global_daily_credits: int = 500
+    # Invite code required to register. Empty means registration is open, which the
+    # app warns about at startup.
+    signup_code: str = ""
     database_url: str = "sqlite+aiosqlite:////data/nutrition.db"
     app_timezone: str = "Europe/Berlin"  # local tz for day boundaries and display
     app_port: int = 8000
