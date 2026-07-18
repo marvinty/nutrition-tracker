@@ -26,6 +26,7 @@ from app.services.goal_service import (
     get_goal,
     period_adherence,
 )
+from app.services.usage_service import get_credit_status
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
@@ -51,6 +52,9 @@ async def dashboard(
     totals = await get_daily_totals(session, user_id=user.username, for_date=selected)
     goal = await get_goal(session, user.username)
     progress = build_progress(totals, goal)
+    # Rendered server-side so the credit line is right on first paint; the page
+    # reloads after every completed log, so it stays current on its own.
+    credits = await get_credit_status(session, user.username, user.tier)
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
@@ -65,6 +69,7 @@ async def dashboard(
             "next_date": None if is_today else (selected + timedelta(days=1)).isoformat(),
             "today": today.isoformat(),
             "username": user.username,
+            "credits": credits,
         },
     )
 

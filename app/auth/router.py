@@ -11,6 +11,7 @@ from app.services.auth_service import (
     create_token,
     create_user,
     delete_token,
+    signup_code_ok,
 )
 
 # Search auth templates first, plus the dashboard templates for the shared base.html.
@@ -62,7 +63,11 @@ async def login(
 
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(request=request, name="register.html", context={})
+    return templates.TemplateResponse(
+        request=request,
+        name="register.html",
+        context={"needs_code": bool(settings.signup_code)},
+    )
 
 
 @router.post("/register")
@@ -70,14 +75,29 @@ async def register(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
+    signup_code: str = Form(default=""),
     session: AsyncSession = Depends(get_session),
 ):
+    # Closing signup is the only thing that stops someone creating accounts in bulk to
+    # farm free credits; the per-user and global credit limits only cap the damage.
+    needs_code = bool(settings.signup_code)
+    if not signup_code_ok(signup_code):
+        return templates.TemplateResponse(
+            request=request,
+            name="register.html",
+            context={"error": "Ungültiger Einladungscode.", "needs_code": True},
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+
     username = username.strip()
     if not username or not password:
         return templates.TemplateResponse(
             request=request,
             name="register.html",
-            context={"error": "Benutzername und Passwort sind erforderlich."},
+            context={
+                "error": "Benutzername und Passwort sind erforderlich.",
+                "needs_code": needs_code,
+            },
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     try:
@@ -86,7 +106,10 @@ async def register(
         return templates.TemplateResponse(
             request=request,
             name="register.html",
-            context={"error": "Dieser Benutzername ist bereits vergeben."},
+            context={
+                "error": "Dieser Benutzername ist bereits vergeben.",
+                "needs_code": needs_code,
+            },
             status_code=status.HTTP_409_CONFLICT,
         )
     token = await create_token(session, user)

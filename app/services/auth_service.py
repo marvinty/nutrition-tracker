@@ -60,6 +60,17 @@ async def get_user_by_token(session: AsyncSession, token: str) -> Optional[User]
     return result.scalar_one_or_none()
 
 
+def signup_code_ok(provided: str) -> bool:
+    """Whether ``provided`` unlocks registration.
+
+    An empty ``settings.signup_code`` means signup is open (dev default); the app logs
+    a warning at startup so that is a choice rather than an accident.
+    """
+    if not settings.signup_code:
+        return True
+    return provided.strip() == settings.signup_code
+
+
 async def delete_token(session: AsyncSession, token: str) -> None:
     result = await session.execute(select(AuthToken).where(AuthToken.token == token))
     auth_token = result.scalar_one_or_none()
