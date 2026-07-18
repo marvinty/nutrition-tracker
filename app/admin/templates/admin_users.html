@@ -1,0 +1,58 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Nutzer — Admin{% endblock %}
+
+{% block content %}
+<div class="page-card">
+    <div class="admin-bar">
+        <div class="brand">Nutrition Tracker <span class="tag">Admin</span></div>
+        <div class="actions">
+            <a class="pill is-active" href="/admin/users">Nutzer</a>
+            <span class="who">{{ admin_name }}</span>
+            <form method="post" action="/admin/logout">
+                <button type="submit" class="pill">Abmelden</button>
+            </form>
+        </div>
+    </div>
+    <div class="card-body">
+        <h2 class="page-title">Nutzer</h2>
+        {% if users %}
+        <div class="table-wrap">
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>Benutzername</th>
+                        <th>Tarif</th>
+                        <th>Registriert</th>
+                        <th class="num">Mahlzeiten</th>
+                        <th>Letzte Aktivität</th>
+                        <th class="num">Credits heute</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td class="name">{{ u.username }}</td>
+                        <td><span class="tier tier--{{ u.tier }}">{{ u.tier }}</span></td>
+                        <td>{{ u.created_at | de_date }}</td>
+                        <td class="num">{{ u.meal_count }}</td>
+                        <td>
+                            {% if u.last_meal_at %}
+                            {{ u.last_meal_at | de_date }}, {{ u.last_meal_at | localtime }}
+                            {% else %}
+                            <span class="muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="num">{{ u.credits_used }} / {{ u.credit_limit }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="count-note">{{ users | length }} Nutzer insgesamt</p>
+        {% else %}
+        <p class="empty">Noch keine registrierten Nutzer.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

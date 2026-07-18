@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     session_ttl_days: int = 30
     cookie_secure: bool = False  # set True in production (HTTPS)
 
+    # Admin panel (/admin). Separate credentials, table and cookie from app users.
+    # Setting both env vars creates the admin on startup, or resets its password
+    # if it already exists — the recovery path for a deployment with no shell.
+    admin_username: str = ""
+    admin_password: str = ""
+    admin_session_cookie_name: str = "admin_session"
+    admin_session_ttl_days: int = 7  # shorter-lived than a user session
+
     model_config = {"env_file": ".env", "case_sensitive": False}
 
 
