@@ -51,7 +51,7 @@ async def login(
         return templates.TemplateResponse(
             request=request,
             name="login.html",
-            context={"error": "Invalid username or password."},
+            context={"error": "Benutzername oder Passwort ist ungültig."},
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
     token = await create_token(session, user)
@@ -77,7 +77,7 @@ async def register(
         return templates.TemplateResponse(
             request=request,
             name="register.html",
-            context={"error": "Username and password are required."},
+            context={"error": "Benutzername und Passwort sind erforderlich."},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     try:
@@ -86,7 +86,7 @@ async def register(
         return templates.TemplateResponse(
             request=request,
             name="register.html",
-            context={"error": "Username is already taken."},
+            context={"error": "Dieser Benutzername ist bereits vergeben."},
             status_code=status.HTTP_409_CONFLICT,
         )
     token = await create_token(session, user)
