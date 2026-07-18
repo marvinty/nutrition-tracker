@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrition Tracker — Essen loggen, ohne Formulare{% endblock %}
+
+{% block extra_head %}
+<style>
+    .landing { width: 860px; max-width: 100%; display: flex; flex-direction: column; gap: 28px; }
+    /* .page-card is pinned to 640px for the app screens; the landing page is wider. */
+    .landing .page-card { width: 100%; }
+
+    .landing-hero { text-align: center; padding: 56px 40px 48px; }
+    .landing-hero h1 {
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: 2.4rem;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+        margin: 0 0 16px;
+        color: var(--text);
+    }
+    .landing-hero .sub {
+        font-size: 1.05rem;
+        color: var(--text-muted);
+        margin: 0 auto 32px;
+        max-width: 46ch;
+    }
+
+    .landing-cta { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .landing-btn {
+        display: inline-flex;
+        align-items: center;
+        height: 46px;
+        padding: 0 30px;
+        border-radius: var(--r-sm);
+        background: var(--accent);
+        color: #fff;
+        font-size: 0.98rem;
+        font-weight: 500;
+        text-decoration: none;
+    }
+    .landing-btn:hover { background: var(--accent-hover); }
+    .landing-note { font-size: 0.85rem; color: var(--text-subtle); margin: 0; }
+    .landing-note a { color: var(--accent-cal); }
+
+    .landing-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .landing-feature { background: var(--surface-2); border-radius: var(--r-md); padding: 24px 26px; }
+    .landing-feature h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    .landing-feature p { margin: 0; font-size: 0.92rem; color: var(--text-muted); }
+    .landing-feature .quote { color: var(--accent-text); font-style: italic; }
+
+    .landing-outro { text-align: center; padding: 40px; }
+    .landing-outro h2 { font-size: 1.5rem; margin: 0 0 24px; }
+
+    @media (max-width: 600px) {
+        .landing-hero { padding: 36px 22px 32px; }
+        .landing-hero h1 { font-size: 1.8rem; }
+        .landing-hero .sub { font-size: 0.98rem; margin-bottom: 26px; }
+        .landing-features { grid-template-columns: 1fr; }
+        .landing-feature { padding: 20px 22px; }
+        .landing-outro { padding: 32px 22px; }
+        .landing-outro h2 { font-size: 1.25rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="landing">
+    <div class="page-card landing-hero">
+        <h1>Sag einfach, was du gegessen hast.</h1>
+        <p class="sub">
+            Kalorien und Makros landen im Log, ohne dass du dich durch Datenbanken
+            und Portionsgrößen klickst. Sprich es ein oder tipp einen Satz — den Rest
+            übernimmt die App.
+        </p>
+        <div class="landing-cta">
+            <a class="landing-btn" href="/register">Jetzt registrieren</a>
+            <p class="landing-note">Zugang aktuell nur mit Invite-Code.</p>
+            <p class="landing-note">Schon dabei? <a href="/login">Anmelden</a></p>
+        </div>
+    </div>
+
+    <div class="page-card">
+        <div class="card-body" style="padding-top: 32px;">
+            <div class="landing-features">
+                <div class="landing-feature">
+                    <h3>Per Sprache loggen</h3>
+                    <p>
+                        Aufnahme starten, Mahlzeit sagen, fertig. Die Aufnahme wird
+                        transkribiert und direkt in Kalorien und Makros übersetzt.
+                    </p>
+                </div>
+                <div class="landing-feature">
+                    <h3>Oder einfach tippen</h3>
+                    <p>
+                        <span class="quote">„gegrilltes Hähnchen mit Reis"</span> reicht.
+                        Keine Dropdowns, keine Suche, keine Gramm-Angaben nötig.
+                    </p>
+                </div>
+                <div class="landing-feature">
+                    <h3>Fragt nach, statt zu raten</h3>
+                    <p>
+                        Fehlt eine wichtige Angabe, kommt eine kurze Rückfrage —
+                        statt einer erfundenen Zahl in deinem Tagesprotokoll.
+                    </p>
+                </div>
+                <div class="landing-feature">
+                    <h3>Ziele im Blick</h3>
+                    <p>
+                        Setz dir Makroziele und sieh den Fortschritt pro Tag,
+                        plus Auswertung über Woche und Monat.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-card landing-outro">
+        <h2>Bereit?</h2>
+        <div class="landing-cta">
+            <a class="landing-btn" href="/register">Jetzt registrieren</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

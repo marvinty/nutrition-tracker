@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.dashboard.router import router as dashboard_router
 from app.db.init_db import init_db
 from app.db.session import async_session_maker
+from app.landing.router import router as landing_router
 from app.services.admin_service import ensure_bootstrap_admin
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Nutrition Tracker API", lifespan=lifespan)
+app.include_router(landing_router)
 app.include_router(auth_router)
 app.include_router(api_router)
 app.include_router(dashboard_router)
