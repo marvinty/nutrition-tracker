@@ -1,5 +1,5 @@
 from pathlib import Path
-from fastapi import APIRouter, Depends, Form, Request, status
+from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +11,11 @@ from app.services.auth_service import (
     create_token,
     create_user,
     delete_token,
-    signup_code_ok,
+)
+from app.services.signup_code_service import (
+    refund_code,
+    signup_allowed,
+    signup_requires_code,
 )
 
 # Search auth templates first, plus the dashboard templates for the shared base.html.
@@ -62,11 +66,20 @@ async def login(
 
 
 @router.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request) -> HTMLResponse:
+async def register_page(
+    request: Request,
+    code: str = Query(default=""),
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    # ``code`` comes from the invite link the admin panel builds, so someone following
+    # it only has to pick a username and password.
     return templates.TemplateResponse(
         request=request,
         name="register.html",
-        context={"needs_code": bool(settings.signup_code)},
+        context={
+            "needs_code": await signup_requires_code(session),
+            "signup_code": code.strip(),
+        },
     )
 
 
@@ -80,15 +93,10 @@ async def register(
 ):
     # Closing signup is the only thing that stops someone creating accounts in bulk to
     # farm free credits; the per-user and global credit limits only cap the damage.
-    needs_code = bool(settings.signup_code)
-    if not signup_code_ok(signup_code):
-        return templates.TemplateResponse(
-            request=request,
-            name="register.html",
-            context={"error": "Ungültiger Einladungscode.", "needs_code": True},
-            status_code=status.HTTP_403_FORBIDDEN,
-        )
+    needs_code = await signup_requires_code(session)
 
+    # Cheap validation first: redeeming a code burns one of its seats, and a rejected
+    # form must not cost the invite a seat the admin has to make up for.
     username = username.strip()
     if not username or not password:
         return templates.TemplateResponse(
@@ -97,18 +105,36 @@ async def register(
             context={
                 "error": "Benutzername und Passwort sind erforderlich.",
                 "needs_code": needs_code,
+                "signup_code": signup_code.strip(),
             },
             status_code=status.HTTP_400_BAD_REQUEST,
         )
+
+    if not await signup_allowed(session, signup_code):
+        return templates.TemplateResponse(
+            request=request,
+            name="register.html",
+            context={
+                "error": "Ungültiger oder bereits aufgebrauchter Einladungscode.",
+                "needs_code": True,
+                "signup_code": signup_code.strip(),
+            },
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+
     try:
         user = await create_user(session, username, password)
     except UsernameTakenError:
+        # The seat was already taken from the code above; hand it back, or an invite
+        # for 20 people would run out early on typos and retries.
+        await refund_code(session, signup_code)
         return templates.TemplateResponse(
             request=request,
             name="register.html",
             context={
                 "error": "Dieser Benutzername ist bereits vergeben.",
                 "needs_code": needs_code,
+                "signup_code": signup_code.strip(),
             },
             status_code=status.HTTP_409_CONFLICT,
         )

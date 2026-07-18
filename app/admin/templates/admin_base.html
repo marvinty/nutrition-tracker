@@ -147,6 +147,89 @@
             color: var(--text-muted);
         }
         .tier--pro { background: var(--accent-soft); color: var(--accent-text); }
+        .tier--active { background: #e2efe4; color: #3f6b48; }
+        .tier--used_up, .tier--expired, .tier--revoked { background: var(--surface-2); color: var(--text-subtle); }
+
+        h3 { font-family: var(--serif); font-weight: 500; font-size: 1rem; margin: 28px 0 12px; }
+        code, .code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.9rem;
+            letter-spacing: 0.04em;
+        }
+        .code {
+            background: var(--surface-2);
+            border-radius: var(--r-sm);
+            padding: 3px 9px;
+            color: var(--text);
+        }
+
+        /* Settings panel (registration open/closed) */
+        .panel {
+            background: var(--surface-2);
+            border-radius: var(--r-md);
+            padding: 16px 20px;
+            margin-bottom: 4px;
+        }
+        .panel-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .panel-row form { margin: 0; }
+        .panel-note { font-size: 0.82rem; color: var(--text-subtle); margin: 4px 0 0; max-width: 46ch; }
+        .panel-note--warn { color: var(--danger); margin-top: 12px; max-width: none; }
+
+        .btn {
+            padding: 9px 18px;
+            border: none;
+            border-radius: var(--r-sm);
+            font: inherit;
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn--primary { background: var(--accent); color: #fff; }
+        .btn--primary:hover { background: var(--accent-hover); }
+        .btn--ghost { background: var(--surface-white); border: 1px solid var(--border); color: var(--text-muted); }
+        .btn--ghost:hover { background: var(--surface); }
+
+        /* Create-code form */
+        .invite-form { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; }
+        .invite-field { display: flex; flex-direction: column; gap: 4px; }
+        .invite-field--wide { flex: 1; min-width: 180px; }
+        .invite-field label {
+            font-size: 11px;
+            color: var(--text-subtle);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .invite-field input {
+            padding: 10px 13px;
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            font: inherit;
+            font-size: 0.9rem;
+            background: var(--surface-white);
+            color: var(--text);
+            width: 100%;
+        }
+        .invite-field input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+        .row-btn {
+            border: none;
+            background: none;
+            color: var(--text-subtle);
+            font: inherit;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+        }
+        .row-btn:hover { background: var(--surface-2); color: var(--text); }
+        table.data td form { margin: 0; }
         .count-note { font-size: 0.82rem; color: var(--text-subtle); margin: 16px 0 0; }
 
         .auth-title { font-size: 24px; margin: 0 0 6px; }
@@ -183,6 +266,9 @@
             .card-body--auth { padding: 32px 22px; }
             .page-card--narrow { width: 100%; }
             h2.page-title { font-size: 1.25rem; }
+            .panel-row { flex-direction: column; align-items: stretch; }
+            .invite-form { flex-direction: column; align-items: stretch; }
+            .invite-form .btn { width: 100%; }
         }
     </style>
 </head>

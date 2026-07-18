@@ -16,6 +16,8 @@ from app.services.admin_service import (
     delete_admin_token,
     list_users_with_stats,
 )
+from app.services.settings_service import is_signup_closed, set_signup_closed
+from app.services.signup_code_service import create_code, list_codes, revoke_code
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
@@ -23,6 +25,14 @@ templates.env.filters["de_date"] = lambda dt: format_day_month(
     to_local(dt).date(), with_year=True
 )
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+# German labels for the statuses computed in signup_code_service.
+CODE_STATUS_LABELS = {
+    "active": "aktiv",
+    "used_up": "aufgebraucht",
+    "expired": "abgelaufen",
+    "revoked": "deaktiviert",
+}
 
 COOKIE_MAX_AGE = settings.admin_session_ttl_days * 24 * 60 * 60
 
@@ -96,6 +106,83 @@ async def admin_users(
         name="admin_users.html",
         context={
             "admin_name": admin.username,
+            "active_page": "users",
             "users": users,
         },
     )
+
+
+@router.get("/invites")
+async def admin_invites(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    admin: Optional[AdminUser] = Depends(resolve_admin),
+):
+    if admin is None:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_invites.html",
+        context={
+            "admin_name": admin.username,
+            "active_page": "invites",
+            "codes": await list_codes(session),
+            "status_labels": CODE_STATUS_LABELS,
+            "signup_closed": await is_signup_closed(session),
+            "env_code_set": bool(settings.signup_code),
+            # Invite links must point at the public host, not at whatever the admin
+            # typed, so they still work when pasted into a chat.
+            "base_url": str(request.base_url).rstrip("/"),
+        },
+    )
+
+
+@router.post("/invites")
+async def admin_create_invite(
+    request: Request,
+    max_uses: int = Form(...),
+    label: str = Form(default=""),
+    valid_days: str = Form(default=""),
+    session: AsyncSession = Depends(get_session),
+    admin: Optional[AdminUser] = Depends(resolve_admin),
+):
+    if admin is None:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    try:
+        days = int(valid_days) if valid_days.strip() else None
+        await create_code(
+            session,
+            max_uses=max_uses,
+            label=label,
+            valid_days=days,
+            created_by=admin.username,
+        )
+    except ValueError:
+        # Bad input only ever comes from bypassing the form's own min/type checks, so a
+        # plain redirect back to the page is enough — no error state to design for.
+        pass
+    return RedirectResponse(url="/admin/invites", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/invites/{code_id}/revoke")
+async def admin_revoke_invite(
+    code_id: int,
+    session: AsyncSession = Depends(get_session),
+    admin: Optional[AdminUser] = Depends(resolve_admin),
+):
+    if admin is None:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    await revoke_code(session, code_id)
+    return RedirectResponse(url="/admin/invites", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/invites/signup-toggle")
+async def admin_toggle_signup(
+    closed: str = Form(default=""),
+    session: AsyncSession = Depends(get_session),
+    admin: Optional[AdminUser] = Depends(resolve_admin),
+):
+    if admin is None:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    await set_signup_closed(session, closed == "1")
+    return RedirectResponse(url="/admin/invites", status_code=status.HTTP_303_SEE_OTHER)

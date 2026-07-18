@@ -13,7 +13,8 @@
             <input type="text" name="username" placeholder="Benutzername" autocomplete="username" required>
             <input type="password" name="password" placeholder="Passwort" autocomplete="new-password" required>
             {% if needs_code %}
-            <input type="text" name="signup_code" placeholder="Einladungscode" autocomplete="off" required>
+            <input type="text" name="signup_code" placeholder="Einladungscode" autocomplete="off"
+                   value="{{ signup_code or '' }}" required>
             {% endif %}
             <button type="submit">Registrieren</button>
         </form>

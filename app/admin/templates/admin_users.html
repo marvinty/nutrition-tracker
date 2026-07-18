@@ -4,16 +4,7 @@
 
 {% block content %}
 <div class="page-card">
-    <div class="admin-bar">
-        <div class="brand">Nutrition Tracker <span class="tag">Admin</span></div>
-        <div class="actions">
-            <a class="pill is-active" href="/admin/users">Nutzer</a>
-            <span class="who">{{ admin_name }}</span>
-            <form method="post" action="/admin/logout">
-                <button type="submit" class="pill">Abmelden</button>
-            </form>
-        </div>
-    </div>
+    {% include "_admin_bar.html" %}
     <div class="card-body">
         <h2 class="page-title">Nutzer</h2>
         {% if users %}
