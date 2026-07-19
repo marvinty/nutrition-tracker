@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ{% endblock %}
+
+{% block extra_head %}
+<style>
+    .faq-card{gap:0;padding-top:8px;padding-bottom:8px}
+    .faq-card + .faq-card{margin-top:20px}
+    .faq-lede{max-width:640px;color:var(--text-muted);margin-bottom:8px}
+
+    /* Accordion. Native details/summary — no JS, keyboard and screen readers work
+       out of the box. The chevron replaces the default marker. */
+    .faq-q{border-top:1px solid var(--border)}
+    .faq-q:first-of-type{border-top:none}
+    .faq-q > summary{
+        display:flex;align-items:center;justify-content:space-between;gap:16px;
+        padding:20px 0;cursor:pointer;list-style:none;
+        font-family:var(--serif);font-size:20px;font-weight:500;letter-spacing:-.01em;
+        line-height:1.3;color:var(--text)}
+    .faq-q > summary::-webkit-details-marker{display:none}
+    .faq-q > summary:hover{color:var(--accent)}
+    .faq-q > summary .chev{flex:none;color:var(--text-subtle);transition:transform .2s,color .2s}
+    .faq-q[open] > summary .chev{transform:rotate(180deg);color:var(--accent)}
+    .faq-q[open] > summary{color:var(--accent)}
+    .faq-a{padding:0 0 22px;max-width:660px;color:var(--text-muted)}
+    .faq-a p + p{margin-top:12px}
+    .faq-a strong{color:var(--text);font-weight:600}
+
+    /* Credit cost table — a list, not a <table>: three rows do not need one, and
+       it reflows on mobile without a horizontal scroller. */
+    .cost-list{list-style:none;margin:14px 0;border:1px solid var(--border);
+        border-radius:var(--r-btn);overflow:hidden;background:var(--surface)}
+    .cost-list li{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+        padding:11px 16px}
+    .cost-list li + li{border-top:1px solid var(--border)}
+    .cost-list .cost{font-family:var(--serif);font-variant-numeric:tabular-nums;
+        color:var(--accent);font-weight:500;white-space:nowrap}
+
+    .faq-foot{margin-top:28px;color:var(--text-subtle);font-size:14px}
+
+    @media(max-width:640px){
+        .faq-q > summary{font-size:18px;padding:17px 0}
+        .cost-list li{flex-wrap:wrap;row-gap:2px}
+    }
+</style>
+{% endblock %}
+
+{% block nav %}
+{% if username %}{{ super() }}{% else %}
+{# Signed-out variant: the app pages behind the normal nav links are not reachable
+   without a session, so this drops them and offers the two auth entry points. #}
+<nav id="nav">
+    <div class="wrap nav-in">
+        <a class="brand" href="/">
+            <span class="dot">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
+            </span>
+            Nutrition&nbsp;Tracker
+        </a>
+        <div class="nav-actions">
+            <a class="nav-link" href="/login">Anmelden</a>
+            <a class="btn sm" href="/register">Registrieren</a>
+        </div>
+    </div>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Häufige Fragen</span>
+        <h1 class="page-h">Wie das <em>funktioniert</em></h1>
+    </div>
+</div>
+
+<p class="faq-lede">Was die App kann, wie das Erfassen abläuft und wofür Credits draufgehen.</p>
+
+<h2 class="sub-h">Funktionen</h2>
+<div class="card feat faq-card">
+    <details class="faq-q">
+        <summary>
+            Wie erfasse ich eine Mahlzeit?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Per Sprache oder per Text — beides in natürlicher Sprache, keine Dropdowns und keine Gramm-Angaben nötig. „Zwei Spiegeleier mit einer Scheibe Vollkornbrot" reicht. Die Sprachaufnahme läuft direkt im Browser, wird transkribiert und dann genauso ausgewertet wie ein getippter Satz.</p>
+            <p>Fotos werden aktuell nicht unterstützt.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Warum stellt die App mir eine Rückfrage?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Wenn eine Angabe fehlt, die das Ergebnis deutlich verändert, fragt die App kurz nach, statt eine Zahl zu erfinden. Höchstens zwei Rückfragen pro Eintrag — danach schätzt sie in jedem Fall.</p>
+            <p>Jede beantwortete Rückfrage kostet Credits, siehe unten.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Kann ich Einträge korrigieren?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Ja. Jede Mahlzeit lässt sich direkt in der Liste bearbeiten oder löschen — Kalorien und Makros trägst du dabei von Hand ein. Das kostet keine Credits.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Wie funktionieren Ziele und Verlauf?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Unter <a href="/goals">Ziele</a> setzt du Tageswerte für kcal, Protein, Carbs und Fett. Leer lassen heißt: kein Ziel für dieses Makro. Auf dem Dashboard erscheint der Fortschritt als Balken.</p>
+            <p>Der <a href="/history">Verlauf</a> zeigt Woche und Monat mit den Werten pro Tag und einer Summe für den Zeitraum.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Wofür sind Rezepte gut?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Für alles, was du öfter isst. Du legst ein Rezept einmal an und fügst die Zutaten per Text oder Sprache hinzu; die App rechnet die Makros pro Portion aus. Danach loggst du es mit einem Klick als Mahlzeit.</p>
+            <p>Das Anlegen der Zutaten kostet Credits, das spätere Loggen eines gespeicherten Rezepts nicht — deshalb lohnt sich ein Rezept für wiederkehrende Mahlzeiten doppelt.</p>
+        </div>
+    </details>
+</div>
+
+<h2 class="sub-h">Credits</h2>
+<div class="card feat faq-card">
+    <details class="faq-q">
+        <summary>
+            Was sind Credits?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Ein Tagesbudget für die KI-gestützten Aktionen. Jede Auswertung durch die KI kostet echtes Geld, deshalb ist sie gedeckelt.</p>
+            <p><strong>Kostenlos</strong> sind dagegen: Einträge von Hand bearbeiten oder löschen, Ziele setzen, den Verlauf ansehen und ein gespeichertes Rezept als Mahlzeit loggen.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Was kostet wie viel?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <ul class="cost-list">
+                <li><span>Mahlzeit per Text</span> <span class="cost">{{ credit_costs.text }}&nbsp;Credit{{ 's' if credit_costs.text != 1 }}</span></li>
+                <li><span>Rückfrage beantworten</span> <span class="cost">{{ credit_costs.clarify }}&nbsp;Credit{{ 's' if credit_costs.clarify != 1 }}</span></li>
+                <li><span>Mahlzeit per Sprache</span> <span class="cost">{{ credit_costs.voice }}&nbsp;Credit{{ 's' if credit_costs.voice != 1 }}</span></li>
+            </ul>
+            <p>Sprache kostet mehr, weil zwei Schritte bezahlt werden: erst die Transkription der Aufnahme, dann die Auswertung des Textes.</p>
+            <p>Für Rezept-Zutaten gelten dieselben Preise — Text {{ credit_costs.text }}, Sprache {{ credit_costs.voice }}.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Wie viele Credits habe ich pro Tag?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p><strong>Free:</strong> {{ tier_credits.free }} Credits pro Tag. <strong>Pro:</strong> {{ tier_credits.pro }} Credits pro Tag.</p>
+            <p>Dein aktueller Stand steht auf dem Dashboard über dem Eingabefeld.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Wann werden Credits zurückgesetzt?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Täglich um Mitternacht ({{ timezone }}). Das Budget startet dann wieder von vorn.</p>
+            <p>Nicht verbrauchte Credits verfallen — sie lassen sich nicht ansparen und aktuell auch nicht nachkaufen.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Ein Eintrag ist fehlgeschlagen, der Credit aber weg. Warum?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Credits werden abgebucht, bevor die Anfrage rausgeht. Ein Aufruf, der unterwegs scheitert, kostet deshalb trotzdem — die Kosten entstehen ja auch dann.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Ich habe noch Credits, Sprache geht trotzdem nicht?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Eine Aktion wird nur gestartet, wenn der Rest die vollen Kosten deckt. Mit {{ credit_costs.voice - 1 }} verbleibenden Credits lässt sich also keine Sprachaufnahme mehr auswerten ({{ credit_costs.voice }} Credits), eine Texteingabe dagegen schon.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Was heißt „Systemlimit für heute erreicht"?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Das liegt nicht an deinem Konto. Neben dem persönlichen Budget gibt es eine Obergrenze über alle Nutzer zusammen — eine Notbremse gegen unerwartete Kosten. Ist sie erreicht, pausieren die KI-Funktionen für alle bis Mitternacht.</p>
+            <p>Mahlzeiten von Hand eintragen funktioniert weiterhin.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Wie komme ich an mehr Credits?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Es gibt noch keine Bezahlfunktion. Der Pro-Tarif wird derzeit von Hand vergeben — melde dich einfach, wenn dir {{ tier_credits.free }} Credits am Tag zu knapp sind.</p>
+        </div>
+    </details>
+</div>
+
+<h2 class="sub-h">Konto</h2>
+<div class="card feat faq-card">
+    <details class="faq-q">
+        <summary>
+            Brauche ich einen Invite-Code?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Je nachdem, ob die Registrierung gerade offen ist. Das Feld auf der <a href="/register">Registrierungsseite</a> sagt dir, ob ein Code verlangt wird.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Warum muss ich meine E-Mail bestätigen?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Ohne bestätigte Adresse gäbe es keinen Weg, dein Passwort zurückzusetzen. Nach der Registrierung kannst du die App zunächst normal nutzen; bleibt die Adresse unbestätigt, wird das Konto nach kurzer Zeit gesperrt.</p>
+            <p>Die Sperre lässt sich jederzeit selbst aufheben: Bestätigungsmail erneut anfordern und den Link anklicken.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Passwort vergessen?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Über <a href="/forgot-password">Passwort zurücksetzen</a> schickt dir die App einen Link an deine bestätigte Adresse.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Wann endet ein Tag?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Um Mitternacht in {{ timezone }}. Diese Grenze gilt für alles: Tagesziele, Verlauf und das Zurücksetzen der Credits.</p>
+        </div>
+    </details>
+
+    <details class="faq-q">
+        <summary>
+            Wie genau sind die Nährwerte?
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="faq-a">
+            <p>Es sind Schätzungen. Die KI leitet Kalorien und Makros aus deiner Beschreibung ab — je genauer die Angabe, desto besser das Ergebnis. Für Trends über Wochen reicht das gut; als exakte Messung taugt es nicht.</p>
+            <p>Die App ist keine medizinische Beratung. Wenn du aus gesundheitlichen Gründen auf präzise Werte angewiesen bist, sprich mit einer Fachperson.</p>
+        </div>
+    </details>
+</div>
+
+{% if not username %}
+<p class="faq-foot">Noch offene Fragen? <a href="/register">Registrieren</a> und ausprobieren.</p>
+{% endif %}
+{% endblock %}

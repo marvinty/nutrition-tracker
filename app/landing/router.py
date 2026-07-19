@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from app.core.config import settings
 from app.core.csrf import register_csrf_field
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import resolve_user
@@ -35,4 +36,24 @@ async def landing(
         request=request,
         name="landing.html",
         context={"needs_code": await signup_requires_code(session)},
+    )
+
+
+@router.get("/faq", response_class=HTMLResponse)
+async def faq(request: Request, user: Optional[User] = Depends(resolve_user)):
+    # Deliberately unguarded: the credit rules are the main thing prospects want to
+    # read *before* signing up. `username` doubles as the switch for the signed-out
+    # nav variant in the template.
+    return templates.TemplateResponse(
+        request=request,
+        name="faq.html",
+        context={
+            "active_page": "faq",
+            "username": user.username if user else None,
+            # Passed through rather than written into the prose so the page cannot
+            # drift from the actual budgets when the config changes.
+            "tier_credits": settings.tier_daily_credits,
+            "credit_costs": settings.credit_costs,
+            "timezone": settings.app_timezone,
+        },
     )
