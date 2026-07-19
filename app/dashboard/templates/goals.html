@@ -2,57 +2,55 @@
 
 {% block title %}Makro-Ziele{% endblock %}
 
+{% block extra_head %}
+<style>
+    .goals-card{max-width:640px}
+    .goals-card .hint{margin-bottom:24px}
+    .goals-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .goals-actions{display:flex;align-items:center;gap:16px;margin-top:24px;flex-wrap:wrap}
+    .goals-actions .status{margin:0}
+    @media(max-width:560px){.goals-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page-card">
-    <div class="card-top">
-        <div class="topbar">
-            <span class="who">Angemeldet als <strong>{{ username }}</strong></span>
-            <div class="actions">
-                <a href="/dashboard" class="pill pill--soft">Dashboard</a>
-                <a href="/recipes" class="pill pill--soft">Rezepte</a>
-                <a href="/history" class="pill pill--soft">Verlauf</a>
-                <form method="post" action="/logout">
-                    <button type="submit" class="pill">Abmelden</button>
-                </form>
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Deine Vorgaben</span>
+        <h1 class="page-h">Makro-<em>Ziele</em></h1>
+    </div>
+</div>
+
+<div class="card feat goals-card">
+    <p class="hint">Tagesziele. Leer lassen = kein Ziel für dieses Makro. Der Fortschritt erscheint als Balken auf dem Dashboard.</p>
+    <form id="goals-form" class="goals-form">
+        <div class="goals-grid">
+            <div class="field">
+                <label for="goal-calories">kcal</label>
+                <input type="number" step="any" min="0" id="goal-calories" placeholder="kein Ziel"
+                       value="{{ goal.calories if goal and goal.calories is not none else '' }}">
+            </div>
+            <div class="field">
+                <label for="goal-protein">Protein (g)</label>
+                <input type="number" step="any" min="0" id="goal-protein" placeholder="kein Ziel"
+                       value="{{ goal.protein if goal and goal.protein is not none else '' }}">
+            </div>
+            <div class="field">
+                <label for="goal-carbs">Carbs (g)</label>
+                <input type="number" step="any" min="0" id="goal-carbs" placeholder="kein Ziel"
+                       value="{{ goal.carbs if goal and goal.carbs is not none else '' }}">
+            </div>
+            <div class="field">
+                <label for="goal-fat">Fett (g)</label>
+                <input type="number" step="any" min="0" id="goal-fat" placeholder="kein Ziel"
+                       value="{{ goal.fat if goal and goal.fat is not none else '' }}">
             </div>
         </div>
-    </div>
-
-    <div class="card-body">
-        <h2 class="page-title">Makro-Ziele</h2>
-
-        <div class="log-panel">
-            <p class="rp-hint">Tagesziele für deinen Kraftsport-Fokus. Leer lassen = kein Ziel für dieses Makro. Der Fortschritt erscheint auf dem Dashboard.</p>
-            <form id="goals-form" class="goals-form">
-                <div class="goals-grid">
-                    <div class="goals-field">
-                        <label for="goal-calories">kcal</label>
-                        <input type="number" step="any" min="0" id="goal-calories" placeholder="kein Ziel"
-                               value="{{ goal.calories if goal and goal.calories is not none else '' }}">
-                    </div>
-                    <div class="goals-field">
-                        <label for="goal-protein">Protein (g)</label>
-                        <input type="number" step="any" min="0" id="goal-protein" placeholder="kein Ziel"
-                               value="{{ goal.protein if goal and goal.protein is not none else '' }}">
-                    </div>
-                    <div class="goals-field">
-                        <label for="goal-carbs">Carbs (g)</label>
-                        <input type="number" step="any" min="0" id="goal-carbs" placeholder="kein Ziel"
-                               value="{{ goal.carbs if goal and goal.carbs is not none else '' }}">
-                    </div>
-                    <div class="goals-field">
-                        <label for="goal-fat">Fett (g)</label>
-                        <input type="number" step="any" min="0" id="goal-fat" placeholder="kein Ziel"
-                               value="{{ goal.fat if goal and goal.fat is not none else '' }}">
-                    </div>
-                </div>
-                <div class="goals-actions">
-                    <button type="submit" id="goals-btn">Speichern</button>
-                    <span id="goals-status" class="status"></span>
-                </div>
-            </form>
+        <div class="goals-actions">
+            <button type="submit" id="goals-btn" class="btn">Speichern</button>
+            <span id="goals-status" class="status"></span>
         </div>
-    </div>
+    </form>
 </div>
 
 <script>

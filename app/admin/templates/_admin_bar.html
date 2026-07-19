@@ -1,12 +1,14 @@
 {# Shared header for every admin page. Expects `admin_name` and `active_page`. #}
 <div class="admin-bar">
-    <div class="brand">Nutrition Tracker <span class="tag">Admin</span></div>
-    <div class="actions">
-        <a class="pill {% if active_page == 'users' %}is-active{% endif %}" href="/admin/users">Nutzer</a>
-        <a class="pill {% if active_page == 'invites' %}is-active{% endif %}" href="/admin/invites">Einladungen</a>
-        <span class="who">{{ admin_name }}</span>
-        <form method="post" action="/admin/logout">
-            <button type="submit" class="pill">Abmelden</button>
-        </form>
+    <div class="wrap admin-in">
+        <div class="brand">Nutrition Tracker <span class="tag">Admin</span></div>
+        <div class="actions">
+            <a class="pill {% if active_page == 'users' %}is-active{% endif %}" href="/admin/users">Nutzer</a>
+            <a class="pill {% if active_page == 'invites' %}is-active{% endif %}" href="/admin/invites">Einladungen</a>
+            <span class="who">{{ admin_name }}</span>
+            <form method="post" action="/admin/logout">
+                <button type="submit" class="pill">Abmelden</button>
+            </form>
+        </div>
     </div>
 </div>

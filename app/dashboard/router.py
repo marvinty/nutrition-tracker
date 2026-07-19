@@ -59,6 +59,7 @@ async def dashboard(
         request=request,
         name="dashboard.html",
         context={
+            "active_page": "dashboard",
             "meals": meals,
             "totals": totals,
             "progress": progress,
@@ -85,6 +86,7 @@ async def recipes_page(
         request=request,
         name="recipes.html",
         context={
+            "active_page": "recipes",
             "username": user.username,
             "today": today_local().isoformat(),
         },
@@ -104,6 +106,7 @@ async def goals_page(
         request=request,
         name="goals.html",
         context={
+            "active_page": "goals",
             "username": user.username,
             "goal": goal,
         },
@@ -167,6 +170,7 @@ async def history(
         request=request,
         name="history.html",
         context={
+            "active_page": "history",
             "view": view,
             "series": series,
             "summary": summary,

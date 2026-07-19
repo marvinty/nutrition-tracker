@@ -3,12 +3,13 @@
 {% block title %}Einladungen — Admin{% endblock %}
 
 {% block content %}
-<div class="page-card">
-    {% include "_admin_bar.html" %}
-    <div class="card-body">
-        <h2 class="page-title">Einladungen</h2>
+{% include "_admin_bar.html" %}
+<main>
+    <div class="wrap">
+        <span class="sec-tag">Zugang</span>
+        <h1 class="page-h">Einladungen</h1>
 
-        <div class="panel">
+        <div class="card feat">
             <div class="panel-row">
                 <div>
                     <strong>Registrierung {{ "geschlossen" if signup_closed else "offen" }}</strong>
@@ -23,7 +24,7 @@
                 </div>
                 <form method="post" action="/admin/invites/signup-toggle">
                     <input type="hidden" name="closed" value="{{ '0' if signup_closed else '1' }}">
-                    <button type="submit" class="btn {{ 'btn--ghost' if signup_closed else 'btn--primary' }}">
+                    <button type="submit" class="btn{{ ' ghost' if signup_closed else '' }}">
                         {{ "Registrierung öffnen" if signup_closed else "Registrierung schließen" }}
                     </button>
                 </form>
@@ -50,7 +51,7 @@
                 <label for="label">Notiz</label>
                 <input type="text" id="label" name="label" maxlength="120" placeholder="z. B. Instagram Juli">
             </div>
-            <button type="submit" class="btn btn--primary">Erzeugen</button>
+            <button type="submit" class="btn">Erzeugen</button>
         </form>
 
         {% if codes %}
@@ -95,7 +96,7 @@
         {% endif %}
         <p class="status" id="copy-status"></p>
     </div>
-</div>
+</main>
 
 <script>
     document.querySelectorAll(".js-copy").forEach(function (btn) {

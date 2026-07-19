@@ -3,10 +3,11 @@
 {% block title %}Nutzer — Admin{% endblock %}
 
 {% block content %}
-<div class="page-card">
-    {% include "_admin_bar.html" %}
-    <div class="card-body">
-        <h2 class="page-title">Nutzer</h2>
+{% include "_admin_bar.html" %}
+<main>
+    <div class="wrap">
+        <span class="sec-tag">Übersicht</span>
+        <h1 class="page-h">Nutzer</h1>
         {% if users %}
         <div class="table-wrap">
             <table class="data">
@@ -45,5 +46,5 @@
         <p class="empty">Noch keine registrierten Nutzer.</p>
         {% endif %}
     </div>
-</div>
+</main>
 {% endblock %}

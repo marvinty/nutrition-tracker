@@ -2,131 +2,111 @@
 
 {% block title %}Rezepte{% endblock %}
 
-{% block content %}
+{% block extra_head %}
 <style>
-    .rp-hint { color: var(--text-subtle); font-size: 0.82rem; margin: 8px 0 0; }
-    .rp-active-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-    .rp-badge { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
-    .rp-name { font-family: var(--serif); font-size: 1.25rem; margin: 4px 0 0; color: var(--text); }
-    .rp-servings { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-    .rp-servings label { font-size: 12px; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; }
-    input.rp-num {
-        width: 72px; padding: 8px 10px; border: 1px solid var(--border);
-        border-radius: var(--r-sm); font: inherit; font-size: 14px;
-        background: var(--surface-white); color: var(--text);
-    }
-    input.rp-num:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-    .rp-macros { font-size: 13px; color: var(--text-muted); }
-    .rp-macros strong { color: var(--accent-cal); font-weight: 600; }
-    .rp-ing-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-    .rp-ing {
-        display: flex; align-items: center; gap: 12px;
-        background: var(--surface-white); border-radius: 12px; padding: 10px 14px;
-    }
-    .rp-ing__main { flex: 1; min-width: 0; }
-    .rp-ing__desc { font-size: 14px; color: var(--text); }
-    .rp-ing__sub { font-size: 12px; color: var(--text-subtle); margin-top: 2px; }
-    .rp-ing__cal { font-size: 13px; font-weight: 500; color: var(--accent-cal); white-space: nowrap; }
-    .rp-ing__del {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 26px; height: 26px; padding: 0; border: none; background: none;
-        color: var(--text-subtle); border-radius: 50%; cursor: pointer; font-size: 16px; line-height: 1;
-    }
-    .rp-ing__del:hover { background: var(--accent-soft-2); color: var(--danger); }
-    .rp-total { font-size: 13px; color: var(--text-muted); margin: 14px 0 0; }
-    .rp-card {
-        display: flex; flex-direction: column; gap: 10px;
-        background: var(--surface-white); border-radius: 14px; padding: 14px 16px;
-    }
-    .rp-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-    .rp-card__name { font-family: var(--serif); font-size: 1.05rem; color: var(--text); }
-    .rp-card__meta { font-size: 12px; color: var(--text-subtle); }
-    .rp-card__macros { font-size: 13px; color: var(--text-muted); }
-    .rp-track { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .rp-track label { font-size: 12px; color: var(--text-subtle); }
-    .rp-track button {
-        padding: 8px 16px; border: none; border-radius: var(--r-sm);
-        background: var(--accent); color: #fff; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
-    }
-    .rp-track button:hover:not(:disabled) { background: var(--accent-hover); }
-    .rp-track button.rp-ghost { background: var(--surface-2); color: var(--text-muted); }
-    .rp-track button.rp-ghost:hover { background: var(--border); }
-    .rp-track button.rp-danger { background: none; color: var(--text-subtle); }
-    .rp-track button.rp-danger:hover { color: var(--danger); background: var(--accent-soft-2); }
-    .rp-track .status { flex-basis: 100%; margin: 0; }
+    .rp-hint{font-size:14px;color:var(--text-subtle);margin-top:12px;text-wrap:pretty}
+    .rp-active-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;
+        margin-bottom:18px;flex-wrap:wrap}
+    .rp-badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
+        letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+    .rp-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);
+        animation:pulse 1.6s ease-in-out infinite}
+    .rp-name{font-family:var(--serif);font-weight:500;font-size:28px;letter-spacing:-.02em;margin-top:6px}
+    .rp-servings{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+    .rp-servings label{margin:0}
+    input.rp-num{width:84px;height:40px;font-size:15px;padding:0 12px;flex:none}
+    .rp-macros{font-size:14px;color:var(--text-muted)}
+    .rp-macros strong{color:var(--accent);font-weight:600}
+    .rp-ing-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+    .rp-ing{display:flex;align-items:center;gap:14px;background:var(--surface);
+        border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+    .rp-ing__main{flex:1;min-width:0}
+    .rp-ing__desc{font-size:15px}
+    .rp-ing__sub{font-size:13px;color:var(--text-subtle);margin-top:2px}
+    .rp-ing__cal{font-family:var(--serif);font-size:16px;color:var(--accent);white-space:nowrap}
+    .rp-ing__del{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+        border:none;background:none;color:var(--text-subtle);border-radius:50%;cursor:pointer;
+        font-size:19px;line-height:1;flex:none}
+    .rp-ing__del:hover{background:var(--accent-soft);color:var(--accent)}
+    .rp-total{font-size:14px;color:var(--text-muted);margin-top:16px}
 
-    @media (max-width: 600px) {
-        /* Erstellformular umbrechen: Name volle Breite, Portionen + Button darunter */
-        #create-form { flex-wrap: wrap; }
-        #create-form #recipe-name { flex-basis: 100%; }
-        .rp-track input[type="date"] { flex: 1; min-width: 130px; }
+    .rp-card{display:flex;flex-direction:column;gap:12px;background:var(--surface);
+        border:1px solid var(--border);border-radius:14px;padding:18px 20px}
+    .rp-card__head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .rp-card__name{font-family:var(--serif);font-size:20px;letter-spacing:-.01em}
+    .rp-card__meta{font-size:13px;color:var(--text-subtle)}
+    .rp-card__macros{font-size:14px;color:var(--text-muted)}
+    .rp-track{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .rp-track label{margin:0}
+    .rp-track input[type=date]{width:auto;height:38px;font-size:14px;flex:1;min-width:140px}
+    .rp-track button{display:inline-flex;align-items:center;justify-content:center;height:38px;
+        padding:0 16px;border:none;border-radius:10px;background:var(--accent);color:#fff;
+        font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s,color .2s}
+    .rp-track button:hover:not(:disabled){background:var(--accent-hover)}
+    .rp-track button:disabled{opacity:.5;cursor:not-allowed}
+    .rp-track button.rp-ghost{background:var(--surface-2);color:var(--text-muted)}
+    .rp-track button.rp-ghost:hover:not(:disabled){background:var(--border);color:var(--text)}
+    .rp-track button.rp-danger{background:none;color:var(--text-subtle)}
+    .rp-track button.rp-danger:hover:not(:disabled){background:var(--accent-soft);color:var(--accent)}
+    .rp-track .status{flex-basis:100%;margin:0}
+
+    @media(max-width:640px){
+        #create-form #recipe-name{flex-basis:100%}
+        .rp-name{font-size:24px}
     }
 </style>
+{% endblock %}
 
-<div class="page-card">
-    <div class="card-top">
-        <div class="topbar">
-            <span class="who">Angemeldet als <strong>{{ username }}</strong></span>
-            <div class="actions">
-                <a href="/dashboard" class="pill pill--soft">Dashboard</a>
-                <a href="/goals" class="pill pill--soft">Ziele</a>
-                <a href="/history" class="pill pill--soft">Verlauf</a>
-                <form method="post" action="/logout">
-                    <button type="submit" class="pill">Abmelden</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="card-body">
-        <h2 class="page-title">Rezepte</h2>
-
-        <div class="log-panel">
-            <div id="create-box">
-                <form id="create-form" class="log-form">
-                    <input type="text" id="recipe-name" placeholder="Rezeptname, z.B. Spaghetti Bolognese" required>
-                    <input type="number" id="recipe-servings" class="rp-num" min="1" value="1" aria-label="Portionen">
-                    <button type="submit" id="create-btn">Starten</button>
-                </form>
-                <p class="rp-hint">Starte den Rezeptmodus und diktiere die Zutaten beim Kochen per Text oder Sprache — du kannst mehrere auf einmal nennen („200g Nudeln und 20g Olivenöl"), sie werden einzeln erfasst. Der Modus bleibt aktiv, bis du auf Fertig tippst.</p>
-                <p id="create-status" class="status"></p>
-            </div>
-
-            <div id="active-box" class="hidden">
-                <div class="rp-active-head">
-                    <div>
-                        <span class="rp-badge">● Rezeptmodus</span>
-                        <div id="active-name" class="rp-name"></div>
-                    </div>
-                    <button type="button" id="finish-btn" class="pill pill--soft">Fertig</button>
-                </div>
-
-                <div class="rp-servings">
-                    <label for="active-servings">Portionen</label>
-                    <input type="number" id="active-servings" class="rp-num" min="1" value="1">
-                    <span id="active-per" class="rp-macros"></span>
-                </div>
-
-                <form id="ingredient-form" class="log-form">
-                    <input type="text" id="ingredient-input" placeholder="z.B. 200g Nudeln und 20g Olivenöl" autocomplete="off">
-                    <button type="submit" id="ingredient-btn">Hinzufügen</button>
-                </form>
-                <div class="log-form">
-                    <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Zutat per Sprache aufnehmen">Sprachaufnahme</button>
-                    <span id="record-indicator" class="hidden">Aufnahme läuft…</span>
-                </div>
-                <p id="ingredient-status" class="status"></p>
-
-                <div id="ingredient-list" class="rp-ing-list"></div>
-                <p class="rp-total" id="active-total"></p>
-            </div>
-        </div>
-
-        <h3>Gespeicherte Rezepte</h3>
-        <div id="recipes-list" class="row-list"></div>
-        <p id="recipes-empty" class="empty hidden">Noch keine Rezepte.</p>
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Vorbereitet</span>
+        <h1 class="page-h"><em>Rezepte</em></h1>
     </div>
 </div>
+
+<div class="card feat">
+    <div id="create-box">
+        <form id="create-form" class="log-form">
+            <input type="text" id="recipe-name" placeholder="Rezeptname, z.B. Spaghetti Bolognese" required>
+            <input type="number" id="recipe-servings" class="rp-num" min="1" value="1" aria-label="Portionen">
+            <button type="submit" id="create-btn" class="btn">Starten</button>
+        </form>
+        <p class="rp-hint">Starte den Rezeptmodus und diktiere die Zutaten beim Kochen per Text oder Sprache — du kannst mehrere auf einmal nennen („200g Nudeln und 20g Olivenöl"), sie werden einzeln erfasst. Der Modus bleibt aktiv, bis du auf Fertig tippst.</p>
+        <p id="create-status" class="status"></p>
+    </div>
+
+    <div id="active-box" class="hidden">
+        <div class="rp-active-head">
+            <div>
+                <span class="rp-badge">Rezeptmodus</span>
+                <div id="active-name" class="rp-name"></div>
+            </div>
+            <button type="button" id="finish-btn" class="btn sm ghost">Fertig</button>
+        </div>
+
+        <div class="rp-servings">
+            <label for="active-servings">Portionen</label>
+            <input type="number" id="active-servings" class="rp-num" min="1" value="1">
+            <span id="active-per" class="rp-macros"></span>
+        </div>
+
+        <form id="ingredient-form" class="log-form">
+            <input type="text" id="ingredient-input" placeholder="z.B. 200g Nudeln und 20g Olivenöl" autocomplete="off">
+            <button type="submit" id="ingredient-btn" class="btn">Hinzufügen</button>
+            <button type="button" id="record-btn" class="btn ghost rec" aria-pressed="false" aria-label="Zutat per Sprache aufnehmen">Sprachaufnahme</button>
+            <span id="record-indicator" class="rec-indicator hidden">Aufnahme läuft…</span>
+        </form>
+        <p id="ingredient-status" class="status"></p>
+
+        <div id="ingredient-list" class="rp-ing-list"></div>
+        <p class="rp-total" id="active-total"></p>
+    </div>
+</div>
+
+<h2 class="sub-h">Gespeicherte Rezepte</h2>
+<div id="recipes-list" class="row-list"></div>
+<p id="recipes-empty" class="empty hidden">Noch keine Rezepte.</p>
 
 <script>
     const TODAY = "{{ today }}";

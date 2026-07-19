@@ -2,83 +2,84 @@
 
 {% block title %}Verlauf — {{ period_label }}{% endblock %}
 
-{% block content %}
-<div class="page-card">
-    <div class="card-top">
-        <div class="topbar">
-            <span class="who">Angemeldet als <strong>{{ username }}</strong></span>
-            <div class="actions">
-                <a href="/dashboard" class="pill pill--soft">Dashboard</a>
-                <a href="/goals" class="pill pill--soft">Ziele</a>
-                <a href="/recipes" class="pill pill--soft">Rezepte</a>
-                <form method="post" action="/logout">
-                    <button type="submit" class="pill">Abmelden</button>
-                </form>
-            </div>
-        </div>
+{% block extra_head %}
+<style>
+    .hist-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .adherence{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+    .adherence .big{font-family:var(--serif);font-size:30px;line-height:1;letter-spacing:-.02em}
+    .adherence-target{color:#f6d9cc;font-size:14px}
+    .accent-block--slim{padding:20px 26px;border-radius:20px}
+</style>
+{% endblock %}
 
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Verlauf</span>
+        <h1 class="page-h">{{ period_label }}</h1>
+    </div>
+    <div class="hist-top">
         <div class="tabs">
             <a href="/history?view=week" class="tab{% if view == 'week' %} is-active{% endif %}">Woche</a>
             <a href="/history?view=month" class="tab{% if view == 'month' %} is-active{% endif %}">Monat</a>
         </div>
-    </div>
-
-    <div class="card-body">
         <div class="day-nav">
             <a href="/history?view={{ view }}&d={{ prev_anchor }}" class="nav-btn">‹ Zurück</a>
             {% if next_anchor %}
             <a href="/history?view={{ view }}&d={{ next_anchor }}" class="nav-btn">Weiter ›</a>
             {% else %}
-            <span class="nav-btn is-disabled">Weiter ›</span>
+            <span class="nav-btn is-disabled" aria-hidden="true">Weiter ›</span>
             {% endif %}
         </div>
-        <h2 class="page-title">{{ period_label }}</h2>
+    </div>
+</div>
 
-        <h3>Ø pro Tag</h3>
-        <div class="totals-grid totals-grid--compact">
-            <div class="totals-card totals-card--cal">
-                <div class="value">{{ summary.avg.calories | int }}</div>
-                <div class="label">kcal</div>
-            </div>
-            <div class="totals-card">
-                <div class="value">{{ summary.avg.protein }}g</div>
-                <div class="label">Protein</div>
-            </div>
-            <div class="totals-card">
-                <div class="value">{{ summary.avg.carbs }}g</div>
-                <div class="label">Carbs</div>
-            </div>
-            <div class="totals-card">
-                <div class="value">{{ summary.avg.fat }}g</div>
-                <div class="label">Fett</div>
-            </div>
-        </div>
+<h2 class="sub-h" style="margin-top:0">Ø pro Tag</h2>
+<div class="totals-grid totals-grid--compact">
+    <div class="totals-card totals-card--cal">
+        <div class="label">kcal</div>
+        <div class="value">{{ summary.avg.calories | int }}</div>
+    </div>
+    <div class="totals-card">
+        <div class="label">Protein</div>
+        <div class="value">{{ summary.avg.protein }}<span class="unit">g</span></div>
+    </div>
+    <div class="totals-card">
+        <div class="label">Carbs</div>
+        <div class="value">{{ summary.avg.carbs }}<span class="unit">g</span></div>
+    </div>
+    <div class="totals-card">
+        <div class="label">Fett</div>
+        <div class="value">{{ summary.avg.fat }}<span class="unit">g</span></div>
+    </div>
+</div>
 
-        {% if adherence %}
-        <div class="adherence">
-            <strong>{{ adherence.protein_hit }}/{{ adherence.logged_days }}</strong> Tage Proteinziel erreicht
-            <span class="adherence-target">(≥ {{ adherence.protein_target }}g)</span>
-        </div>
+{% if adherence %}
+<div class="accent-block accent-block--slim" style="margin-top:18px">
+    <div class="adherence">
+        <span class="big">{{ adherence.protein_hit }}/{{ adherence.logged_days }}</span>
+        <strong>Tage Proteinziel erreicht</strong>
+        <span class="adherence-target">(≥ {{ adherence.protein_target }}g)</span>
+    </div>
+</div>
+{% endif %}
+
+<h2 class="sub-h">Tage im Detail</h2>
+<div class="row-list">
+    {% for day in series %}
+    <div class="row-item row-item--link" onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'">
+        <span class="row-day">{{ day.date | de_short }}</span>
+        <span class="row-macros">{{ day.calories | int }} kcal · {{ day.protein }}g P · {{ day.carbs }}g C · {{ day.fat }}g F</span>
+        {% if adherence and day.meal_count > 0 and day.protein >= adherence.protein_target %}
+        <span class="goal-tick" title="Proteinziel erreicht">✓</span>
         {% endif %}
-
-        <h3>Tage im Detail</h3>
-        <div class="row-list">
-            {% for day in series %}
-            <div class="row-item row-item--link" onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'">
-                <span class="row-day">{{ day.date | de_short }}</span>
-                <span class="row-macros">{{ day.calories | int }} kcal · {{ day.protein }}g P · {{ day.carbs }}g C · {{ day.fat }}g F</span>
-                {% if adherence and day.meal_count > 0 and day.protein >= adherence.protein_target %}
-                <span class="goal-tick" title="Proteinziel erreicht">✓</span>
-                {% endif %}
-                <span class="row-count">{{ day.meal_count }} Mahlz.</span>
-            </div>
-            {% endfor %}
-            <div class="row-item row-item--total">
-                <span class="row-day">Total ({{ summary.days }} Tage)</span>
-                <span class="row-macros">{{ summary.total.calories | int }} kcal · {{ summary.total.protein }}g P · {{ summary.total.carbs }}g C · {{ summary.total.fat }}g F</span>
-                <span class="row-count">{{ summary.total.meal_count }} Mahlz.</span>
-            </div>
-        </div>
+        <span class="row-count">{{ day.meal_count }} Mahlz.</span>
+    </div>
+    {% endfor %}
+    <div class="row-item row-item--total">
+        <span class="row-day">Total ({{ summary.days }} Tage)</span>
+        <span class="row-macros">{{ summary.total.calories | int }} kcal · {{ summary.total.protein }}g P · {{ summary.total.carbs }}g C · {{ summary.total.fat }}g F</span>
+        <span class="row-count">{{ summary.total.meal_count }} Mahlz.</span>
     </div>
 </div>
 {% endblock %}

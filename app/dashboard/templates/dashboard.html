@@ -2,159 +2,171 @@
 
 {% block title %}Dashboard — {{ selected_label }}{% endblock %}
 
+{% block extra_head %}
+<style>
+    .log-card{gap:4px}
+    .log-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:22px;flex-wrap:wrap}
+    .log-head h3{margin-bottom:2px}
+    .log-head > div{flex:1;min-width:220px}
+    .credit-badge{font-size:12px;font-weight:500;color:var(--text-subtle);background:var(--surface);
+        border:1px solid var(--border);border-radius:99px;padding:6px 13px;white-space:nowrap}
+    .credit-badge.credit-line--blocked{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+    h2.sub-h .count{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text-subtle);
+        background:var(--surface-2);border-radius:99px;padding:3px 11px;vertical-align:middle;margin-left:6px}
+    @media(max-width:640px){
+        .log-head{gap:14px;margin-bottom:18px;align-items:center}
+        /* the badge is the least important thing here — send it below the heading */
+        .credit-badge{order:99;width:100%;text-align:center;white-space:normal}
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="page-card">
-    <div class="card-top">
-        <div class="topbar">
-            <span class="who">
-                Angemeldet als <strong>{{ username }}</strong>
-                · <span id="credit-line" {% if not credits.system_available %}class="credit-line--blocked"{% endif %}>
-                    {%- if not credits.system_available -%}
-                    Systemlimit erreicht — heute keine KI-Analysen
-                    {%- else -%}
-                    noch {{ credits.remaining }} von {{ credits.limit }} Credits heute
-                    {%- endif -%}
-                </span>
-            </span>
-            <div class="actions">
-                <a href="/goals" class="pill pill--soft">Ziele</a>
-                <a href="/recipes" class="pill pill--soft">Rezepte</a>
-                <a href="/history" class="pill pill--soft">Verlauf</a>
-                <form method="post" action="/logout">
-                    <button type="submit" class="pill">Abmelden</button>
-                </form>
-            </div>
-        </div>
+<div class="page-head">
+    <div>
+        <span class="sec-tag">{% if is_today %}Heute{% else %}Rückblick{% endif %}</span>
+        <h1 class="page-h">{{ selected_label }}</h1>
     </div>
-
-    <div class="card-body">
-        <div class="day-nav">
-            <a href="/dashboard?d={{ prev_date }}" class="nav-btn">‹</a>
-            {% if next_date %}
-            <a href="/dashboard?d={{ next_date }}" class="nav-btn">›</a>
-            {% else %}
-            <span class="nav-btn is-disabled">›</span>
-            {% endif %}
-            <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}">
-            {% if not is_today %}
-            <a href="/dashboard" class="nav-btn">Heute</a>
-            {% endif %}
-        </div>
-        <h2 class="page-title">{{ selected_label }}{% if is_today %} (Heute){% endif %}</h2>
-
-        <div class="log-panel">
-            <form id="text-meal-form" class="log-form">
-                <input type="text" id="meal-text-input" placeholder="z.B. gegrilltes Hähnchen mit Reis" required>
-                <button type="submit" id="text-submit-btn">Loggen</button>
-            </form>
-            <p id="text-status" class="status"></p>
-
-            <div class="log-form">
-                <button type="button" id="record-btn" class="secondary" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen">Sprachaufnahme</button>
-                <span id="record-indicator" class="hidden">Aufnahme läuft…</span>
-            </div>
-            <p id="voice-status" class="status"></p>
-
-            <div id="clarify-box" class="clarify hidden">
-                <p id="clarify-question" class="clarify-question"></p>
-                <form id="clarify-form" class="log-form">
-                    <input type="text" id="clarify-input" placeholder="Deine Antwort…" autocomplete="off" required>
-                    <button type="submit" id="clarify-submit-btn">Antworten</button>
-                </form>
-                <p id="clarify-status" class="status"></p>
-            </div>
-        </div>
-
-        <div class="totals-grid">
-            <div class="totals-card totals-card--cal">
-                <div class="value">{{ totals.calories | int }}</div>
-                <div class="label">kcal</div>
-                {% if progress.calories %}
-                <div class="goal-meta">Ziel {{ progress.calories.target | int }} · {{ progress.calories.percent }}%</div>
-                <div class="goal-bar"><div class="goal-bar__fill{% if progress.calories.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.calories.bar_pct }}%"></div></div>
-                {% endif %}
-            </div>
-            <div class="totals-card">
-                <div class="value">{{ totals.protein }}g</div>
-                <div class="label">Protein</div>
-                {% if progress.protein %}
-                <div class="goal-meta">Ziel {{ progress.protein.target }}g · {{ progress.protein.percent }}%</div>
-                <div class="goal-bar"><div class="goal-bar__fill{% if progress.protein.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.protein.bar_pct }}%"></div></div>
-                {% endif %}
-            </div>
-            <div class="totals-card">
-                <div class="value">{{ totals.carbs }}g</div>
-                <div class="label">Carbs</div>
-                {% if progress.carbs %}
-                <div class="goal-meta">Ziel {{ progress.carbs.target }}g · {{ progress.carbs.percent }}%</div>
-                <div class="goal-bar"><div class="goal-bar__fill{% if progress.carbs.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.carbs.bar_pct }}%"></div></div>
-                {% endif %}
-            </div>
-            <div class="totals-card">
-                <div class="value">{{ totals.fat }}g</div>
-                <div class="label">Fett</div>
-                {% if progress.fat %}
-                <div class="goal-meta">Ziel {{ progress.fat.target }}g · {{ progress.fat.percent }}%</div>
-                <div class="goal-bar"><div class="goal-bar__fill{% if progress.fat.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.fat.bar_pct }}%"></div></div>
-                {% endif %}
-            </div>
-        </div>
-
-        <h3>Mahlzeiten{% if is_today %} heute{% endif %} ({{ totals.meal_count }})</h3>
-        {% if meals %}
-        <div class="row-list">
-            {% for meal in meals %}
-            <div class="row-item" data-meal-id="{{ meal.id }}">
-                <span class="row-time">{{ meal.timestamp | localtime }}</span>
-                <div class="row-main">
-                    <div class="row-title">{{ meal.description }}</div>
-                    <div class="row-sub">
-                        {{ (meal.protein | string + "g P") if meal.protein is not none else "—" }} ·
-                        {{ (meal.carbs | string + "g C") if meal.carbs is not none else "—" }} ·
-                        {{ (meal.fat | string + "g F") if meal.fat is not none else "—" }}
-                    </div>
-                </div>
-                <span class="row-cal">{{ meal.calories if meal.calories is not none else "—" }} kcal</span>
-                <div class="row-actions">
-                    <button type="button" class="row-btn" data-action="edit">Bearbeiten</button>
-                </div>
-            </div>
-            <form class="row-edit hidden" data-meal-id="{{ meal.id }}">
-                <input type="text" class="row-edit__desc" value="{{ meal.description }}" placeholder="Beschreibung" required>
-                <div class="row-edit__macros">
-                    <div class="row-edit__field">
-                        <label>kcal</label>
-                        <input type="number" step="any" name="calories" value="{{ meal.calories if meal.calories is not none else '' }}">
-                    </div>
-                    <div class="row-edit__field">
-                        <label>Protein</label>
-                        <input type="number" step="any" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}">
-                    </div>
-                    <div class="row-edit__field">
-                        <label>Carbs</label>
-                        <input type="number" step="any" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
-                    </div>
-                    <div class="row-edit__field">
-                        <label>Fett</label>
-                        <input type="number" step="any" name="fat" value="{{ meal.fat if meal.fat is not none else '' }}">
-                    </div>
-                </div>
-                <div class="row-edit__actions">
-                    <button type="submit" class="row-edit__save">Speichern</button>
-                    <button type="button" class="row-edit__cancel" data-action="cancel">Abbrechen</button>
-                    <span class="status"></span>
-                    <button type="button" class="row-edit__delete" data-action="delete" aria-label="Eintrag löschen" title="Löschen">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    </button>
-                </div>
-            </form>
-            {% endfor %}
-        </div>
+    <div class="day-nav">
+        <a href="/dashboard?d={{ prev_date }}" class="nav-btn" aria-label="Vorheriger Tag">‹</a>
+        {% if next_date %}
+        <a href="/dashboard?d={{ next_date }}" class="nav-btn" aria-label="Nächster Tag">›</a>
         {% else %}
-        <p class="empty">Keine Mahlzeiten{% if is_today %} heute{% else %} an diesem Tag{% endif %} erfasst.</p>
+        <span class="nav-btn is-disabled" aria-hidden="true">›</span>
+        {% endif %}
+        <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}" aria-label="Datum wählen">
+        {% if not is_today %}
+        <a href="/dashboard" class="nav-btn">Heute</a>
         {% endif %}
     </div>
 </div>
+
+<div class="card feat log-card">
+    <div class="log-head">
+        <span class="ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
+        </span>
+        <div>
+            <h3>Sag einfach, was du gegessen hast.</h3>
+            <p class="hint">Sprich einen Satz ein oder tipp ihn — Makros landen automatisch im Log.</p>
+        </div>
+        <span id="credit-line" class="credit-badge{% if not credits.system_available %} credit-line--blocked{% endif %}">
+            {%- if not credits.system_available -%}
+            Systemlimit erreicht — heute keine KI-Analysen
+            {%- else -%}
+            noch {{ credits.remaining }} von {{ credits.limit }} Credits heute
+            {%- endif -%}
+        </span>
+    </div>
+
+    <form id="text-meal-form" class="log-form">
+        <input type="text" id="meal-text-input" placeholder="z.B. gegrilltes Hähnchen mit Reis" required>
+        <button type="submit" id="text-submit-btn" class="btn">Loggen</button>
+        <button type="button" id="record-btn" class="btn ghost rec" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen">Sprachaufnahme</button>
+        <span id="record-indicator" class="rec-indicator hidden">Aufnahme läuft…</span>
+    </form>
+    <p id="text-status" class="status"></p>
+    <p id="voice-status" class="status"></p>
+
+    <div id="clarify-box" class="clarify hidden">
+        <p id="clarify-question" class="clarify-question"></p>
+        <form id="clarify-form" class="log-form">
+            <input type="text" id="clarify-input" placeholder="Deine Antwort…" autocomplete="off" required>
+            <button type="submit" id="clarify-submit-btn" class="btn">Antworten</button>
+        </form>
+        <p id="clarify-status" class="status"></p>
+    </div>
+</div>
+
+<h2 class="sub-h">Tagesbilanz</h2>
+<div class="totals-grid">
+    <div class="totals-card totals-card--cal">
+        <div class="label">kcal</div>
+        <div class="value">{{ totals.calories | int }}</div>
+        {% if progress.calories %}
+        <div class="goal-meta">Ziel {{ progress.calories.target | int }} · {{ progress.calories.percent }}%</div>
+        <div class="goal-bar"><div class="goal-bar__fill{% if progress.calories.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.calories.bar_pct }}%"></div></div>
+        {% endif %}
+    </div>
+    <div class="totals-card">
+        <div class="label">Protein</div>
+        <div class="value">{{ totals.protein }}<span class="unit">g</span></div>
+        {% if progress.protein %}
+        <div class="goal-meta">Ziel {{ progress.protein.target }}g · {{ progress.protein.percent }}%</div>
+        <div class="goal-bar"><div class="goal-bar__fill{% if progress.protein.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.protein.bar_pct }}%"></div></div>
+        {% endif %}
+    </div>
+    <div class="totals-card">
+        <div class="label">Carbs</div>
+        <div class="value">{{ totals.carbs }}<span class="unit">g</span></div>
+        {% if progress.carbs %}
+        <div class="goal-meta">Ziel {{ progress.carbs.target }}g · {{ progress.carbs.percent }}%</div>
+        <div class="goal-bar"><div class="goal-bar__fill{% if progress.carbs.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.carbs.bar_pct }}%"></div></div>
+        {% endif %}
+    </div>
+    <div class="totals-card">
+        <div class="label">Fett</div>
+        <div class="value">{{ totals.fat }}<span class="unit">g</span></div>
+        {% if progress.fat %}
+        <div class="goal-meta">Ziel {{ progress.fat.target }}g · {{ progress.fat.percent }}%</div>
+        <div class="goal-bar"><div class="goal-bar__fill{% if progress.fat.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.fat.bar_pct }}%"></div></div>
+        {% endif %}
+    </div>
+</div>
+
+<h2 class="sub-h">Mahlzeiten{% if is_today %} heute{% endif %} <span class="count">{{ totals.meal_count }}</span></h2>
+{% if meals %}
+<div class="row-list">
+    {% for meal in meals %}
+    <div class="row-item" data-meal-id="{{ meal.id }}">
+        <span class="row-time">{{ meal.timestamp | localtime }}</span>
+        <div class="row-main">
+            <div class="row-title">{{ meal.description }}</div>
+            <div class="row-sub">
+                {{ (meal.protein | string + "g P") if meal.protein is not none else "—" }} ·
+                {{ (meal.carbs | string + "g C") if meal.carbs is not none else "—" }} ·
+                {{ (meal.fat | string + "g F") if meal.fat is not none else "—" }}
+            </div>
+        </div>
+        <span class="row-cal">{{ meal.calories if meal.calories is not none else "—" }} kcal</span>
+        <div class="row-actions">
+            <button type="button" class="row-btn" data-action="edit">Bearbeiten</button>
+        </div>
+    </div>
+    <form class="row-edit hidden" data-meal-id="{{ meal.id }}">
+        <input type="text" class="row-edit__desc" value="{{ meal.description }}" placeholder="Beschreibung" required>
+        <div class="row-edit__macros">
+            <div class="row-edit__field">
+                <label>kcal</label>
+                <input type="number" step="any" name="calories" value="{{ meal.calories if meal.calories is not none else '' }}">
+            </div>
+            <div class="row-edit__field">
+                <label>Protein</label>
+                <input type="number" step="any" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}">
+            </div>
+            <div class="row-edit__field">
+                <label>Carbs</label>
+                <input type="number" step="any" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
+            </div>
+            <div class="row-edit__field">
+                <label>Fett</label>
+                <input type="number" step="any" name="fat" value="{{ meal.fat if meal.fat is not none else '' }}">
+            </div>
+        </div>
+        <div class="row-edit__actions">
+            <button type="submit" class="btn sm row-edit__save">Speichern</button>
+            <button type="button" class="btn sm ghost row-edit__cancel" data-action="cancel">Abbrechen</button>
+            <span class="status"></span>
+            <button type="button" class="row-edit__delete" data-action="delete" aria-label="Eintrag löschen" title="Löschen">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+        </div>
+    </form>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty">Keine Mahlzeiten{% if is_today %} heute{% else %} an diesem Tag{% endif %} erfasst.</p>
+{% endif %}
 
 <script>
     const SELECTED_DATE = "{{ selected }}";
