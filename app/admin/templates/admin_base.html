@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* Same design system as the user-facing app (design.md). The admin side is
+        /* Same design system as the user-facing app (DESIGN.md). The admin side is
            marked by a dark nav bar — a dark panel on --text, which the system allows —
            rather than by a separate palette. */
         :root{
@@ -22,6 +22,8 @@
             --accent-hover:#b4553a;
             --accent-soft:#f2e2d6;
             --border:#e4dcc9;
+            --danger:#a33520;
+            --danger-soft:#f4ded6;
             --serif:'Newsreader',Georgia,serif;
             --sans:'Inter',system-ui,-apple-system,sans-serif;
             --r-btn:11px;
@@ -80,7 +82,7 @@
         input:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
         label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-subtle)}
         .status{min-height:1.3em;font-size:14px;color:var(--text-muted);margin-top:12px}
-        .status.error{color:var(--accent);font-weight:500}
+        .status.error{color:var(--danger);font-weight:500}
         .empty{color:var(--text-subtle);font-style:italic}
         .muted{color:var(--text-subtle)}
 
@@ -111,7 +113,7 @@
         /* settings panel */
         .panel-row{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
         .panel-note{font-size:14px;color:var(--text-subtle);margin-top:6px;max-width:52ch}
-        .panel-note--warn{color:var(--accent);margin-top:16px;max-width:none}
+        .panel-note--warn{color:var(--danger);margin-top:16px;max-width:none}
 
         .invite-form{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
         .invite-field{display:flex;flex-direction:column;gap:6px}

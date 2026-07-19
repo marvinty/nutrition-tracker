@@ -34,11 +34,19 @@ Große typografische Momente in Newsreader; Betonung als `<em>` (kursiv, in `--a
   --accent-hover:#b4553a;
   --accent-soft:#f2e2d6;   /* helle Accent-Fläche/Chip */
   --border:#e4dcc9;
+  --danger:#a33520;        /* Fehler, Löschen, Limit erreicht */
+  --danger-soft:#f4ded6;   /* helle Danger-Fläche (Hover auf Löschen) */
 }
 ```
 Innerhalb der Palette darf man mutig werden: großflächige Accent-Blöcke,
 invertierte Sektionen (Text auf `--accent`), dunkle Panels (Text auf `--text`).
 Nur keine neuen Grundfarben.
+
+**Danger vs. Accent:** `--danger` ist ein dunklerer, rotstichigerer Ton derselben
+Familie — kein neuer Grundton, aber deutlich genug von `--accent` unterscheidbar,
+damit eine Fehlermeldung nicht wie ein primärer Button aussieht. Nur für
+Fehlertexte, Löschaktionen, erreichte Limits und Ziel-Überschreitung verwenden;
+**nie für Buttons oder Flächen, die zu einer normalen Aktion einladen.**
 
 ## Komponenten (aus `landing.html`)
 - **Button** `.btn`: Höhe 44px (`.lg` 54px), Radius 11–13px, `--accent` → Hover `--accent-hover`,

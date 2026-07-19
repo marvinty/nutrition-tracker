@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* Design system per design.md — tokens are exact, no new base colours.
+        /* Design system per DESIGN.md — tokens are exact, no new base colours.
            Derived tints (dark panels, accent shades) follow landing.html. */
         :root{
             --bg:#eeece4;
@@ -21,6 +21,8 @@
             --accent-hover:#b4553a;
             --accent-soft:#f2e2d6;
             --border:#e4dcc9;
+            --danger:#a33520;
+            --danger-soft:#f4ded6;
             --serif:'Newsreader',Georgia,serif;
             --sans:'Inter',system-ui,-apple-system,sans-serif;
             --r-btn:11px;
@@ -60,7 +62,7 @@
         .nav-actions{display:flex;align-items:center;gap:16px}
         .nav-who{font-size:13px;color:var(--text-subtle);text-align:right;line-height:1.35}
         .nav-who strong{color:var(--text-muted);font-weight:600}
-        .credit-line--blocked{color:var(--accent);font-weight:500}
+        .credit-line--blocked{color:var(--danger);font-weight:500}
         .nav-actions form{margin:0}
         .link-btn{background:none;border:none;font:inherit;font-size:14px;font-weight:500;
             color:var(--text-muted);cursor:pointer;padding:7px 10px;border-radius:99px}
@@ -119,7 +121,7 @@
         .status{min-height:1.3em;font-size:14px;color:var(--text-muted);margin-top:10px}
         /* an empty status line must not reserve space — several sit stacked in the log card */
         .status:empty{min-height:0;margin:0}
-        .status.error{color:var(--accent);font-weight:500}
+        .status.error{color:var(--danger);font-weight:500}
         .empty{color:var(--text-subtle);font-style:italic;font-size:16px}
         .hint{font-size:14px;color:var(--text-subtle);text-wrap:pretty}
 
@@ -167,8 +169,8 @@
         .totals-card--cal .goal-bar{background:rgba(255,255,255,.28)}
         .goal-bar__fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s ease}
         .totals-card--cal .goal-bar__fill{background:#fff}
-        .goal-bar__fill--over{background:var(--text)}
-        .totals-card--cal .goal-bar__fill--over{background:var(--text)}
+        .goal-bar__fill--over{background:var(--danger)}
+        .totals-card--cal .goal-bar__fill--over{background:var(--danger)}
 
         /* ---------- inverted accent block ---------- */
         .accent-block{background:var(--accent);color:#fdf3ee;border-radius:var(--r-block);padding:32px 36px}
@@ -208,7 +210,7 @@
         .row-edit__actions .status{margin:0;flex:1;min-width:120px}
         .row-edit__delete{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;
             border:none;background:none;color:var(--text-subtle);border-radius:9px;cursor:pointer}
-        .row-edit__delete:hover{background:var(--accent-soft);color:var(--accent)}
+        .row-edit__delete:hover{background:var(--danger-soft);color:var(--danger)}
 
         /* ---------- clarify prompt ---------- */
         .clarify{margin-top:18px;padding:20px 22px;border-radius:16px;background:var(--accent-soft);
