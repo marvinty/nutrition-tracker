@@ -7,6 +7,7 @@ from app.core.security import (
     generate_token,
     hash_password,
     normalize_email,
+    validate_password,
     verify_password,
 )
 from app.models.auth_token import AuthToken
@@ -46,7 +47,12 @@ async def get_user_by_email(session: AsyncSession, email: str) -> Optional[User]
 async def create_user(
     session: AsyncSession, username: str, email: str, password: str
 ) -> User:
-    """Create an account. ``email`` must already be normalized by the caller."""
+    """Create an account. ``email`` must already be normalized by the caller.
+
+    Password rules live here rather than in the router so no future caller can set a
+    password that bypasses them.
+    """
+    validate_password(password)
     existing = await session.execute(select(User).where(User.username == username))
     if existing.scalar_one_or_none() is not None:
         raise UsernameTakenError(username)
@@ -187,6 +193,7 @@ async def reset_password(session: AsyncSession, user: User, password: str) -> No
     changing the password. Reaching the reset link also proves control of the mailbox,
     so it doubles as verification for an address that never got confirmed.
     """
+    validate_password(password)
     user.password_hash = hash_password(password)
     if user.email_verified_at is None:
         user.email_verified_at = datetime.now(timezone.utc)

@@ -9,7 +9,13 @@ from app.core.csrf import register_csrf_field
 from app.core.client_ip import client_ip
 from app.core.config import settings
 from app.core.deps import resolve_user
-from app.core.security import InvalidEmailError, normalize_email
+from app.core.security import (
+    InvalidEmailError,
+    InvalidPasswordError,
+    PASSWORD_MIN_LENGTH,
+    normalize_email,
+    validate_password,
+)
 from app.services import rate_limit_service as rl
 from app.db.session import get_session
 from app.models.user import User
@@ -121,6 +127,16 @@ async def register_page(
     )
 
 
+def _password_error_message(exc: InvalidPasswordError) -> str:
+    """The user-facing German text for a rejected password.
+
+    Shared by registration and reset so the two paths cannot drift apart.
+    """
+    if exc.reason == "too_short":
+        return f"Dein Passwort muss mindestens {PASSWORD_MIN_LENGTH} Zeichen lang sein."
+    return "Dein Passwort ist zu lang – bitte höchstens 72 Zeichen."
+
+
 @router.post("/register")
 async def register(
     request: Request,
@@ -170,6 +186,10 @@ async def register(
         return _reject(
             "Bitte gib eine gültige E-Mail-Adresse ein.", status.HTTP_400_BAD_REQUEST
         )
+    try:
+        validate_password(password)
+    except InvalidPasswordError as exc:
+        return _reject(_password_error_message(exc), status.HTTP_400_BAD_REQUEST)
 
     if not await signup_allowed(session, signup_code):
         return _reject(
@@ -361,25 +381,26 @@ async def submit_reset_password(
     password: str = Form(...),
     session: AsyncSession = Depends(get_session),
 ):
+    def _reject(message: str = "", *, valid: bool = True) -> HTMLResponse:
+        context = {"token": token, "valid": valid}
+        if message:
+            context["error"] = message
+        return templates.TemplateResponse(
+            request=request,
+            name="reset_password.html",
+            context=context,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
     user = await get_user_by_token(session, token, kind=RESET_TOKEN) if token else None
     if user is None:
-        return templates.TemplateResponse(
-            request=request,
-            name="reset_password.html",
-            context={"token": token, "valid": False},
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        return _reject(valid=False)
     if not password:
-        return templates.TemplateResponse(
-            request=request,
-            name="reset_password.html",
-            context={
-                "token": token,
-                "valid": True,
-                "error": "Bitte gib ein neues Passwort ein.",
-            },
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        return _reject("Bitte gib ein neues Passwort ein.")
+    try:
+        validate_password(password)
+    except InvalidPasswordError as exc:
+        return _reject(_password_error_message(exc))
 
     await reset_password(session, user, password)
     # Every token is gone now, including this request's own — so hand out a fresh

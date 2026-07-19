@@ -32,7 +32,9 @@
                    value="{{ username or '' }}" required>
             <input type="email" name="email" placeholder="E-Mail-Adresse" autocomplete="email"
                    value="{{ email or '' }}" required>
-            <input type="password" name="password" placeholder="Passwort" autocomplete="new-password" required>
+            <input type="password" name="password" placeholder="Passwort" autocomplete="new-password"
+                   minlength="10" required>
+            <p class="field-hint">Mindestens 10 Zeichen.</p>
             {% if needs_code %}
             <input type="text" name="signup_code" placeholder="Einladungscode" autocomplete="off"
                    value="{{ signup_code or '' }}" required>

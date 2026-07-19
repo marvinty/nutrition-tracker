@@ -8,8 +8,29 @@ import bcrypt
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s.]+(\.[^@\s.]+)+$")
 
 
+# Length is the only rule. Composition rules ("must contain a digit") buy no real
+# entropy — they produce "Passwort1" while rejecting a long passphrase that is strictly
+# stronger. The upper bound is not a policy choice: bcrypt silently truncates at 72
+# bytes, so without it everything past that point would be ignored without anyone
+# noticing. Measured in bytes, not characters, because that is what bcrypt counts —
+# an umlaut costs two.
+PASSWORD_MIN_LENGTH = 10
+PASSWORD_MAX_BYTES = 72
+
+
 class InvalidEmailError(ValueError):
     """Raised when an address is not shaped like an email address."""
+
+
+class InvalidPasswordError(ValueError):
+    """Raised when a password does not meet the length requirements.
+
+    Carries ``reason`` so callers can pick a message without matching on strings.
+    """
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
 
 
 def normalize_email(email: str) -> str:
@@ -23,6 +44,20 @@ def normalize_email(email: str) -> str:
     if not _EMAIL_RE.match(normalized):
         raise InvalidEmailError(email)
     return normalized
+
+
+def validate_password(password: str) -> str:
+    """Return ``password`` unchanged, or raise ``InvalidPasswordError``.
+
+    Deliberately no stripping or normalizing: leading and trailing spaces are valid
+    password characters, and trimming here but not on the login path would lock people
+    out of accounts they set up correctly.
+    """
+    if len(password) < PASSWORD_MIN_LENGTH:
+        raise InvalidPasswordError("too_short")
+    if len(password.encode("utf-8")) > PASSWORD_MAX_BYTES:
+        raise InvalidPasswordError("too_long")
+    return password
 
 
 def hash_password(password: str) -> str:

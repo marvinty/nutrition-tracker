@@ -20,7 +20,15 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.config import settings
-from app.core.security import InvalidEmailError, normalize_email, verify_password
+from app.core.security import (
+    PASSWORD_MAX_BYTES,
+    PASSWORD_MIN_LENGTH,
+    InvalidEmailError,
+    InvalidPasswordError,
+    normalize_email,
+    validate_password,
+    verify_password,
+)
 from app.models.auth_token import AuthToken
 from app.models.base import Base
 from app.models.user import User
@@ -40,6 +48,11 @@ from app.services.auth_service import (
     mark_email_verified,
     reset_password,
 )
+
+
+# Fixture password. Named rather than inlined because it now has to clear
+# PASSWORD_MIN_LENGTH — a bare literal invites a too-short value creeping back in.
+PASSWORD = "hunter2-hunter2"
 
 
 @pytest_asyncio.fixture
@@ -64,7 +77,7 @@ def one_hour_grace(monkeypatch):
 
 
 async def _make_user(session, username="marvin", email="marvin@example.com"):
-    return await create_user(session, username, email, "hunter2")
+    return await create_user(session, username, email, PASSWORD)
 
 
 # --- address normalization ---------------------------------------------------
@@ -88,7 +101,7 @@ async def test_case_variants_collide_as_the_same_account(session):
     await _make_user(session, email=normalize_email("Marvin@Example.de"))
     with pytest.raises(EmailTakenError):
         await create_user(
-            session, "other", normalize_email("MARVIN@example.DE"), "hunter2"
+            session, "other", normalize_email("MARVIN@example.DE"), PASSWORD
         )
 
 
@@ -99,14 +112,14 @@ async def test_case_variants_collide_as_the_same_account(session):
 async def test_duplicate_email_is_rejected(session):
     await _make_user(session)
     with pytest.raises(EmailTakenError):
-        await create_user(session, "someone-else", "marvin@example.com", "hunter2")
+        await create_user(session, "someone-else", "marvin@example.com", PASSWORD)
 
 
 @pytest.mark.asyncio
 async def test_duplicate_username_still_rejected(session):
     await _make_user(session)
     with pytest.raises(UsernameTakenError):
-        await create_user(session, "marvin", "other@example.com", "hunter2")
+        await create_user(session, "marvin", "other@example.com", PASSWORD)
 
 
 @pytest.mark.asyncio
@@ -115,26 +128,97 @@ async def test_new_account_starts_unverified(session):
     assert user.email_verified_at is None
 
 
+# --- password rules ----------------------------------------------------------
+
+
+@pytest.mark.parametrize("length", [0, 1, PASSWORD_MIN_LENGTH - 1])
+def test_short_passwords_are_rejected(length):
+    with pytest.raises(InvalidPasswordError) as exc:
+        validate_password("a" * length)
+    assert exc.value.reason == "too_short"
+
+
+def test_the_minimum_itself_is_accepted():
+    """Guards the boundary against an off-by-one turning 10 into 11."""
+    assert validate_password("a" * PASSWORD_MIN_LENGTH)
+
+
+def test_a_long_passphrase_without_digits_is_accepted():
+    """Deliberate: composition rules are not enforced, only length.
+
+    A passphrase like this is stronger than "Passwort1", which a digit requirement
+    would wave through — see the comment on PASSWORD_MIN_LENGTH.
+    """
+    assert validate_password("correct horse battery staple")
+
+
+def test_passwords_past_the_bcrypt_limit_are_rejected():
+    with pytest.raises(InvalidPasswordError) as exc:
+        validate_password("a" * (PASSWORD_MAX_BYTES + 1))
+    assert exc.value.reason == "too_long"
+
+
+def test_the_limit_counts_bytes_not_characters():
+    """Umlauts cost two bytes, and bcrypt truncates on bytes.
+
+    Counting characters here would let a password through whose tail bcrypt silently
+    ignores — the exact failure the limit exists to prevent.
+    """
+    password = "ü" * 40  # 40 characters, 80 bytes
+    assert len(password) < PASSWORD_MAX_BYTES
+    with pytest.raises(InvalidPasswordError) as exc:
+        validate_password(password)
+    assert exc.value.reason == "too_long"
+
+
+def test_surrounding_whitespace_is_not_trimmed_away():
+    """Trimming here but not on login would lock people out of their own accounts."""
+    assert validate_password("  " + "a" * PASSWORD_MIN_LENGTH + "  ")
+
+
+@pytest.mark.asyncio
+async def test_registration_enforces_the_minimum(session):
+    with pytest.raises(InvalidPasswordError):
+        await create_user(session, "marvin", "marvin@example.com", "kurz")
+
+
+@pytest.mark.asyncio
+async def test_a_rejected_password_creates_no_account(session):
+    """The check has to land before the insert, not alongside it."""
+    with pytest.raises(InvalidPasswordError):
+        await create_user(session, "marvin", "marvin@example.com", "kurz")
+    assert await get_user_by_email(session, "marvin@example.com") is None
+
+
+@pytest.mark.asyncio
+async def test_reset_enforces_the_minimum(session):
+    """Reset is the other way to set a password, and the way around the rule if missed."""
+    user = await _make_user(session)
+    with pytest.raises(InvalidPasswordError):
+        await reset_password(session, user, "kurz")
+    assert verify_password(PASSWORD, user.password_hash)
+
+
 # --- login -------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_login_by_email(session):
     await _make_user(session)
-    assert await authenticate_user(session, "marvin@example.com", "hunter2") is not None
+    assert await authenticate_user(session, "marvin@example.com", PASSWORD) is not None
 
 
 @pytest.mark.asyncio
 async def test_login_accepts_unnormalized_email(session):
     await _make_user(session)
-    assert await authenticate_user(session, " MARVIN@example.COM ", "hunter2") is not None
+    assert await authenticate_user(session, " MARVIN@example.COM ", PASSWORD) is not None
 
 
 @pytest.mark.asyncio
 async def test_login_by_username_no_longer_works(session):
     """The username is a display name now; only the address authenticates."""
     await _make_user(session)
-    assert await authenticate_user(session, "marvin", "hunter2") is None
+    assert await authenticate_user(session, "marvin", PASSWORD) is None
 
 
 @pytest.mark.asyncio
@@ -302,7 +386,7 @@ async def test_reset_sets_new_password(session):
     user = await _make_user(session)
     await reset_password(session, user, "new-secret")
     assert verify_password("new-secret", user.password_hash)
-    assert await authenticate_user(session, "marvin@example.com", "hunter2") is None
+    assert await authenticate_user(session, "marvin@example.com", PASSWORD) is None
 
 
 @pytest.mark.asyncio
