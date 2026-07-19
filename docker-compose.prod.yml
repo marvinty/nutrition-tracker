@@ -6,7 +6,12 @@ services:
       - "${APP_PORT:-8000}:8000"
     volumes:
       - macromic_data:/data
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+    # One worker on purpose. Two processes writing the same SQLite file contend for a
+    # database-level write lock, which surfaces as intermittent "database is locked"
+    # under concurrent logging. At this write volume — a handful of rows per user per
+    # day — a single worker is not the bottleneck. Revisit only alongside a move off
+    # SQLite.
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
     restart: unless-stopped
 
 volumes:
