@@ -70,6 +70,10 @@ def period_adherence(series: list[dict], goal: Optional[MacroGoal]) -> Optional[
 
     Protein is the Kraftsport lead metric. Only days with at least one meal
     count. Returns ``None`` when no protein target is set.
+
+    Currently not called: the /history route passes ``adherence=None`` on purpose
+    (see app/dashboard/router.py). Kept, with its tests, for when the feature comes
+    back — likely with per-period targets instead of today's daily goal.
     """
     if goal is None or not goal.protein:
         return None

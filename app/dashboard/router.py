@@ -25,7 +25,6 @@ from app.services.meal_service import (
 from app.services.goal_service import (
     build_progress,
     get_goal,
-    period_adherence,
 )
 from app.services.usage_service import get_credit_status
 
@@ -161,8 +160,12 @@ async def history(
     start, end, prev_anchor, next_anchor = _period_range(view, anchor)
     series = await get_daily_series(session, user_id=user.username, start=start, end=end)
     summary = get_period_summary(series)
-    goal = await get_goal(session, user.username)
-    adherence = period_adherence(series, goal)
+    # Adherence ("X/Y Tage Proteinziel erreicht") is mothballed: it compares every day
+    # in the period against the *current* daily protein goal, which is misleading as
+    # soon as that goal is edited. Passing None keeps the template's `{% if adherence %}`
+    # guards closed — the block and the per-day ticks disappear without deleting either
+    # side. Restore by calling period_adherence(series, await get_goal(...)) again.
+    adherence = None
 
     if view == "month":
         period_label = format_month_year(start)
