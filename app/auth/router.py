@@ -1,16 +1,35 @@
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Optional
 from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
+from app.core.deps import resolve_user
+from app.core.security import InvalidEmailError, normalize_email
 from app.db.session import get_session
+from app.models.user import User
 from app.services.auth_service import (
+    RESET_TOKEN,
+    VERIFY_TOKEN,
+    EmailTakenError,
     UsernameTakenError,
     authenticate_user,
     create_token,
     create_user,
     delete_token,
+    delete_user_tokens,
+    get_user_by_email,
+    get_user_by_token,
+    is_email_verified,
+    latest_token_created_at,
+    mark_email_verified,
+    reset_password,
+)
+from app.services.email_service import (
+    send_password_reset_email,
+    send_verification_email,
 )
 from app.services.signup_code_service import (
     refund_code,
@@ -47,16 +66,19 @@ async def login_page(request: Request) -> HTMLResponse:
 @router.post("/login")
 async def login(
     request: Request,
-    username: str = Form(...),
+    email: str = Form(...),
     password: str = Form(...),
     session: AsyncSession = Depends(get_session),
 ):
-    user = await authenticate_user(session, username.strip(), password)
+    user = await authenticate_user(session, email, password)
     if user is None:
         return templates.TemplateResponse(
             request=request,
             name="login.html",
-            context={"error": "Benutzername oder Passwort ist ungültig."},
+            context={
+                "error": "E-Mail-Adresse oder Passwort ist ungültig.",
+                "email": email.strip(),
+            },
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
     token = await create_token(session, user)
@@ -87,6 +109,7 @@ async def register_page(
 async def register(
     request: Request,
     username: str = Form(...),
+    email: str = Form(...),
     password: str = Form(...),
     signup_code: str = Form(default=""),
     session: AsyncSession = Depends(get_session),
@@ -95,52 +118,245 @@ async def register(
     # farm free credits; the per-user and global credit limits only cap the damage.
     needs_code = await signup_requires_code(session)
 
-    # Cheap validation first: redeeming a code burns one of its seats, and a rejected
-    # form must not cost the invite a seat the admin has to make up for.
-    username = username.strip()
-    if not username or not password:
+    def _reject(message: str, code: int, *, needs: bool = needs_code) -> HTMLResponse:
         return templates.TemplateResponse(
             request=request,
             name="register.html",
             context={
-                "error": "Benutzername und Passwort sind erforderlich.",
-                "needs_code": needs_code,
+                "error": message,
+                "needs_code": needs,
                 "signup_code": signup_code.strip(),
+                # Echo back what they typed so a rejected form is a correction, not a
+                # blank slate they have to fill in again.
+                "username": username.strip(),
+                "email": email.strip(),
+            },
+            status_code=code,
+        )
+
+    # Cheap validation first: redeeming a code burns one of its seats, and a rejected
+    # form must not cost the invite a seat the admin has to make up for.
+    username = username.strip()
+    if not username or not password or not email.strip():
+        return _reject(
+            "Benutzername, E-Mail-Adresse und Passwort sind erforderlich.",
+            status.HTTP_400_BAD_REQUEST,
+        )
+    try:
+        normalized_email = normalize_email(email)
+    except InvalidEmailError:
+        return _reject(
+            "Bitte gib eine gültige E-Mail-Adresse ein.", status.HTTP_400_BAD_REQUEST
+        )
+
+    if not await signup_allowed(session, signup_code):
+        return _reject(
+            "Ungültiger oder bereits aufgebrauchter Einladungscode.",
+            status.HTTP_403_FORBIDDEN,
+            needs=True,
+        )
+
+    try:
+        user = await create_user(session, username, normalized_email, password)
+    except (UsernameTakenError, EmailTakenError) as exc:
+        # The seat was already taken from the code above; hand it back, or an invite
+        # for 20 people would run out early on typos and retries.
+        await refund_code(session, signup_code)
+        message = (
+            "Dieser Benutzername ist bereits vergeben."
+            if isinstance(exc, UsernameTakenError)
+            else "Für diese E-Mail-Adresse existiert bereits ein Konto."
+        )
+        return _reject(message, status.HTTP_409_CONFLICT)
+
+    await _send_verification(session, user)
+    token = await create_token(session, user)
+    response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    _set_session_cookie(response, token.token)
+    return response
+
+
+# --- Email verification ---------------------------------------------------------
+
+# Lower bound between two verification mails for one account. Stops a stuck client (or
+# an impatient finger on the resend button) from turning the app into a mail relay
+# aimed at someone else's inbox.
+RESEND_INTERVAL = timedelta(seconds=60)
+
+
+async def _send_verification(session: AsyncSession, user: User) -> None:
+    """Issue a fresh verification token and mail it.
+
+    Old tokens are dropped first so only the most recent link works — otherwise every
+    resend leaves another live credential in another inbox copy.
+    """
+    await delete_user_tokens(session, user, VERIFY_TOKEN)
+    token = await create_token(session, user, kind=VERIFY_TOKEN)
+    await send_verification_email(user.email, user.username, token.token)
+
+
+@router.get("/verify-email", response_class=HTMLResponse)
+async def verify_email(
+    request: Request,
+    token: str = Query(default=""),
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    user = await get_user_by_token(session, token, kind=VERIFY_TOKEN) if token else None
+    if user is None:
+        # Expired or already used. Not an error worth dwelling on — the page's job is
+        # to offer a new mail, which is why it carries its own resend form.
+        return templates.TemplateResponse(
+            request=request,
+            name="verify_result.html",
+            context={"ok": False},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    await mark_email_verified(session, user)
+    return templates.TemplateResponse(
+        request=request, name="verify_result.html", context={"ok": True}
+    )
+
+
+@router.get("/verify-email/required", response_class=HTMLResponse)
+async def verify_required(
+    request: Request,
+    user: Optional[User] = Depends(resolve_user),
+) -> HTMLResponse:
+    """The block page an unverified account lands on once its grace period lapses."""
+    if user is None:
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    if is_email_verified(user):
+        return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse(
+        request=request, name="verify_required.html", context={"email": user.email}
+    )
+
+
+@router.post("/verify-email/resend")
+async def resend_verification(
+    request: Request,
+    user: Optional[User] = Depends(resolve_user),
+    session: AsyncSession = Depends(get_session),
+):
+    # Reachable while locked out — see core.deps. Without that exemption the grace
+    # period would be a one-way door for anyone whose first mail never arrived.
+    if user is None:
+        return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    if is_email_verified(user):
+        return RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
+
+    last_sent = await latest_token_created_at(session, user, VERIFY_TOKEN)
+    throttled = (
+        last_sent is not None
+        and datetime.now(timezone.utc) - last_sent < RESEND_INTERVAL
+    )
+    if not throttled:
+        await _send_verification(session, user)
+    return templates.TemplateResponse(
+        request=request,
+        name="verify_required.html",
+        context={
+            "email": user.email,
+            "sent": not throttled,
+            "throttled": throttled,
+        },
+    )
+
+
+# --- Password reset -------------------------------------------------------------
+
+# Shown whether or not the address exists. Confirming which addresses have accounts
+# would turn this form into a membership oracle for anyone who cares to ask.
+_RESET_SENT_MESSAGE = (
+    "Falls ein Konto mit dieser E-Mail-Adresse existiert, haben wir einen Link zum "
+    "Zurücksetzen verschickt. Schau auch im Spam-Ordner nach."
+)
+
+
+@router.get("/forgot-password", response_class=HTMLResponse)
+async def forgot_password_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request, name="forgot_password.html", context={}
+    )
+
+
+@router.post("/forgot-password", response_class=HTMLResponse)
+async def forgot_password(
+    request: Request,
+    email: str = Form(...),
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    try:
+        normalized_email = normalize_email(email)
+    except InvalidEmailError:
+        # Same confirmation as a valid unknown address: a distinct "malformed" reply
+        # is harmless on its own, but it invites probing the two responses apart.
+        normalized_email = None
+
+    if normalized_email is not None:
+        user = await get_user_by_email(session, normalized_email)
+        if user is not None:
+            last_sent = await latest_token_created_at(session, user, RESET_TOKEN)
+            if last_sent is None or datetime.now(timezone.utc) - last_sent >= RESEND_INTERVAL:
+                await delete_user_tokens(session, user, RESET_TOKEN)
+                token = await create_token(session, user, kind=RESET_TOKEN)
+                await send_password_reset_email(user.email, user.username, token.token)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="forgot_password.html",
+        context={"message": _RESET_SENT_MESSAGE},
+    )
+
+
+@router.get("/reset-password", response_class=HTMLResponse)
+async def reset_password_page(
+    request: Request,
+    token: str = Query(default=""),
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    user = await get_user_by_token(session, token, kind=RESET_TOKEN) if token else None
+    return templates.TemplateResponse(
+        request=request,
+        name="reset_password.html",
+        context={"token": token, "valid": user is not None},
+        status_code=status.HTTP_200_OK if user else status.HTTP_400_BAD_REQUEST,
+    )
+
+
+@router.post("/reset-password")
+async def submit_reset_password(
+    request: Request,
+    token: str = Form(...),
+    password: str = Form(...),
+    session: AsyncSession = Depends(get_session),
+):
+    user = await get_user_by_token(session, token, kind=RESET_TOKEN) if token else None
+    if user is None:
+        return templates.TemplateResponse(
+            request=request,
+            name="reset_password.html",
+            context={"token": token, "valid": False},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    if not password:
+        return templates.TemplateResponse(
+            request=request,
+            name="reset_password.html",
+            context={
+                "token": token,
+                "valid": True,
+                "error": "Bitte gib ein neues Passwort ein.",
             },
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    if not await signup_allowed(session, signup_code):
-        return templates.TemplateResponse(
-            request=request,
-            name="register.html",
-            context={
-                "error": "Ungültiger oder bereits aufgebrauchter Einladungscode.",
-                "needs_code": True,
-                "signup_code": signup_code.strip(),
-            },
-            status_code=status.HTTP_403_FORBIDDEN,
-        )
-
-    try:
-        user = await create_user(session, username, password)
-    except UsernameTakenError:
-        # The seat was already taken from the code above; hand it back, or an invite
-        # for 20 people would run out early on typos and retries.
-        await refund_code(session, signup_code)
-        return templates.TemplateResponse(
-            request=request,
-            name="register.html",
-            context={
-                "error": "Dieser Benutzername ist bereits vergeben.",
-                "needs_code": needs_code,
-                "signup_code": signup_code.strip(),
-            },
-            status_code=status.HTTP_409_CONFLICT,
-        )
-    token = await create_token(session, user)
+    await reset_password(session, user, password)
+    # Every token is gone now, including this request's own — so hand out a fresh
+    # session rather than bouncing the user back to the login form.
+    new_token = await create_token(session, user)
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
-    _set_session_cookie(response, token.token)
+    _set_session_cookie(response, new_token.token)
     return response
 
 

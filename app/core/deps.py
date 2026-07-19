@@ -4,8 +4,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.session import get_session
 from app.models.user import User
-from app.services.auth_service import get_user_by_token
+from app.services.auth_service import get_user_by_token, is_locked_for_unverified_email
 from app.services.usage_service import consume_credits, limit_for
+
+# The only paths an account with a lapsed, unconfirmed address may still reach. Without
+# them the lock would be a dead end: no way to request a new mail, no way to confirm the
+# one already sent, no way to sign out and use a different account.
+_LOCK_EXEMPT_PATHS = frozenset(
+    {
+        "/verify-email",
+        "/verify-email/required",
+        "/verify-email/resend",
+        "/logout",
+        "/login",
+        "/register",
+        "/forgot-password",
+        "/reset-password",
+    }
+)
+
+
+class EmailVerificationRequired(Exception):
+    """Raised when a locked account touches anything outside the exempt paths.
+
+    Carried out to an exception handler rather than returned inline because it is
+    raised from a dependency, which has no response to return. The handler decides
+    between a redirect and a 403 based on what the caller asked for.
+    """
 
 
 def _extract_token(request: Request) -> Optional[str]:
@@ -23,10 +48,22 @@ async def resolve_user(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> Optional[User]:
+    # Templates read this to decide whether to show the "confirm your address" banner,
+    # which saves threading a flag through every page's context dict. Always assigned,
+    # including the None case, so a template can access it without guarding.
+    request.state.user = None
     token = _extract_token(request)
     if not token:
         return None
-    return await get_user_by_token(session, token)
+    user = await get_user_by_token(session, token)
+    request.state.user = user
+    if (
+        user is not None
+        and request.url.path not in _LOCK_EXEMPT_PATHS
+        and is_locked_for_unverified_email(user)
+    ):
+        raise EmailVerificationRequired()
+    return user
 
 
 async def get_current_user(user: Optional[User] = Depends(resolve_user)) -> User:

@@ -12,6 +12,9 @@ env/
 
 # Secrets
 .env
+# Backups and per-environment variants carry the same keys as .env itself
+.env.*
+!.env.example
 
 # Database
 *.db

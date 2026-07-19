@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}E-Mail bestätigen — Nutrition Tracker{% endblock %}
+
+{% block nav %}
+<nav id="nav">
+    <div class="wrap nav-in">
+        <a class="brand" href="/">
+            <span class="dot">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
+            </span>
+            Nutrition&nbsp;Tracker
+        </a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="card auth-card">
+        {% if ok %}
+        <h1 class="auth-title">Alles <em>bestätigt</em>.</h1>
+        <p class="auth-lede">Deine E-Mail-Adresse ist bestätigt. Viel Spaß beim Loggen.</p>
+        <p><a class="btn block" href="/dashboard">Zum Dashboard</a></p>
+        {% else %}
+        <h1 class="auth-title">Link <em>abgelaufen</em>.</h1>
+        <p class="auth-lede">
+            Dieser Bestätigungslink ist nicht mehr gültig — er hält 24 Stunden und wird
+            durch jede neu angeforderte Mail ersetzt.
+        </p>
+        <form method="post" action="/verify-email/resend" class="auth-form">
+            <button type="submit" class="btn block">Neue Mail anfordern</button>
+        </form>
+        <p class="auth-footer">
+            Nicht angemeldet? <a href="/login">Melde dich an</a>, dann kannst du die
+            Bestätigung erneut anfordern.
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

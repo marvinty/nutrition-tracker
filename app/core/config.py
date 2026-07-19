@@ -22,6 +22,17 @@ class Settings(BaseSettings):
     # Invite code required to register. Empty means registration is open, which the
     # app warns about at startup.
     signup_code: str = ""
+    # Transactional email (verification, password reset) via Resend's HTTP API.
+    # Leaving the key empty makes send_email log the message instead of sending it, so
+    # local development and tests exercise the real flows without network or a mock.
+    resend_api_key: str = ""
+    email_from: str = "Nutrition Tracker <noreply@example.com>"
+    # How long a new account may go unconfirmed before it is locked. The lock is
+    # reversible from the block page itself, so this can be short.
+    email_verify_grace_minutes: int = 60
+    # Absolute origin for links in outgoing mail. request.base_url reports the internal
+    # address behind a reverse proxy, which would produce unreachable links.
+    public_base_url: str = "http://localhost:8000"
     database_url: str = "sqlite+aiosqlite:////data/nutrition.db"
     app_timezone: str = "Europe/Berlin"  # local tz for day boundaries and display
     app_port: int = 8000

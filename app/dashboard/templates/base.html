@@ -106,7 +106,7 @@
         .stack{display:flex;flex-direction:column;gap:18px}
 
         /* ---------- forms ---------- */
-        input[type=text],input[type=password],input[type=number],input[type=date]{
+        input[type=text],input[type=password],input[type=email],input[type=number],input[type=date]{
             font-family:inherit;font-size:16px;padding:0 16px;height:46px;
             border:1px solid var(--border);border-radius:var(--r-btn);
             background:var(--surface);color:var(--text);width:100%}
@@ -122,6 +122,9 @@
         /* an empty status line must not reserve space — several sit stacked in the log card */
         .status:empty{min-height:0;margin:0}
         .status.error{color:var(--danger);font-weight:500}
+        .verify-banner{background:var(--danger-soft);color:var(--danger);border-radius:10px;
+            padding:10px 14px;margin:16px 0 0;font-weight:500}
+        .verify-banner .link-btn{color:inherit;text-decoration:underline}
         .empty{color:var(--text-subtle);font-style:italic;font-size:16px}
         .hint{font-size:14px;color:var(--text-subtle);text-wrap:pretty}
 
@@ -297,6 +300,20 @@
     </div>
 </nav>
 {% endblock %}
+
+{# Shown during the grace period, before an unconfirmed account gets locked out. #}
+{% set _u = request.state.user if request else None %}
+{% if _u and _u.email and not _u.email_verified_at %}
+<div class="wrap">
+    <p class="status verify-banner">
+        Bitte bestätige deine E-Mail-Adresse <strong>{{ _u.email }}</strong>, sonst wird
+        dein Konto bald gesperrt.
+        <form method="post" action="/verify-email/resend" style="display:inline">
+            <button type="submit" class="link-btn">Mail erneut senden</button>
+        </form>
+    </p>
+</div>
+{% endif %}
 
 {% block body %}
 <main>
