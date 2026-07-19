@@ -1,6 +1,6 @@
 """Admin panel service layer: admin auth (mirrors ``auth_service`` but against the
-separate ``adminuser``/``admintoken`` tables) plus the read-only queries backing
-the panel's pages."""
+separate ``adminuser``/``admintoken`` tables) plus the queries backing the panel's
+pages."""
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -99,6 +99,24 @@ async def ensure_bootstrap_admin(session: AsyncSession) -> Optional[AdminUser]:
     await session.commit()
     await session.refresh(admin)
     return admin
+
+
+async def set_user_tier(session: AsyncSession, username: str, tier: str) -> bool:
+    """Move a user to another tier. Returns False when the user does not exist.
+
+    ``tier_daily_credits`` is the only source of truth for which tiers exist, so a
+    value it does not know is rejected here rather than written and silently
+    downgraded to "free" by ``limit_for`` on every later request.
+    """
+    if tier not in settings.tier_daily_credits:
+        raise ValueError(f"unknown tier: {tier}")
+    result = await session.execute(select(User).where(User.username == username))
+    user = result.scalar_one_or_none()
+    if user is None:
+        return False
+    user.tier = tier
+    await session.commit()
+    return True
 
 
 async def list_users_with_stats(session: AsyncSession) -> list[UserRow]:

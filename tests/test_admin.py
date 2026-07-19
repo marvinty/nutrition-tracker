@@ -31,6 +31,7 @@ from app.services.admin_service import (
     ensure_bootstrap_admin,
     get_admin_by_token,
     list_users_with_stats,
+    set_user_tier,
 )
 from app.services.usage_service import GLOBAL_KEY
 
@@ -243,3 +244,36 @@ async def test_user_list_orders_newest_first(session):
     await session.commit()
     rows = await list_users_with_stats(session)
     assert [r.username for r in rows] == ["new", "old"]
+
+
+# --- tier changes ------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_set_user_tier_raises_the_daily_limit(session):
+    session.add(User(username="alice", password_hash="x", tier="free"))
+    await session.commit()
+
+    assert await set_user_tier(session, "alice", "pro") is True
+
+    rows = await list_users_with_stats(session)
+    assert rows[0].tier == "pro"
+    assert rows[0].credit_limit == settings.tier_daily_credits["pro"]
+
+
+@pytest.mark.asyncio
+async def test_set_user_tier_rejects_unknown_tier(session):
+    """An unknown tier would be silently downgraded to "free" by limit_for later."""
+    session.add(User(username="alice", password_hash="x", tier="free"))
+    await session.commit()
+
+    with pytest.raises(ValueError):
+        await set_user_tier(session, "alice", "platinum")
+
+    rows = await list_users_with_stats(session)
+    assert rows[0].tier == "free"
+
+
+@pytest.mark.asyncio
+async def test_set_user_tier_reports_missing_user(session):
+    assert await set_user_tier(session, "nobody", "pro") is False

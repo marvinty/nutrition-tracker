@@ -25,7 +25,17 @@
                     {% for u in users %}
                     <tr>
                         <td class="name">{{ u.username }}</td>
-                        <td><span class="tier tier--{{ u.tier }}">{{ u.tier }}</span></td>
+                        <td>
+                            <form method="post" action="/admin/users/{{ u.username }}/tier" class="tier-form">
+                                {{ csrf_field() }}
+                                <select name="tier" aria-label="Tarif von {{ u.username }}">
+                                    {% for t in tiers %}
+                                    <option value="{{ t }}" {% if t == u.tier %}selected{% endif %}>{{ t }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="row-btn">Speichern</button>
+                            </form>
+                        </td>
                         <td>{{ u.created_at | de_date }}</td>
                         <td class="num">{{ u.meal_count }}</td>
                         <td>

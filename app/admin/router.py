@@ -17,6 +17,7 @@ from app.services.admin_service import (
     create_admin_token,
     delete_admin_token,
     list_users_with_stats,
+    set_user_tier,
 )
 from app.services import rate_limit_service as rl
 from app.services.settings_service import is_signup_closed, set_signup_closed
@@ -121,8 +122,26 @@ async def admin_users(
             "admin_name": admin.username,
             "active_page": "users",
             "users": users,
+            "tiers": list(settings.tier_daily_credits),
         },
     )
+
+
+@router.post("/users/{username}/tier")
+async def admin_set_user_tier(
+    username: str,
+    tier: str = Form(...),
+    session: AsyncSession = Depends(get_session),
+    admin: Optional[AdminUser] = Depends(resolve_admin),
+):
+    if admin is None:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    try:
+        await set_user_tier(session, username, tier)
+    except ValueError:
+        # Only reachable by posting past the <select>, same as admin_create_invite.
+        pass
+    return RedirectResponse(url="/admin/users", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/invites")
