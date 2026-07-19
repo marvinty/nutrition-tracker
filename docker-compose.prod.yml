@@ -5,9 +5,9 @@ services:
     ports:
       - "${APP_PORT:-8000}:8000"
     volumes:
-      - nutrition_data:/data
+      - macromic_data:/data
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
     restart: unless-stopped
 
 volumes:
-  nutrition_data:
+  macromic_data:

@@ -1,4 +1,4 @@
-# Design-System — Nutrition Tracker
+# Design-System — MacroMic
 
 Referenz für alle UI-Arbeiten. Baustein-Vorlage ist `landing.html`.
 Ton, Farben, Fonts und Komponenten hier sind verbindlich — nichts dazuerfinden.

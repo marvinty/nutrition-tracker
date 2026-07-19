@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Nutrition Tracker API", lifespan=lifespan)
+app = FastAPI(title="MacroMic API", lifespan=lifespan)
 app.add_middleware(CSRFMiddleware)
 
 # Brand assets (wordmark, favicon). The first static files the app has had — every

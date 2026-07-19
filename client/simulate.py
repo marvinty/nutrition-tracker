@@ -111,7 +111,7 @@ def speak(text: str) -> None:
 
 
 def main() -> None:
-    print("Nutrition Tracker Simulator")
+    print("MacroMic Simulator")
     print(f"Endpoint: {API_URL}/audio")
     print("-" * 40)
     try:

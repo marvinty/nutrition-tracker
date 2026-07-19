@@ -1,4 +1,4 @@
-# Nutrition Tracker
+# MacroMic
 
 A voice-first nutrition logging API. Speak what you ate, get macros back. Built with FastAPI, SQLite, OpenAI Whisper, and Anthropic Claude.
 
@@ -25,7 +25,7 @@ client/
 
 - **Abstract `LLMProvider`** — swap or add providers by implementing one async method and setting `LLM_PROVIDER` in `.env`. See [Adding a new LLM provider](#adding-a-new-llm-provider).
 - **`user_id: String` on every meal** — UUID-ready for future multi-tenancy; defaults to `"default"` for single-user mode.
-- **SQLite in a named Docker volume** (`/data/nutrition.db`) — persists across container rebuilds.
+- **SQLite in a named Docker volume** (`/data/macromic.db`) — persists across container rebuilds.
 - **Whisper always via OpenAI** — speech-to-text is independent of the active `LLM_PROVIDER`.
 
 ## Quick Start (Docker)
@@ -101,7 +101,7 @@ curl "http://localhost:8000/meals?filter_date=2026-03-30"
 ## Deployment (Linux Server)
 
 ```bash
-git clone <your-repo> && cd nutrition-tracker
+git clone <your-repo> && cd macromic
 cp .env.example .env && nano .env   # set API keys
 
 docker compose -f docker-compose.prod.yml up -d
@@ -112,7 +112,7 @@ The prod compose file:
 - Runs `uvicorn` with `--workers 2`
 - Uses `restart: unless-stopped`
 
-The `nutrition_data` Docker volume persists the SQLite database.
+The `macromic_data` Docker volume persists the SQLite database.
 
 ## ESP32 Simulator (macOS)
 
@@ -169,7 +169,7 @@ All settings are read from `.env` (see `.env.example`):
 | `ANTHROPIC_API_KEY` | — | Required for Claude provider |
 | `OPENAI_API_KEY` | — | Required for Whisper transcription (always) |
 | `LLM_PROVIDER` | `claude` | Active LLM provider (`claude`, `openai`, `gemini`) |
-| `DATABASE_URL` | `sqlite+aiosqlite:////data/nutrition.db` | SQLAlchemy async DB URL |
+| `DATABASE_URL` | `sqlite+aiosqlite:////data/macromic.db` | SQLAlchemy async DB URL |
 | `APP_PORT` | `8000` | Host port exposed by Docker |
 | `TIER_DAILY_CREDITS` | `{"free": 20, "pro": 300}` | Daily AI credit budget per user tier |
 | `CREDIT_COSTS` | `{"text": 1, "clarify": 1, "voice": 3}` | Credits each action spends |
@@ -187,7 +187,7 @@ The budget comes from the user's `tier` column (default `free`). There is no bil
 yet, so promote by hand:
 
 ```bash
-sqlite3 /data/nutrition.db "UPDATE user SET tier='pro' WHERE username='marvin'"
+sqlite3 /data/macromic.db "UPDATE user SET tier='pro' WHERE username='marvin'"
 ```
 
 Two further layers sit on top, because per-user limits alone cannot stop a burst of
