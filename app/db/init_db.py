@@ -11,6 +11,7 @@ from app.models.admin_user import AdminUser  # noqa: F401 — must import to reg
 from app.models.admin_token import AdminToken  # noqa: F401 — must import to register with Base.metadata
 from app.models.signup_code import SignupCode  # noqa: F401 — must import to register with Base.metadata
 from app.models.app_setting import AppSetting  # noqa: F401 — must import to register with Base.metadata
+from app.models.rate_limit import RateLimitHit  # noqa: F401 — must import to register with Base.metadata
 from app.db.session import engine
 
 

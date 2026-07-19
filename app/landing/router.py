@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from app.core.csrf import register_csrf_field
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import resolve_user
 from app.db.session import get_session
@@ -11,8 +12,10 @@ from app.services.signup_code_service import signup_requires_code
 
 # Search landing templates first, plus the dashboard templates for the shared base.html.
 _dashboard_templates = Path(__file__).parent.parent / "dashboard" / "templates"
-templates = Jinja2Templates(
-    directory=[str(Path(__file__).parent / "templates"), str(_dashboard_templates)]
+templates = register_csrf_field(
+    Jinja2Templates(
+        directory=[str(Path(__file__).parent / "templates"), str(_dashboard_templates)]
+    )
 )
 router = APIRouter(tags=["landing"])
 

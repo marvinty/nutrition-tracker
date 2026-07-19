@@ -23,6 +23,7 @@
                     </p>
                 </div>
                 <form method="post" action="/admin/invites/signup-toggle">
+                    {{ csrf_field() }}
                     <input type="hidden" name="closed" value="{{ '0' if signup_closed else '1' }}">
                     <button type="submit" class="btn{{ ' ghost' if signup_closed else '' }}">
                         {{ "Registrierung öffnen" if signup_closed else "Registrierung schließen" }}
@@ -39,6 +40,7 @@
 
         <h3>Neuen Code erzeugen</h3>
         <form method="post" action="/admin/invites" class="invite-form">
+            {{ csrf_field() }}
             <div class="invite-field">
                 <label for="max_uses">Gültig für … Nutzer</label>
                 <input type="number" id="max_uses" name="max_uses" value="20" min="1" max="10000" required>
@@ -82,6 +84,7 @@
                         <td>
                             {% if c.status == "active" %}
                             <form method="post" action="/admin/invites/{{ c.id }}/revoke">
+                                {{ csrf_field() }}
                                 <button type="submit" class="row-btn">Deaktivieren</button>
                             </form>
                             {% endif %}

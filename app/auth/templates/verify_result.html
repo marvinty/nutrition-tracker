@@ -29,6 +29,7 @@
             durch jede neu angeforderte Mail ersetzt.
         </p>
         <form method="post" action="/verify-email/resend" class="auth-form">
+            {{ csrf_field() }}
             <button type="submit" class="btn block">Neue Mail anfordern</button>
         </form>
         <p class="auth-footer">

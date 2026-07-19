@@ -5,6 +5,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.admin.deps import resolve_admin
+from app.core.csrf import register_csrf_field
+from app.core.client_ip import client_ip
 from app.core.config import settings
 from app.core.dates_de import format_day_month
 from app.core.time import to_local
@@ -16,10 +18,13 @@ from app.services.admin_service import (
     delete_admin_token,
     list_users_with_stats,
 )
+from app.services import rate_limit_service as rl
 from app.services.settings_service import is_signup_closed, set_signup_closed
 from app.services.signup_code_service import create_code, list_codes, revoke_code
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates = register_csrf_field(
+    Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+)
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
 templates.env.filters["de_date"] = lambda dt: format_day_month(
     to_local(dt).date(), with_year=True
@@ -60,14 +65,22 @@ async def admin_login(
     password: str = Form(...),
     session: AsyncSession = Depends(get_session),
 ):
+    # The most valuable target in the app, and its password comes from an env var that
+    # ships with "change-me" in .env.example — so this one is throttled hardest.
+    ip = rl.ip_key(client_ip(request))
+    account = rl.account_key(username)
+    await rl.enforce(session, rl.ADMIN_LOGIN, ip, account)
+
     admin = await authenticate_admin(session, username.strip(), password)
     if admin is None:
+        await rl.record_failure(session, rl.ADMIN_LOGIN, ip, account)
         return templates.TemplateResponse(
             request=request,
             name="admin_login.html",
             context={"error": "Benutzername oder Passwort ist ungültig."},
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
+    await rl.clear_hits(session, rl.ADMIN_LOGIN, account)
     token = await create_admin_token(session, admin)
     response = RedirectResponse(url="/admin/users", status_code=status.HTTP_303_SEE_OTHER)
     _set_admin_cookie(response, token.token)

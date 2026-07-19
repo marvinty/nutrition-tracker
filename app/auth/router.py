@@ -5,9 +5,12 @@ from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.csrf import register_csrf_field
+from app.core.client_ip import client_ip
 from app.core.config import settings
 from app.core.deps import resolve_user
 from app.core.security import InvalidEmailError, normalize_email
+from app.services import rate_limit_service as rl
 from app.db.session import get_session
 from app.models.user import User
 from app.services.auth_service import (
@@ -39,8 +42,10 @@ from app.services.signup_code_service import (
 
 # Search auth templates first, plus the dashboard templates for the shared base.html.
 _dashboard_templates = Path(__file__).parent.parent / "dashboard" / "templates"
-templates = Jinja2Templates(
-    directory=[str(Path(__file__).parent / "templates"), str(_dashboard_templates)]
+templates = register_csrf_field(
+    Jinja2Templates(
+        directory=[str(Path(__file__).parent / "templates"), str(_dashboard_templates)]
+    )
 )
 router = APIRouter(tags=["auth"])
 
@@ -70,8 +75,15 @@ async def login(
     password: str = Form(...),
     session: AsyncSession = Depends(get_session),
 ):
+    # Both keys, because either alone leaves a hole: per-IP misses a botnet working on
+    # one account, per-account misses one host working through many accounts.
+    ip = rl.ip_key(client_ip(request))
+    account = rl.account_key(email)
+    await rl.enforce(session, rl.LOGIN, ip, account)
+
     user = await authenticate_user(session, email, password)
     if user is None:
+        await rl.record_failure(session, rl.LOGIN, ip, account)
         return templates.TemplateResponse(
             request=request,
             name="login.html",
@@ -81,6 +93,10 @@ async def login(
             },
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
+    # A correct password clears the account's failures but deliberately not the IP's:
+    # on a shared address one success would otherwise reset the budget an attacker is
+    # burning through from the same network.
+    await rl.clear_hits(session, rl.LOGIN, account)
     token = await create_token(session, user)
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     _set_session_cookie(response, token.token)
@@ -114,6 +130,12 @@ async def register(
     signup_code: str = Form(default=""),
     session: AsyncSession = Depends(get_session),
 ):
+    # Unlike login, this counts every attempt rather than only failures: creating
+    # accounts in bulk to farm free credits is the abuse here, and each *success* is
+    # what does the damage.
+    ip = rl.ip_key(client_ip(request))
+    await rl.enforce(session, rl.SIGNUP, ip)
+
     # Closing signup is the only thing that stops someone creating accounts in bulk to
     # farm free credits; the per-user and global credit limits only cap the damage.
     needs_code = await signup_requires_code(session)
@@ -169,6 +191,7 @@ async def register(
         )
         return _reject(message, status.HTTP_409_CONFLICT)
 
+    await rl.record_hit(session, rl.SIGNUP, ip)
     await _send_verification(session, user)
     token = await create_token(session, user)
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
@@ -286,6 +309,12 @@ async def forgot_password(
     email: str = Form(...),
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
+    # Per IP and per address: this endpoint sends mail to an address the caller
+    # chooses, which makes it usable to flood someone else's inbox.
+    ip = rl.ip_key(client_ip(request))
+    await rl.enforce(session, rl.FORGOT_PASSWORD, ip, rl.account_key(email))
+    await rl.record_hit(session, rl.FORGOT_PASSWORD, ip)
+
     try:
         normalized_email = normalize_email(email)
     except InvalidEmailError:
@@ -294,6 +323,7 @@ async def forgot_password(
         normalized_email = None
 
     if normalized_email is not None:
+        await rl.record_hit(session, rl.FORGOT_PASSWORD, rl.account_key(normalized_email))
         user = await get_user_by_email(session, normalized_email)
         if user is not None:
             last_sent = await latest_token_created_at(session, user, RESET_TOKEN)

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Zu viele Versuche — Nutrition Tracker{% endblock %}
+
+{% block nav %}
+<nav id="nav">
+    <div class="wrap nav-in">
+        <a class="brand" href="/">
+            <span class="dot">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
+            </span>
+            Nutrition&nbsp;Tracker
+        </a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="card auth-card">
+        <h1 class="auth-title">Kurz <em>durchatmen</em>.</h1>
+        <p class="auth-lede">{{ detail }}</p>
+        <p class="auth-footer">
+            Passwort vergessen? <a href="/forgot-password">Setz es zurück</a> — das geht
+            auch, während die Sperre läuft.
+        </p>
+    </div>
+</div>
+{% endblock %}

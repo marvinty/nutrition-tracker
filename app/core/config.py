@@ -40,6 +40,19 @@ class Settings(BaseSettings):
     session_ttl_days: int = 30
     cookie_secure: bool = False  # set True in production (HTTPS)
 
+    # How many reverse proxies of ours sit in front of the app. Decides which entry of
+    # X-Forwarded-For is trustworthy — see core/client_ip.py. Default 0 (no proxy) is
+    # the safe one: it ignores the header entirely rather than trusting a value any
+    # client can set. Set to 1 when running behind Caddy/nginx/Traefik.
+    trusted_proxy_hops: int = 0
+    # Failed sign-in attempts allowed per window, counted per IP and per account. Only
+    # failures count, so normal use never runs into it.
+    login_rate_limit: int = 10
+    login_rate_window_minutes: int = 15
+    # Mails are the expensive, abusable side of these two, so they get their own budget.
+    signup_rate_limit: int = 5
+    forgot_password_rate_limit: int = 5
+
     # Admin panel (/admin). Separate credentials, table and cookie from app users.
     # Setting both env vars creates the admin on startup, or resets its password
     # if it already exists — the recovery path for a deployment with no shell.

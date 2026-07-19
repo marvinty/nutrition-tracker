@@ -1,17 +1,22 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse, RedirectResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.admin.router import router as admin_router
 from app.api.router import api_router
 from app.auth.router import router as auth_router
+from app.auth.router import templates as auth_templates
 from app.core.config import settings
+from app.core.csrf import CSRFMiddleware
 from app.core.deps import EmailVerificationRequired
 from app.dashboard.router import router as dashboard_router
 from app.db.init_db import init_db
 from app.db.session import async_session_maker
 from app.landing.router import router as landing_router
 from app.services.admin_service import ensure_bootstrap_admin
+from app.services.rate_limit_service import prune_expired
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +61,35 @@ async def lifespan(app: FastAPI):
 
     async with async_session_maker() as session:
         await ensure_bootstrap_admin(session)
+        # Rows outside the window are meaningless; clearing them at boot is enough to
+        # keep the table from growing across restarts without a scheduled job.
+        await prune_expired(session)
     yield
 
 
 app = FastAPI(title="Nutrition Tracker API", lifespan=lifespan)
+app.add_middleware(CSRFMiddleware)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def _http_exception(request: Request, exc: StarletteHTTPException):
+    """Render 429 as a page for form posts, keeping JSON everywhere else.
+
+    The rate limiter guards HTML forms as well as the API, and FastAPI's default
+    renders every HTTPException as JSON — which for someone who mistyped their password
+    too often would mean a bare line of JSON instead of an explanation. Anything that
+    is not this specific case is handed straight back to the default handler.
+    """
+    is_browser_form = not request.url.path.startswith("/api/")
+    if exc.status_code == status.HTTP_429_TOO_MANY_REQUESTS and is_browser_form:
+        return auth_templates.TemplateResponse(
+            request=request,
+            name="rate_limited.html",
+            context={"detail": exc.detail},
+            status_code=exc.status_code,
+            headers=getattr(exc, "headers", None),
+        )
+    return await http_exception_handler(request, exc)
 
 
 @app.exception_handler(EmailVerificationRequired)

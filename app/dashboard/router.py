@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.csrf import register_csrf_field
 from app.core.deps import resolve_user
 from app.core.dates_de import (
     format_day_month,
@@ -28,7 +29,9 @@ from app.services.goal_service import (
 )
 from app.services.usage_service import get_credit_status
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates = register_csrf_field(
+    Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+)
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
 templates.env.filters["de_short"] = format_short_weekday
 router = APIRouter(tags=["dashboard"])

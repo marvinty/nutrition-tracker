@@ -7,6 +7,7 @@
             <a class="pill {% if active_page == 'invites' %}is-active{% endif %}" href="/admin/invites">Einladungen</a>
             <span class="who">{{ admin_name }}</span>
             <form method="post" action="/admin/logout">
+                {{ csrf_field() }}
                 <button type="submit" class="pill">Abmelden</button>
             </form>
         </div>
