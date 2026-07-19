@@ -37,6 +37,23 @@ _INGREDIENTS_SHAPE = """[
   {"description": "...", "calories": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
 ]"""
 
+# These prompts are written in English, so without saying otherwise the model
+# answers in English too: a user logging "zwei Spiegeleier und eine Scheibe
+# Vollkornbrot" got back "2 Fried Eggs and 1 slice of whole grain bread", which
+# is what lands in their meal list. It matters just as much for the clarifying
+# question, which is shown verbatim in an otherwise German UI.
+#
+# German unconditionally rather than mirroring the user's language: a prompt
+# asking gpt-4o-mini to mirror was tried and it answered German to English input
+# anyway (twice), so mirroring would have been a promise the model does not keep.
+# Everything else the user sees is German too, which makes this the honest rule.
+# Revisit if the app is ever localised.
+_LANGUAGE_RULE = (
+    "\nLANGUAGE: write every human-readable string you return — the description "
+    "and any question — in GERMAN, whatever language the user wrote in. Keep the "
+    "user's own food names as they wrote them rather than translating them.\n"
+)
+
 
 def build_system_prompt(allow_questions: bool) -> str:
     """System prompt for the nutrition analysis conversation.
@@ -51,6 +68,7 @@ def build_system_prompt(allow_questions: bool) -> str:
         "Your job is to return structured nutrition data: description, calories, "
         "protein, carbs, fat (grams for macros, kcal for calories).\n"
         "Respond ONLY with a single valid JSON object and no text outside it.\n"
+        f"{_LANGUAGE_RULE}"
     )
     if allow_questions:
         return base + (
@@ -89,6 +107,7 @@ def build_ingredients_prompt() -> str:
         "from the stated amount and typical values. Never ask questions; always estimate.\n"
         "Respond ONLY with a single valid JSON array and no text outside it, using this shape:\n"
         f"{_INGREDIENTS_SHAPE}"
+        f"{_LANGUAGE_RULE}"
     )
 
 
