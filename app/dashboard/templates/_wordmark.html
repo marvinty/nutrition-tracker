@@ -1,0 +1,41 @@
+{# MacroMic wordmark — inlined, not <img>.
+
+   An <img>-referenced SVG is an isolated document: the page's webfonts do not reach
+   it, so 'Space Grotesk' would never load and the mark would silently fall back to
+   the system sans. Inlined, the <text> resolves against the fonts the page already
+   loads. Source of truth for the artwork is app/static/brand/macromic-wordmark.svg —
+   keep the two in sync until the text is converted to paths (see BRAND.md).
+
+   The viewBox is deliberately tighter than the source file's "0 0 620 200". Measured
+   in the browser, the artwork only occupies x 34-463, y 30-180 — the artboard carries
+   ~31% empty margin, nearly all of it on the right. Rendered at a nav-sized height
+   that padding shrinks the visible mark to about three quarters of its box, which read
+   as undersized next to the nav links. Cropping to the ink plus a small margin is the
+   fix; the geometry inside is untouched. Right and bottom edges are set by the
+   waveform bars, whose coordinates are fixed, so they cannot shift with the font. The
+   top edge is cap height, hence the slightly larger margin there.
+
+   Sizing lives in CSS, not here. Callers that need something other than the nav-sized
+   mark pass their own class:
+     {% with mark_class = "wordmark-lg" %}{% include "_wordmark.html" %}{% endwith %}
+
+   `variant` picks the colour pair. "dark" is for the mark sitting on the dark panel
+   (#2b241f) — the admin bar — and carries the lifted values from
+   macromic-wordmark-dark.svg, not a tint computed here. Geometry is shared so a change
+   to the crop cannot leave one variant behind. #}
+{% set _palette = {
+     'light': {'macro': '#7a7164', 'mic': '#c96442'},
+     'dark':  {'macro': '#c7bfb2', 'mic': '#e08a63'},
+   }[variant | default('light')] %}
+<svg class="{{ mark_class | default('brand-mark') }}" viewBox="26 20 445 168"
+     xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MacroMic">
+  <text x="34" y="120" font-family="'Space Grotesk',ui-sans-serif,system-ui,sans-serif"
+        font-size="92" font-weight="500" letter-spacing="-4"><tspan fill="{{ _palette.macro }}">macro</tspan><tspan fill="{{ _palette.mic }}">mic</tspan></text>
+  <g fill="{{ _palette.mic }}">
+    <rect x="392" y="150" width="7" height="14" rx="3.5"></rect>
+    <rect x="408" y="142" width="7" height="30" rx="3.5"></rect>
+    <rect x="424" y="134" width="7" height="46" rx="3.5"></rect>
+    <rect x="440" y="144" width="7" height="26" rx="3.5"></rect>
+    <rect x="456" y="151" width="7" height="12" rx="3.5"></rect>
+  </g>
+</svg>

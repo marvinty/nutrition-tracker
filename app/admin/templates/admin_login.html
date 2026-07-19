@@ -1,11 +1,14 @@
 {% extends "admin_base.html" %}
 
-{% block title %}Admin-Anmeldung — Nutrition Tracker{% endblock %}
+{% block title %}Admin-Anmeldung — MacroMic{% endblock %}
 
 {% block content %}
 <div class="admin-bar">
     <div class="wrap admin-in">
-        <div class="brand">Nutrition Tracker <span class="tag">Admin</span></div>
+        <div class="brand">
+            {% with variant = "dark" %}{% include "_wordmark.html" %}{% endwith %}
+            <span class="tag">Admin</span>
+        </div>
     </div>
 </div>
 <main>

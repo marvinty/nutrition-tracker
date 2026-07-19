@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Nutrition Tracker{% endblock %}</title>
+    <title>{% block title %}MacroMic{% endblock %}</title>
+    <link rel="icon" href="/static/brand/macromic-mark.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
     <style>
         /* Design system per DESIGN.md — tokens are exact, no new base colours.
            Derived tints (dark panels, accent shades) follow landing.html. */
@@ -49,11 +50,11 @@
         nav.scrolled{border-color:var(--border)}
         .nav-in{display:flex;align-items:center;justify-content:space-between;gap:18px;
             min-height:68px;flex-wrap:wrap;padding:10px 0}
-        .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;
-            letter-spacing:-.01em;color:var(--text)}
+        .brand{display:flex;align-items:center;color:var(--text)}
         .brand:hover{color:var(--text)}
-        .brand .dot{width:26px;height:26px;border-radius:8px;background:var(--accent);
-            display:grid;place-items:center;color:#fff;flex:none}
+        /* Height-driven, not width: the artboard carries trailing whitespace, so a
+           fixed width would size the letterforms unpredictably. */
+        .brand-mark{height:36px;width:auto;display:block}
         .nav-links{display:flex;align-items:center;gap:4px}
         .nav-link{padding:7px 14px;border-radius:99px;font-size:14px;font-weight:500;
             color:var(--text-muted);transition:background .2s,color .2s}
@@ -252,6 +253,7 @@
             body{font-size:16px}
             .wrap{padding:0 20px}
             .nav-in{min-height:60px;gap:12px}
+            .brand-mark{height:28px}
             .nav-who{display:none}
             .nav-links{order:3;width:100%;gap:2px}
             .nav-link{flex:1;text-align:center;padding:7px 8px;font-size:13px}
@@ -282,12 +284,7 @@
 {% block nav %}
 <nav id="nav">
     <div class="wrap nav-in">
-        <a class="brand" href="/dashboard">
-            <span class="dot">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
-            </span>
-            Nutrition&nbsp;Tracker
-        </a>
+        <a class="brand" href="/dashboard">{% include "_wordmark.html" %}</a>
         <div class="nav-links">
             <a class="nav-link{% if active_page == 'dashboard' %} is-active{% endif %}" href="/dashboard">Heute</a>
             <a class="nav-link{% if active_page == 'history' %} is-active{% endif %}" href="/history">Verlauf</a>

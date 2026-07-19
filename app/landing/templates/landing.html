@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nutrition Tracker — Sag einfach, was du gegessen hast.</title>
+<title>MacroMic — Sag einfach, was du gegessen hast.</title>
+<link rel="icon" href="/static/brand/macromic-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#eeece4; --surface:#fbf8f2; --surface-2:#f2ede2;
@@ -32,9 +33,10 @@
       backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .3s}
   nav.scrolled{border-color:var(--border)}
   .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.01em}
-  .brand .dot{width:26px;height:26px;border-radius:8px;background:var(--accent);
-    display:grid;place-items:center;color:#fff}
+  .brand{display:flex;align-items:center}
+  /* Height-driven, not width: the artboard carries trailing whitespace, so a fixed
+     width would size the letterforms unpredictably. */
+  .brand-mark{height:36px;width:auto;display:block}
   .nav-actions{display:flex;align-items:center;gap:20px}
   .nav-login{color:var(--text-muted);font-size:14px;font-weight:500}
   .nav-login:hover{color:var(--text)}
@@ -141,6 +143,11 @@
   /* ---------- outro ---------- */
   .outro{background:var(--surface);border:1px solid var(--border);border-radius:32px;
     padding:80px 40px;text-align:center;position:relative;overflow:hidden}
+  /* Sits above the outro headline as the brand beat before the CTA. Scaled to read as
+     a heading in its own right — it still comes in under the h2's cap height, which
+     keeps the reading order (name, then claim, then CTA) intact. The block's
+     background is --surface, the exact cream the mark was drawn for. */
+  .wordmark-lg{height:clamp(48px,6.5vw,88px);width:auto;display:block;margin:0 auto 32px}
   .outro h2{font-family:var(--serif);font-weight:500;letter-spacing:-.03em;line-height:1.03;
     font-size:clamp(40px,6vw,80px);text-wrap:balance}
   .outro h2 em{font-style:italic;color:var(--accent)}
@@ -169,6 +176,8 @@
   @media(max-width:560px){
     body{font-size:16px}
     .wrap{padding:0 20px}
+    .brand-mark{height:28px}
+    .wordmark-lg{margin-bottom:20px}
     .nav-login{display:none}
     header.hero{padding:44px 0 24px}
     section{padding:60px 0}
@@ -192,12 +201,7 @@
 
 <nav id="nav">
   <div class="wrap nav-in">
-    <div class="brand">
-      <span class="dot">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>
-      </span>
-      Nutrition&nbsp;Tracker
-    </div>
+    <div class="brand">{% include "_wordmark.html" %}</div>
     <div class="nav-actions">
       <a class="nav-login" href="/faq">FAQ</a>
       <a class="nav-login" href="/login">Anmelden</a>
@@ -368,6 +372,7 @@
 <section style="padding-top:20px">
   <div class="wrap">
     <div class="outro rv">
+      {% with mark_class = "wordmark-lg" %}{% include "_wordmark.html" %}{% endwith %}
       <h2>Weniger tippen.<br><em>Genauer</em> tracken.</h2>
       <div class="oc">
         <a class="btn lg" href="/register">Jetzt registrieren
@@ -380,7 +385,7 @@
 </section>
 
 <footer class="wrap">
-  <span>Nutrition Tracker</span>
+  <span>MacroMic</span>
   <span><a href="/faq">FAQ</a> &middot; Sag einfach, was du gegessen hast.</span>
 </footer>
 

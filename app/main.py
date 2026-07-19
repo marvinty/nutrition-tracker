@@ -1,8 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI, Request, status
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.admin.router import router as admin_router
 from app.api.router import api_router
@@ -69,6 +71,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Nutrition Tracker API", lifespan=lifespan)
 app.add_middleware(CSRFMiddleware)
+
+# Brand assets (wordmark, favicon). The first static files the app has had — every
+# other stylesheet and icon is inlined in its template.
+app.mount(
+    "/static",
+    StaticFiles(directory=Path(__file__).parent / "static"),
+    name="static",
+)
 
 
 @app.exception_handler(StarletteHTTPException)

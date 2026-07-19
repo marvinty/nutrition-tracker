@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Admin — Nutrition Tracker{% endblock %}</title>
+    <title>{% block title %}Admin — MacroMic{% endblock %}</title>
+    <link rel="icon" href="/static/brand/macromic-mark.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
     <style>
         /* Same design system as the user-facing app (DESIGN.md). The admin side is
            marked by a dark nav bar — a dark panel on --text, which the system allows —
@@ -43,8 +44,10 @@
         .admin-bar{background:var(--text);color:#f4efe6}
         .admin-in{display:flex;align-items:center;justify-content:space-between;gap:18px;
             min-height:64px;flex-wrap:wrap;padding:10px 0}
-        .admin-bar .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);
-            font-size:19px;color:#fbf8f2}
+        .admin-bar .brand{display:flex;align-items:center;gap:12px}
+        /* The dark variant of the mark — the bar's background is --text, the exact
+           tone macromic-wordmark-dark.svg was drawn against. */
+        .admin-bar .brand-mark{height:26px;width:auto;display:block}
         .admin-bar .brand .tag{font-family:var(--sans);font-size:10px;font-weight:600;
             text-transform:uppercase;letter-spacing:.1em;background:var(--accent);color:#fff;
             border-radius:99px;padding:3px 10px}

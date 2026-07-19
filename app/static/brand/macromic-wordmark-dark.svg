@@ -1,0 +1,12 @@
+<svg viewBox="0 0 620 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="macromic">
+  
+  <text x="34" y="120" font-family="&#39;Space Grotesk&#39;,ui-sans-serif,system-ui,sans-serif" font-size="92" font-weight="500" letter-spacing="-4"><tspan fill="#c7bfb2">macro</tspan><tspan fill="#e08a63">mic</tspan></text>
+  
+  <g fill="#e08a63">
+    <rect x="392" y="150" width="7" height="14" rx="3.5"></rect>
+    <rect x="408" y="142" width="7" height="30" rx="3.5"></rect>
+    <rect x="424" y="134" width="7" height="46" rx="3.5"></rect>
+    <rect x="440" y="144" width="7" height="26" rx="3.5"></rect>
+    <rect x="456" y="151" width="7" height="12" rx="3.5"></rect>
+  </g>
+</svg>
