@@ -28,3 +28,7 @@ data/
 .idea/
 .vscode/
 *.swp
+
+# Claude Code: the .local variant is the per-machine permission allowlist and
+# fills up with paths that only exist on one checkout. launch.json stays tracked.
+.claude/settings.local.json
