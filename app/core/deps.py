@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.session import get_session
 from app.models.user import User
+from app.services.ai_log_service import set_ai_context
 from app.services.auth_service import get_user_by_token, is_locked_for_unverified_email
 from app.services.usage_service import consume_credits, limit_for
 
@@ -88,6 +89,7 @@ def require_credits(action: str):
     cost = settings.credit_costs[action]
 
     async def dependency(
+        request: Request,
         user: User = Depends(get_current_user),
         session: AsyncSession = Depends(get_session),
     ) -> User:
@@ -98,6 +100,12 @@ def require_credits(action: str):
             limit_for(user.tier),
             global_limit=settings.global_daily_credits,
         )
+        # Everything downstream of here may reach a provider, and the provider is
+        # where the log row is written — but it cannot see who is calling. Setting
+        # the context once here covers every AI endpoint, since each one already
+        # depends on require_credits. Deliberately after the charge: a request
+        # rejected for lack of credits never reaches an API and has nothing to log.
+        set_ai_context(user.username, action, request.url.path)
         return user
 
     return dependency

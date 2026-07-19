@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, Depends, Form, Request, status
@@ -16,9 +17,13 @@ from app.services.admin_service import (
     authenticate_admin,
     create_admin_token,
     delete_admin_token,
+    get_user_detail,
+    list_user_credit_days,
+    list_user_meals,
     list_users_with_stats,
     set_user_tier,
 )
+from app.services.ai_log_service import list_logs_for_user
 from app.services import rate_limit_service as rl
 from app.services.settings_service import is_signup_closed, set_signup_closed
 from app.services.signup_code_service import create_code, list_codes, revoke_code
@@ -32,9 +37,20 @@ templates = register_csrf_field(
     )
 )
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
-templates.env.filters["de_date"] = lambda dt: format_day_month(
-    to_local(dt).date(), with_year=True
-)
+
+
+def _de_date(value) -> str:
+    """Format a timestamp or a plain date the same way.
+
+    ``AiUsage.day`` is already a local calendar date, not a UTC timestamp, so it
+    must skip the timezone conversion — passing it through ``to_local`` would
+    both fail (no ``tzinfo`` on a date) and be wrong in principle.
+    """
+    d = value if isinstance(value, date) and not isinstance(value, datetime) else to_local(value).date()
+    return format_day_month(d, with_year=True)
+
+
+templates.env.filters["de_date"] = _de_date
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 # German labels for the statuses computed in signup_code_service.
@@ -132,10 +148,39 @@ async def admin_users(
     )
 
 
+@router.get("/users/{username}")
+async def admin_user_detail(
+    request: Request,
+    username: str,
+    session: AsyncSession = Depends(get_session),
+    admin: Optional[AdminUser] = Depends(resolve_admin),
+):
+    if admin is None:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    detail = await get_user_detail(session, username)
+    if detail is None:
+        return RedirectResponse(url="/admin/users", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_user_detail.html",
+        context={
+            "admin_name": admin.username,
+            "active_page": "users",
+            "detail": detail,
+            "tiers": list(settings.tier_daily_credits),
+            "logs": await list_logs_for_user(session, username),
+            "credit_days": await list_user_credit_days(session, username),
+            "meals": await list_user_meals(session, username),
+            "retention_days": settings.ai_log_retention_days,
+        },
+    )
+
+
 @router.post("/users/{username}/tier")
 async def admin_set_user_tier(
     username: str,
     tier: str = Form(...),
+    back: str = Form(default=""),
     session: AsyncSession = Depends(get_session),
     admin: Optional[AdminUser] = Depends(resolve_admin),
 ):
@@ -146,7 +191,10 @@ async def admin_set_user_tier(
     except ValueError:
         # Only reachable by posting past the <select>, same as admin_create_invite.
         pass
-    return RedirectResponse(url="/admin/users", status_code=status.HTTP_303_SEE_OTHER)
+    # The list page and the detail page share this handler; ``back`` is how the
+    # detail form asks to be returned to instead of the list.
+    target = f"/admin/users/{username}" if back == "detail" else "/admin/users"
+    return RedirectResponse(url=target, status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/invites")

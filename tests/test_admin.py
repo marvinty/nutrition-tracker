@@ -22,6 +22,7 @@ from app.models.base import Base
 from app.models.admin_token import AdminToken  # noqa: F401 — register with Base.metadata
 from app.models.admin_user import AdminUser
 from app.models.ai_usage import AiUsage
+from app.models.auth_token import AuthToken
 from app.models.meal import Meal
 from app.models.user import User
 from app.services.admin_service import (
@@ -30,6 +31,9 @@ from app.services.admin_service import (
     delete_admin_token,
     ensure_bootstrap_admin,
     get_admin_by_token,
+    get_user_detail,
+    list_user_credit_days,
+    list_user_meals,
     list_users_with_stats,
     set_user_tier,
 )
@@ -277,3 +281,108 @@ async def test_set_user_tier_rejects_unknown_tier(session):
 @pytest.mark.asyncio
 async def test_set_user_tier_reports_missing_user(session):
     assert await set_user_tier(session, "nobody", "pro") is False
+
+
+# --- user detail -------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_user_detail_reports_missing_user(session):
+    assert await get_user_detail(session, "nobody") is None
+
+
+@pytest.mark.asyncio
+async def test_user_detail_reports_profile_and_activity(session, monkeypatch):
+    today = datetime(2026, 7, 18).date()
+    monkeypatch.setattr("app.services.usage_service.today_local", lambda: today)
+    verified = datetime(2026, 7, 1, 9, 0, tzinfo=timezone.utc)
+    session.add(
+        User(
+            username="alice",
+            email="alice@example.com",
+            email_verified_at=verified,
+            password_hash="x",
+            tier="pro",
+        )
+    )
+    await session.commit()
+    older = datetime(2026, 7, 2, 10, 0, tzinfo=timezone.utc)
+    newer = datetime(2026, 7, 6, 18, 30, tzinfo=timezone.utc)
+    session.add_all(
+        [
+            Meal(user_id="alice", description="Haferflocken", timestamp=older),
+            Meal(user_id="alice", description="Reis", timestamp=newer),
+            Meal(user_id="bob", description="Skyr", timestamp=newer),
+        ]
+    )
+    session.add(AiUsage(user_id="alice", day=today, count=7))
+    await session.commit()
+
+    detail = await get_user_detail(session, "alice")
+    assert detail.email == "alice@example.com"
+    assert detail.email_verified_at.replace(tzinfo=timezone.utc) == verified
+    assert detail.tier == "pro"
+    assert detail.credit_limit == settings.tier_daily_credits["pro"]
+    assert detail.credits_today == 7
+    assert detail.meal_count == 2  # bob's meal must not be counted
+    assert detail.last_meal_at.replace(tzinfo=timezone.utc) == newer
+
+
+@pytest.mark.asyncio
+async def test_user_detail_counts_only_live_sessions(session):
+    user = User(username="alice", password_hash="x")
+    session.add(user)
+    await session.commit()
+    now = datetime.now(timezone.utc)
+    session.add_all(
+        [
+            AuthToken(token="no-expiry", user_id=user.id, expires_at=None),
+            AuthToken(
+                token="future", user_id=user.id, expires_at=now + timedelta(days=1)
+            ),
+            AuthToken(
+                token="expired", user_id=user.id, expires_at=now - timedelta(days=1)
+            ),
+        ]
+    )
+    await session.commit()
+
+    detail = await get_user_detail(session, "alice")
+    assert detail.active_sessions == 2
+
+
+@pytest.mark.asyncio
+async def test_credit_days_ignore_global_row_and_order_newest_first(session):
+    today = datetime(2026, 7, 18).date()
+    session.add(User(username="alice", password_hash="x"))
+    await session.commit()
+    session.add_all(
+        [
+            AiUsage(user_id="alice", day=today - timedelta(days=2), count=3),
+            AiUsage(user_id="alice", day=today, count=5),
+            AiUsage(user_id=GLOBAL_KEY, day=today, count=400),
+        ]
+    )
+    await session.commit()
+
+    days = await list_user_credit_days(session, "alice")
+    assert [(d.day, d.count) for d in days] == [(today, 5), (today - timedelta(days=2), 3)]
+
+
+@pytest.mark.asyncio
+async def test_user_meals_are_scoped_ordered_and_capped(session):
+    session.add(User(username="alice", password_hash="x"))
+    await session.commit()
+    base = datetime(2026, 7, 1, 8, 0, tzinfo=timezone.utc)
+    session.add_all(
+        [
+            Meal(user_id="alice", description="erste", timestamp=base),
+            Meal(user_id="alice", description="zweite", timestamp=base + timedelta(hours=3)),
+            Meal(user_id="bob", description="fremd", timestamp=base + timedelta(hours=4)),
+        ]
+    )
+    await session.commit()
+
+    meals = await list_user_meals(session, "alice")
+    assert [m.description for m in meals] == ["zweite", "erste"]
+    assert len(await list_user_meals(session, "alice", limit=1)) == 1

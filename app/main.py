@@ -18,6 +18,7 @@ from app.db.init_db import init_db
 from app.db.session import async_session_maker
 from app.landing.router import router as landing_router
 from app.services.admin_service import ensure_bootstrap_admin
+from app.services.ai_log_service import prune_old_logs
 from app.services.rate_limit_service import prune_expired
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,10 @@ async def lifespan(app: FastAPI):
         # Rows outside the window are meaningless; clearing them at boot is enough to
         # keep the table from growing across restarts without a scheduled job.
         await prune_expired(session)
+        # Same reasoning, different table: the AI log keeps verbatim user input, so
+        # its retention window has to be enforced somewhere. At boot is enough
+        # without adding a scheduler.
+        await prune_old_logs(session)
     yield
 
 

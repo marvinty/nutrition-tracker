@@ -3,9 +3,9 @@ separate ``adminuser``/``admintoken`` tables) plus the queries backing the panel
 pages."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.security import generate_token, hash_password, verify_password
@@ -13,9 +13,10 @@ from app.core.time import today_local
 from app.models.admin_token import AdminToken
 from app.models.admin_user import AdminUser
 from app.models.ai_usage import AiUsage
+from app.models.auth_token import AuthToken
 from app.models.meal import Meal
 from app.models.user import User
-from app.services.usage_service import limit_for
+from app.services.usage_service import get_usage, limit_for
 
 
 @dataclass
@@ -29,6 +30,31 @@ class UserRow:
     last_meal_at: Optional[datetime]
     credits_used: int
     credit_limit: int
+
+
+@dataclass
+class UserDetail:
+    """Everything the admin detail page shows above the logs."""
+
+    username: str
+    email: Optional[str]
+    email_verified_at: Optional[datetime]
+    created_at: datetime
+    tier: str
+    credit_limit: int
+    credits_today: int
+    meal_count: int
+    last_meal_at: Optional[datetime]
+    active_sessions: int
+    last_login_at: Optional[datetime]
+
+
+@dataclass
+class CreditDay:
+    """One day's credit spend for a single user."""
+
+    day: date
+    count: int
 
 
 async def authenticate_admin(
@@ -158,3 +184,82 @@ async def list_users_with_stats(session: AsyncSession) -> list[UserRow]:
         )
         for row in rows
     ]
+
+
+async def get_user_detail(session: AsyncSession, username: str) -> Optional[UserDetail]:
+    """One user's profile and counters, or None when the name is unknown.
+
+    Several small queries rather than one join: ``Meal`` and ``AuthToken`` are both
+    one-to-many against the user, so joining them together would multiply each
+    other's counts — the same trap ``list_users_with_stats`` sidesteps.
+    """
+    result = await session.execute(select(User).where(User.username == username))
+    user = result.scalar_one_or_none()
+    if user is None:
+        return None
+
+    meal_stats = (
+        await session.execute(
+            select(func.count(Meal.id), func.max(Meal.timestamp)).where(
+                Meal.user_id == username
+            )
+        )
+    ).one()
+
+    # Compared in SQL rather than in Python: SQLite returns naive datetimes, and
+    # an aware "now" would raise on comparison — see get_admin_by_token above,
+    # which has to work around exactly that after the fact.
+    now = datetime.now(timezone.utc)
+    session_stats = (
+        await session.execute(
+            select(func.count(AuthToken.token), func.max(AuthToken.created_at)).where(
+                AuthToken.user_id == user.id,
+                or_(AuthToken.expires_at.is_(None), AuthToken.expires_at > now),
+            )
+        )
+    ).one()
+
+    return UserDetail(
+        username=user.username,
+        email=user.email,
+        email_verified_at=user.email_verified_at,
+        created_at=user.created_at,
+        tier=user.tier,
+        credit_limit=limit_for(user.tier),
+        credits_today=await get_usage(session, username),
+        meal_count=meal_stats[0] or 0,
+        last_meal_at=meal_stats[1],
+        active_sessions=session_stats[0] or 0,
+        # Newest live session standing in for a real last-login timestamp, which
+        # the user table does not carry.
+        last_login_at=session_stats[1],
+    )
+
+
+async def list_user_credit_days(
+    session: AsyncSession, username: str, days: int = 30
+) -> list[CreditDay]:
+    """Recent daily credit spend, newest first.
+
+    Filtering on the username also excludes ``usage_service.GLOBAL_KEY``, which
+    shares this table but is the app-wide counter, not a user.
+    """
+    cutoff = today_local() - timedelta(days=days)
+    result = await session.execute(
+        select(AiUsage.day, AiUsage.count)
+        .where(AiUsage.user_id == username, AiUsage.day > cutoff)
+        .order_by(AiUsage.day.desc())
+    )
+    return [CreditDay(day=day, count=count) for day, count in result.all()]
+
+
+async def list_user_meals(
+    session: AsyncSession, username: str, limit: int = 20
+) -> list[Meal]:
+    result = await session.execute(
+        select(Meal)
+        .where(Meal.user_id == username)
+        .order_by(Meal.timestamp.desc(), Meal.id.desc())
+        .limit(limit)
+    )
+    return list(result.scalars().all())

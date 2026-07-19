@@ -7,6 +7,7 @@ from app.models.user import User  # noqa: F401 — must import to register with 
 from app.models.auth_token import AuthToken  # noqa: F401 — must import to register with Base.metadata
 from app.models.macro_goal import MacroGoal  # noqa: F401 — must import to register with Base.metadata
 from app.models.ai_usage import AiUsage  # noqa: F401 — must import to register with Base.metadata
+from app.models.ai_request_log import AiRequestLog  # noqa: F401 — must import to register with Base.metadata
 from app.models.admin_user import AdminUser  # noqa: F401 — must import to register with Base.metadata
 from app.models.admin_token import AdminToken  # noqa: F401 — must import to register with Base.metadata
 from app.models.signup_code import SignupCode  # noqa: F401 — must import to register with Base.metadata

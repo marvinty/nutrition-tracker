@@ -4,6 +4,7 @@ import tempfile
 from typing import Optional
 
 from app.providers.whisper.base import WhisperProvider
+from app.services.ai_log_service import log_ai_call
 
 
 class LocalWhisperProvider(WhisperProvider):
@@ -32,9 +33,20 @@ class LocalWhisperProvider(WhisperProvider):
             tmp.write(audio_bytes)
             tmp_path = tmp.name
         try:
-            model = self._get_model()
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(None, lambda: model.transcribe(tmp_path))
-            return result["text"].strip()
+            # Logged like the hosted providers even though it costs nothing: the
+            # point is seeing what users said, and the latency here is the one
+            # worth watching — first use also pays for loading the model.
+            async with log_ai_call(
+                kind="transcribe", provider="local", model=self._model_name
+            ) as rec:
+                rec.set_prompt(f"<audio {len(audio_bytes)} bytes, {filename}>")
+                model = self._get_model()
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(
+                    None, lambda: model.transcribe(tmp_path)
+                )
+                text = result["text"].strip()
+                rec.set_response(text)
+            return text
         finally:
             os.unlink(tmp_path)

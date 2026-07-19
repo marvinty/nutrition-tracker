@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     # wrong (a signup burst, a client stuck in a retry loop). Tripping it locks out
     # every user until local midnight — the deliberate trade against a surprise bill.
     global_daily_credits: int = 500
+    # Full-text log of every AI call (see models/ai_request_log.py). The retention
+    # window is what keeps storing verbatim user input defensible, and the char cap
+    # stops one pathological request from bloating the SQLite file.
+    ai_log_retention_days: int = 90
+    ai_log_max_text_chars: int = 20000
     # Invite code required to register. Empty means registration is open, which the
     # app warns about at startup.
     signup_code: str = ""

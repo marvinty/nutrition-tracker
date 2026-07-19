@@ -1,0 +1,187 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ detail.username }} — Admin{% endblock %}
+
+{% block content %}
+{% include "_admin_bar.html" %}
+<main>
+    <div class="wrap">
+        <a href="/admin/users" class="back-link">← Alle Nutzer</a>
+        <h1 class="page-h">{{ detail.username }}</h1>
+
+        <h3>Stammdaten &amp; Zugang</h3>
+        <div class="card">
+            <dl class="kv">
+                <dt>E-Mail</dt>
+                <dd>{{ detail.email or '—' }}</dd>
+                <dt>Bestätigt</dt>
+                <dd>
+                    {% if detail.email_verified_at %}
+                    <span class="badge badge--ok">ja</span>
+                    <span class="muted">{{ detail.email_verified_at | de_date }}</span>
+                    {% else %}
+                    <span class="badge badge--fail">nein</span>
+                    {% endif %}
+                </dd>
+                <dt>Registriert</dt>
+                <dd>{{ detail.created_at | de_date }}, {{ detail.created_at | localtime }}</dd>
+                <dt>Tarif</dt>
+                <dd>
+                    <form method="post" action="/admin/users/{{ detail.username }}/tier" class="tier-form">
+                        {{ csrf_field() }}
+                        <input type="hidden" name="back" value="detail">
+                        <select name="tier" aria-label="Tarif von {{ detail.username }}">
+                            {% for t in tiers %}
+                            <option value="{{ t }}" {% if t == detail.tier %}selected{% endif %}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="row-btn">Speichern</button>
+                    </form>
+                </dd>
+                <dt>Credits heute</dt>
+                <dd>{{ detail.credits_today }} / {{ detail.credit_limit }}</dd>
+                <dt>Mahlzeiten</dt>
+                <dd>
+                    {{ detail.meal_count }}
+                    {% if detail.last_meal_at %}
+                    <span class="muted">— zuletzt {{ detail.last_meal_at | de_date }}, {{ detail.last_meal_at | localtime }}</span>
+                    {% endif %}
+                </dd>
+                <dt>Aktive Sitzungen</dt>
+                <dd>
+                    {{ detail.active_sessions }}
+                    {% if detail.last_login_at %}
+                    <span class="muted">— neueste vom {{ detail.last_login_at | de_date }}</span>
+                    {% endif %}
+                </dd>
+            </dl>
+        </div>
+
+        <h3>KI-Anfragen</h3>
+        {% if logs %}
+        <div class="table-wrap">
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>Zeitpunkt</th>
+                        <th>Art</th>
+                        <th>Modell</th>
+                        <th class="num">Tokens</th>
+                        <th class="num">Dauer</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="name">{{ log.created_at | de_date }}, {{ log.created_at | localtime }}</td>
+                        <td>
+                            {{ log.kind }}
+                            {% if log.action %}<span class="muted">/ {{ log.action }}</span>{% endif %}
+                        </td>
+                        <td>{{ log.model or log.provider }}</td>
+                        <td class="num">
+                            {% if log.prompt_tokens is not none %}
+                            {{ log.prompt_tokens }} / {{ log.completion_tokens }}
+                            {% else %}
+                            <span class="muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="num">{{ log.latency_ms }} ms</td>
+                        <td>
+                            {% if log.success %}
+                            <span class="badge badge--ok">ok</span>
+                            {% else %}
+                            <span class="badge badge--fail">Fehler</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" class="wrap-cell">
+                            <details class="log-detail">
+                                <summary>Anfrage &amp; Antwort anzeigen</summary>
+                                {% if log.error %}
+                                <h4>Fehler</h4>
+                                <pre>{{ log.error }}</pre>
+                                {% endif %}
+                                <h4>Anfrage{% if log.endpoint %} — {{ log.endpoint }}{% endif %}</h4>
+                                <pre>{{ log.request_text }}</pre>
+                                {% if log.response_text %}
+                                <h4>Antwort</h4>
+                                <pre>{{ log.response_text }}</pre>
+                                {% endif %}
+                            </details>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="count-note">
+            Die letzten {{ logs | length }} Anfragen. Ältere als
+            {{ retention_days }} Tage werden automatisch gelöscht.
+        </p>
+        {% else %}
+        <p class="empty">Noch keine KI-Anfragen von diesem Nutzer.</p>
+        {% endif %}
+
+        <h3>Credits pro Tag</h3>
+        {% if credit_days %}
+        <div class="table-wrap">
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th class="num">Credits</th>
+                        <th class="num">Limit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in credit_days %}
+                    <tr>
+                        <td class="name">{{ d.day | de_date }}</td>
+                        <td class="num">{{ d.count }}</td>
+                        <td class="num">{{ detail.credit_limit }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty">Noch kein Credit-Verbrauch.</p>
+        {% endif %}
+
+        <h3>Letzte Mahlzeiten</h3>
+        {% if meals %}
+        <div class="table-wrap">
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>Zeitpunkt</th>
+                        <th>Beschreibung</th>
+                        <th class="num">kcal</th>
+                        <th class="num">P</th>
+                        <th class="num">K</th>
+                        <th class="num">F</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in meals %}
+                    <tr>
+                        <td class="name">{{ m.timestamp | de_date }}, {{ m.timestamp | localtime }}</td>
+                        <td class="wrap-cell">{{ m.description }}</td>
+                        <td class="num">{{ m.calories | round | int if m.calories is not none else '—' }}</td>
+                        <td class="num">{{ m.protein | round | int if m.protein is not none else '—' }}</td>
+                        <td class="num">{{ m.carbs | round | int if m.carbs is not none else '—' }}</td>
+                        <td class="num">{{ m.fat | round | int if m.fat is not none else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty">Noch keine Mahlzeiten.</p>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

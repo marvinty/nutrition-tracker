@@ -24,7 +24,7 @@
                 <tbody>
                     {% for u in users %}
                     <tr>
-                        <td class="name">{{ u.username }}</td>
+                        <td class="name"><a href="/admin/users/{{ u.username }}">{{ u.username }}</a></td>
                         <td>
                             <form method="post" action="/admin/users/{{ u.username }}/tier" class="tier-form">
                                 {{ csrf_field() }}
