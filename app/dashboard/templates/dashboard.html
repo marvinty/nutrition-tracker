@@ -11,12 +11,16 @@
     .credit-badge{font-size:12px;font-weight:500;color:var(--text-subtle);background:var(--surface);
         border:1px solid var(--border);border-radius:99px;padding:6px 13px;white-space:nowrap}
     .credit-badge.credit-line--blocked{color:var(--danger);border-color:var(--danger);background:var(--danger-soft)}
+    .credit-link{font-size:12px;color:var(--text-subtle);white-space:nowrap}
+    .credit-link:hover{color:var(--accent)}
     h2.sub-h .count{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text-subtle);
         background:var(--surface-2);border-radius:99px;padding:3px 11px;vertical-align:middle;margin-left:6px}
     @media(max-width:640px){
         .log-head{gap:14px;margin-bottom:18px;align-items:center}
-        /* the badge is the least important thing here — send it below the heading */
+        /* the badge is the least important thing here — send it below the heading,
+           and keep its link directly under it rather than stranded mid-row */
         .credit-badge{order:99;width:100%;text-align:center;white-space:normal}
+        .credit-link{order:100;width:100%;text-align:center}
     }
 </style>
 {% endblock %}
@@ -57,6 +61,9 @@
             noch {{ credits.remaining }} von {{ credits.limit }} Credits heute
             {%- endif -%}
         </span>
+        {# A sibling, not a child of #credit-line: refreshCredits() overwrites that
+           element's textContent and would delete a link nested inside it. #}
+        <a href="/ai-log" class="credit-link">Was habe ich gefragt?</a>
     </div>
 
     <form id="text-meal-form" class="log-form">

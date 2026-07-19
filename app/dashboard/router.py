@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.config import settings
 from app.core.csrf import register_csrf_field
 from app.core.deps import resolve_user
 from app.core.dates_de import (
@@ -26,6 +27,7 @@ from app.services.goal_service import (
     build_progress,
     get_goal,
 )
+from app.services.ai_log_service import list_user_entries
 from app.services.usage_service import get_credit_status
 
 templates = register_csrf_field(
@@ -33,6 +35,9 @@ templates = register_csrf_field(
 )
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
 templates.env.filters["de_short"] = format_short_weekday
+# Takes a timestamp, unlike de_short which takes a date — the AI log rows carry
+# tz-aware datetimes that have to be converted before the day is read off them.
+templates.env.filters["de_day"] = lambda dt: format_short_weekday(to_local(dt).date())
 router = APIRouter(tags=["dashboard"])
 
 
@@ -91,6 +96,33 @@ async def recipes_page(
             "active_page": "recipes",
             "username": user.username,
             "today": today_local().isoformat(),
+        },
+    )
+
+
+@router.get("/ai-log")
+async def ai_log_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    user: Optional[User] = Depends(resolve_user),
+):
+    """What the user has asked the AI, and what it answered.
+
+    The counterpart to the credit badge: the badge says how much is left, this
+    says what it went on. Scoped to the caller by ``list_user_entries``, which
+    also strips the system prompt out of each row — that is admin-only.
+    """
+    if user is None:
+        return RedirectResponse(url="/login", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="ai_log.html",
+        context={
+            "active_page": "ai_log",
+            "username": user.username,
+            "entries": await list_user_entries(session, user.username),
+            "credits": await get_credit_status(session, user.username, user.tier),
+            "retention_days": settings.ai_log_retention_days,
         },
     )
 

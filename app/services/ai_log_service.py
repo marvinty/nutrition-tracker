@@ -17,6 +17,7 @@ task-local and cannot leak between concurrent requests.
 
 import json
 import logging
+import re
 import time
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
@@ -189,6 +190,78 @@ async def list_logs_for_user(
         .limit(limit)
     )
     return list(result.scalars().all())
+
+
+@dataclass
+class UserLogEntry:
+    """One AI call as its own user may see it.
+
+    Not the raw row: ``request_text`` holds the system prompt and the conversation
+    as JSON, which is both unreadable and internal. This carries only the two
+    things the user contributed or received — what they said, and what came back.
+    """
+
+    created_at: datetime
+    kind: str
+    action: Optional[str]
+    input_text: str
+    output_text: Optional[str]
+    success: bool
+
+
+def _strip_fences(raw: str) -> str:
+    """Mirror of the cleaning in ``providers.base`` — models like to wrap JSON."""
+    return re.sub(r"```json?\s*|\s*```", "", raw or "").strip()
+
+
+def _input_from_row(log: AiRequestLog) -> str:
+    """The user's own words, dug out of the serialized prompt."""
+    if log.kind == "transcribe":
+        # The audio placeholder says nothing; the transcript below is the input.
+        return "🎤 Sprachaufnahme"
+    try:
+        payload = json.loads(log.request_text)
+        for message in reversed(payload.get("messages", [])):
+            if message.get("role") == "user":
+                return message.get("content", "")
+    except (json.JSONDecodeError, TypeError, AttributeError):
+        pass
+    return ""
+
+
+def _output_from_row(log: AiRequestLog) -> Optional[str]:
+    """The readable result: a transcript, a description, or a clarifying question."""
+    if not log.success:
+        return None
+    if log.kind == "transcribe":
+        return log.response_text
+    try:
+        data = json.loads(_strip_fences(log.response_text or ""))
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if isinstance(data, list):  # ingredient extraction returns an array
+        parts = [i.get("description") for i in data if isinstance(i, dict)]
+        return ", ".join(p for p in parts if p) or None
+    if isinstance(data, dict):
+        return data.get("question") or data.get("description")
+    return None
+
+
+async def list_user_entries(
+    session: AsyncSession, username: str, limit: int = 50
+) -> list[UserLogEntry]:
+    """The user-facing view of their own AI calls."""
+    return [
+        UserLogEntry(
+            created_at=log.created_at,
+            kind=log.kind,
+            action=log.action,
+            input_text=_input_from_row(log),
+            output_text=_output_from_row(log),
+            success=log.success,
+        )
+        for log in await list_logs_for_user(session, username, limit=limit)
+    ]
 
 
 async def prune_old_logs(

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}KI-Anfragen{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* dashboard.html scopes this to its own page, so it is repeated here */
+    .credit-badge{font-size:12px;font-weight:500;color:var(--text-subtle);background:var(--surface);
+        border:1px solid var(--border);border-radius:99px;padding:5px 13px;white-space:nowrap}
+    .ai-intro{max-width:60ch;margin-bottom:28px}
+    .ai-list{display:flex;flex-direction:column;gap:12px}
+    .ai-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);
+        padding:18px 20px}
+    .ai-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;
+        font-size:12px;color:var(--text-subtle)}
+    .ai-kind{padding:2px 10px;border-radius:99px;background:var(--surface-2);font-weight:600;
+        letter-spacing:.04em;text-transform:uppercase;font-size:10px}
+    .ai-said,.ai-got{display:flex;gap:10px;align-items:baseline}
+    .ai-said + .ai-got{margin-top:8px}
+    .ai-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+        color:var(--text-subtle);min-width:78px;flex-shrink:0}
+    .ai-text{color:var(--text);overflow-wrap:anywhere}
+    .ai-got .ai-text{color:var(--text-muted)}
+    .ai-failed{color:var(--danger);font-weight:500}
+    @media(max-width:560px){
+        .ai-said,.ai-got{flex-direction:column;gap:2px}
+        .ai-label{min-width:0}
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Transparenz</span>
+        <h1 class="page-h">KI-<em>Anfragen</em></h1>
+    </div>
+    <span class="credit-badge">noch {{ credits.remaining }} von {{ credits.limit }} Credits heute</span>
+</div>
+
+<p class="hint ai-intro">
+    Jede Analyse schickt deine Beschreibung an ein KI-Modell. Hier siehst du, was
+    dabei ankam und was zurückkam. Einträge werden nach {{ retention_days }} Tagen
+    automatisch gelöscht.
+</p>
+
+{% if entries %}
+<div class="ai-list">
+    {% for e in entries %}
+    <div class="ai-entry">
+        <div class="ai-meta">
+            <span class="ai-kind">
+                {%- if e.kind == 'transcribe' -%}Sprache
+                {%- elif e.kind == 'llm_ingredients' -%}Zutaten
+                {%- else -%}Analyse{%- endif -%}
+            </span>
+            <span>{{ e.created_at | de_day }}, {{ e.created_at | localtime }} Uhr</span>
+            {% if not e.success %}<span class="ai-failed">fehlgeschlagen</span>{% endif %}
+        </div>
+        <div class="ai-said">
+            <span class="ai-label">Du</span>
+            <span class="ai-text">{{ e.input_text or '—' }}</span>
+        </div>
+        {% if e.output_text %}
+        <div class="ai-got">
+            <span class="ai-label">Erkannt</span>
+            <span class="ai-text">{{ e.output_text }}</span>
+        </div>
+        {% elif not e.success %}
+        <div class="ai-got">
+            <span class="ai-label">Erkannt</span>
+            <span class="ai-text">Die Anfrage kam nicht durch — dafür wurden dir Credits abgezogen.</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty">Du hast noch keine KI-Analysen gemacht.</p>
+{% endif %}
+{% endblock %}

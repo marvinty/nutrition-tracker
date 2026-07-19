@@ -23,6 +23,7 @@ from app.models.base import Base
 from app.services import ai_log_service
 from app.services.ai_log_service import (
     list_logs_for_user,
+    list_user_entries,
     log_ai_call,
     prune_old_logs,
     serialize_prompt,
@@ -190,6 +191,84 @@ async def test_list_logs_filters_by_user_and_orders_newest_first(session):
     assert [r.request_text for r in rows] == ["neu", "alt"]
 
     assert len(await list_logs_for_user(session, "alice", limit=1)) == 1
+
+
+# --- the user-facing view ----------------------------------------------------
+
+
+def _row(**kw) -> AiRequestLog:
+    defaults = dict(
+        user_id="alice", kind="llm_analyze", provider="openai",
+        request_text="", latency_ms=1, success=True,
+    )
+    return AiRequestLog(**{**defaults, **kw})
+
+
+@pytest.mark.asyncio
+async def test_user_view_hides_the_system_prompt(session):
+    """The system prompt is internal — a user must see only their own words."""
+    session.add(
+        _row(
+            request_text=serialize_prompt(
+                "You are a nutrition analysis assistant. SECRET RULES",
+                [{"role": "user", "content": "150g Skyr"}],
+            ),
+            response_text='{"type":"result","description":"150 g Skyr"}',
+        )
+    )
+    await session.commit()
+
+    entry = (await list_user_entries(session, "alice"))[0]
+    assert entry.input_text == "150g Skyr"
+    assert entry.output_text == "150 g Skyr"
+    assert "SECRET RULES" not in entry.input_text
+    assert "SECRET RULES" not in (entry.output_text or "")
+
+
+@pytest.mark.asyncio
+async def test_user_view_reads_transcript_question_and_ingredients(session):
+    session.add_all(
+        [
+            _row(kind="transcribe", response_text="Zwei Eier"),
+            _row(
+                request_text=serialize_prompt("sys", [{"role": "user", "content": "Nudeln"}]),
+                response_text='{"type":"question","question":"Welche Nudeln?"}',
+            ),
+            _row(
+                kind="llm_ingredients",
+                request_text=serialize_prompt("sys", [{"role": "user", "content": "Pasta und Öl"}]),
+                response_text='```json\n[{"description":"Pasta"},{"description":"Öl"}]\n```',
+            ),
+        ]
+    )
+    await session.commit()
+
+    by_kind = {e.kind: e for e in await list_user_entries(session, "alice")}
+    assert by_kind["transcribe"].output_text == "Zwei Eier"
+    assert by_kind["transcribe"].input_text == "🎤 Sprachaufnahme"
+    assert by_kind["llm_analyze"].output_text == "Welche Nudeln?"
+    # fenced JSON and an array both have to survive
+    assert by_kind["llm_ingredients"].output_text == "Pasta, Öl"
+
+
+@pytest.mark.asyncio
+async def test_user_view_survives_unparseable_and_failed_rows(session):
+    session.add_all(
+        [
+            _row(request_text="not json", response_text="not json either"),
+            _row(
+                request_text=serialize_prompt("sys", [{"role": "user", "content": "Apfel"}]),
+                response_text=None, success=False, error="AuthenticationError: 401",
+            ),
+        ]
+    )
+    await session.commit()
+
+    entries = await list_user_entries(session, "alice")
+    assert len(entries) == 2
+    failed = [e for e in entries if not e.success][0]
+    assert failed.input_text == "Apfel"  # still shows what they asked
+    assert failed.output_text is None  # and never leaks the raw error
 
 
 @pytest.mark.asyncio
