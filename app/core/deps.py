@@ -85,8 +85,15 @@ def require_credits(action: str):
     belongs on every endpoint that reaches an LLM or Whisper. Charging happens before the
     work, which means a failed call still costs a credit — acceptable, since the API call
     is usually already paid for by then.
+
+    The app-wide ceiling counts *calls*, not the user-facing price, so an action priced
+    at zero still costs one there. Otherwise a free action would be completely unmetered:
+    the question limit that makes clarifying rounds finite lives in ``run_analysis`` and
+    counts assistant turns in the *client-supplied* conversation, which bounds the app's
+    own UI but not a caller posting a fresh one-message conversation every time.
     """
     cost = settings.credit_costs[action]
+    global_cost = max(cost, 1)
 
     async def dependency(
         request: Request,
@@ -99,6 +106,7 @@ def require_credits(action: str):
             cost,
             limit_for(user.tier),
             global_limit=settings.global_daily_credits,
+            global_cost=global_cost,
         )
         # Everything downstream of here may reach a provider, and the provider is
         # where the log row is written — but it cannot see who is calling. Setting

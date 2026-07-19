@@ -91,7 +91,7 @@
         </summary>
         <div class="faq-a">
             <p>Wenn eine Angabe fehlt, die das Ergebnis deutlich verändert, fragt die App kurz nach, statt eine Zahl zu erfinden. Höchstens zwei Rückfragen pro Eintrag — danach schätzt sie in jedem Fall.</p>
-            <p>Jede beantwortete Rückfrage kostet Credits, siehe unten.</p>
+            <p>Rückfragen zu beantworten kostet dich nichts — die App hat ja gefragt, nicht du.</p>
         </div>
     </details>
 
@@ -137,7 +137,7 @@
         </summary>
         <div class="faq-a">
             <p>Ein Tagesbudget für die KI-gestützten Aktionen. Jede Auswertung durch die KI kostet echtes Geld, deshalb ist sie gedeckelt.</p>
-            <p><strong>Kostenlos</strong> sind dagegen: Einträge von Hand bearbeiten oder löschen, Ziele setzen, den Verlauf ansehen und ein gespeichertes Rezept als Mahlzeit loggen.</p>
+            <p><strong>Kostenlos</strong> sind dagegen: Rückfragen der App beantworten, Einträge von Hand bearbeiten oder löschen, Ziele setzen, den Verlauf ansehen und ein gespeichertes Rezept als Mahlzeit loggen.</p>
         </div>
     </details>
 
@@ -149,7 +149,13 @@
         <div class="faq-a">
             <ul class="cost-list">
                 <li><span>Mahlzeit per Text</span> <span class="cost">{{ credit_costs.text }}&nbsp;Credit{{ 's' if credit_costs.text != 1 }}</span></li>
-                <li><span>Rückfrage beantworten</span> <span class="cost">{{ credit_costs.clarify }}&nbsp;Credit{{ 's' if credit_costs.clarify != 1 }}</span></li>
+                <li><span>Rückfrage beantworten</span> <span class="cost">
+                    {%- if credit_costs.clarify -%}
+                    {{ credit_costs.clarify }}&nbsp;Credit{{ 's' if credit_costs.clarify != 1 }}
+                    {%- else -%}
+                    kostenlos
+                    {%- endif -%}
+                </span></li>
                 <li><span>Mahlzeit per Sprache</span> <span class="cost">{{ credit_costs.voice }}&nbsp;Credit{{ 's' if credit_costs.voice != 1 }}</span></li>
             </ul>
             <p>Sprache kostet mehr, weil zwei Schritte bezahlt werden: erst die Transkription der Aufnahme, dann die Auswertung des Textes.</p>

@@ -14,11 +14,12 @@ from datetime import timedelta
 import pytest
 import pytest_asyncio
 from fastapi import HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core import time as core_time
 from app.models.base import Base
-from app.models.ai_usage import AiUsage  # noqa: F401 — register with Base.metadata
+from app.models.ai_usage import AiUsage
 from app.core.config import settings
 from app.services.usage_service import (
     GLOBAL_KEY,
@@ -147,6 +148,59 @@ async def test_global_limit_is_optional(session):
     # Omitting it skips the ceiling entirely and writes no global row.
     await consume_credits(session, "alice", cost=1, limit=10)
     assert await get_usage(session, GLOBAL_KEY) == 0
+
+
+@pytest.mark.asyncio
+async def test_free_action_still_counts_against_the_ceiling(session):
+    # A clarifying round is free for the user but must not be unmetered: the question
+    # limit lives in run_analysis and counts turns in the client-supplied conversation,
+    # so it does not bound a caller posting a fresh conversation every time.
+    await consume_credits(
+        session, "alice", cost=0, limit=10, global_limit=100, global_cost=1
+    )
+    assert await get_usage(session, "alice") == 0
+    assert await get_usage(session, GLOBAL_KEY) == 1
+
+
+@pytest.mark.asyncio
+async def test_free_action_writes_no_user_row(session):
+    """Zero cost skips the user counter rather than creating an empty row."""
+    await consume_credits(
+        session, "alice", cost=0, limit=10, global_limit=100, global_cost=1
+    )
+    rows = (await session.execute(select(AiUsage).where(AiUsage.user_id == "alice"))).all()
+    assert rows == []
+
+
+@pytest.mark.asyncio
+async def test_free_action_works_for_a_user_who_is_out_of_credits(session):
+    """Someone who spent their budget can still finish a conversation the app started."""
+    await consume_credits(session, "alice", cost=2, limit=2, global_limit=100)
+    await consume_credits(
+        session, "alice", cost=0, limit=2, global_limit=100, global_cost=1
+    )
+    assert await get_usage(session, "alice") == 2
+
+
+@pytest.mark.asyncio
+async def test_free_action_is_still_refused_once_the_ceiling_is_out(session):
+    await consume_credits(session, "bob", cost=5, limit=10, global_limit=5)
+    with pytest.raises(HTTPException):
+        await consume_credits(
+            session, "alice", cost=0, limit=10, global_limit=5, global_cost=1
+        )
+
+
+@pytest.mark.asyncio
+async def test_global_cost_defaults_to_the_user_cost(session):
+    await consume_credits(session, "alice", cost=3, limit=10, global_limit=100)
+    assert await get_usage(session, GLOBAL_KEY) == 3
+
+
+def test_clarify_is_priced_free_but_metered():
+    """The pairing the change rests on: free for the user, one call for the ceiling."""
+    assert settings.credit_costs["clarify"] == 0
+    assert max(settings.credit_costs["clarify"], 1) == 1
 
 
 def test_limit_for_falls_back_to_free(monkeypatch):

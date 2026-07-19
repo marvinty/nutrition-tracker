@@ -114,6 +114,7 @@ async def consume_credits(
     cost: int,
     limit: int,
     global_limit: Optional[int] = None,
+    global_cost: Optional[int] = None,
 ) -> int:
     """Spend ``cost`` credits for ``user_id`` today, raising 429 if either budget is out.
 
@@ -123,13 +124,26 @@ async def consume_credits(
     one user drain the shared ceiling with requests that were all refused. Returns the
     user's new total. The day is the local calendar date, so budgets reset at local
     midnight. ``global_limit`` of ``None`` skips the app-wide ceiling.
+
+    ``global_cost`` defaults to ``cost`` but can differ, which is what lets an action
+    be free for the user while still counting against the app-wide ceiling. Without
+    that split a free action would be entirely unmetered.
     """
+    charged_globally = cost if global_cost is None else global_cost
     try:
         if global_limit is not None:
-            await _reserve(session, GLOBAL_KEY, cost, global_limit, _GLOBAL_LIMIT_DETAIL)
-        total = await _reserve(
-            session, user_id, cost, limit, _USER_LIMIT_DETAIL.format(limit=limit)
-        )
+            await _reserve(
+                session, GLOBAL_KEY, charged_globally, global_limit, _GLOBAL_LIMIT_DETAIL
+            )
+        # A zero-cost action skips the user counter entirely rather than adding zero:
+        # it has nothing to reserve, and going through _reserve would create an empty
+        # row for a user who has not actually spent anything today.
+        if cost:
+            total = await _reserve(
+                session, user_id, cost, limit, _USER_LIMIT_DETAIL.format(limit=limit)
+            )
+        else:
+            total = await get_usage(session, user_id)
     except HTTPException:
         await session.rollback()
         raise

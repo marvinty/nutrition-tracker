@@ -13,7 +13,10 @@ class Settings(BaseSettings):
     # the DB can never hand out an unlimited budget.
     tier_daily_credits: dict[str, int] = {"free": 20, "pro": 300}
     # Voice costs more because it pays for transcription *and* the LLM analysis.
-    credit_costs: dict[str, int] = {"text": 1, "clarify": 1, "voice": 3}
+    # A clarifying round is free: the model asked the question, so charging the user
+    # for answering it would penalise them for the model's own uncertainty. It still
+    # counts against the app-wide ceiling — see require_credits.
+    credit_costs: dict[str, int] = {"text": 1, "clarify": 0, "voice": 3}
     # App-wide ceiling across all users. A circuit breaker, not a rationing tool:
     # keep it well above the expected daily sum so it only trips when something is
     # wrong (a signup burst, a client stuck in a retry loop). Tripping it locks out
