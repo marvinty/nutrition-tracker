@@ -49,15 +49,22 @@ async def resolve_user(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> Optional[User]:
-    # Templates read this to decide whether to show the "confirm your address" banner,
-    # which saves threading a flag through every page's context dict. Always assigned,
-    # including the None case, so a template can access it without guarding.
-    request.state.user = None
+    # base.html reads this to decide whether to show the "confirm your address" banner,
+    # which saves threading a flag through every page's context dict. It is deliberately
+    # a plain value (the address, or None) rather than the User object: an error page can
+    # render *after* the request session was rolled back — consume_credits does exactly
+    # that on a 429 — and a rollback expires every ORM object on the session, so touching
+    # user.email at render time would raise DetachedInstanceError and turn the intended
+    # error page into a 500. Resolving it here, while the session is live, keeps the
+    # template off the ORM. Always assigned, including the None case, so the template can
+    # read it without guarding.
+    request.state.verify_banner = None
     token = _extract_token(request)
     if not token:
         return None
     user = await get_user_by_token(session, token)
-    request.state.user = user
+    if user is not None and user.email and not user.email_verified_at:
+        request.state.verify_banner = user.email
     if (
         user is not None
         and request.url.path not in _LOCK_EXEMPT_PATHS

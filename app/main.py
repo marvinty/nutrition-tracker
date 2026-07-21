@@ -88,15 +88,21 @@ app.mount(
 
 @app.exception_handler(StarletteHTTPException)
 async def _http_exception(request: Request, exc: StarletteHTTPException):
-    """Render 429 as a page for form posts, keeping JSON everywhere else.
+    """Render 429 as a page for form navigations, keeping JSON everywhere else.
 
     The rate limiter guards HTML forms as well as the API, and FastAPI's default
     renders every HTTPException as JSON — which for someone who mistyped their password
     too often would mean a bare line of JSON instead of an explanation. Anything that
     is not this specific case is handed straight back to the default handler.
+
+    The tell is the ``Accept`` header, not the path: a real browser form submit navigates
+    and asks for ``text/html``, whereas fetch() defaults to ``*/*``. Keying on the path
+    alone misrouted the AI endpoints — /meals/text, /meals/clarify and /audio sit at the
+    root (legacy paths for the ESP32 client) but are called by the dashboard's fetch code,
+    which parses ``detail`` out of JSON and cannot read an HTML page.
     """
-    is_browser_form = not request.url.path.startswith("/api/")
-    if exc.status_code == status.HTTP_429_TOO_MANY_REQUESTS and is_browser_form:
+    wants_html = "text/html" in request.headers.get("accept", "")
+    if exc.status_code == status.HTTP_429_TOO_MANY_REQUESTS and wants_html:
         return auth_templates.TemplateResponse(
             request=request,
             name="rate_limited.html",

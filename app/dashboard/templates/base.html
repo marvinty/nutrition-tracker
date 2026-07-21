@@ -305,14 +305,17 @@
 </nav>
 {% endblock %}
 
-{# Shown during the grace period, before an unconfirmed account gets locked out. #}
-{% set _u = request.state.user if request else None %}
-{% if _u and _u.email and not _u.email_verified_at %}
+{# Shown during the grace period, before an unconfirmed account gets locked out. The
+   address (or None) is precomputed in resolve_user rather than read off the User here —
+   see the comment there: an error page can render after the session was rolled back, and
+   touching the ORM at that point raises DetachedInstanceError. #}
+{% set _verify_email = request.state.verify_banner if request else None %}
+{% if _verify_email %}
 <div class="wrap">
     {# A div, not a p: a <form> inside a <p> is invalid, and the browser closes the
        paragraph early — which pushed the button outside the banner's own box. #}
     <div class="status verify-banner">
-        <span>Bitte bestätige deine E-Mail-Adresse <strong>{{ _u.email }}</strong>,
+        <span>Bitte bestätige deine E-Mail-Adresse <strong>{{ _verify_email }}</strong>,
         sonst wird dein Konto bald gesperrt.</span>
         <form method="post" action="/verify-email/resend">
             {{ csrf_field() }}
