@@ -14,6 +14,7 @@ from app.models.signup_code import SignupCode  # noqa: F401 — must import to r
 from app.models.app_setting import AppSetting  # noqa: F401 — must import to register with Base.metadata
 from app.models.rate_limit import RateLimitHit  # noqa: F401 — must import to register with Base.metadata
 from app.models.user_token_total import UserTokenTotal  # noqa: F401 — must import to register with Base.metadata
+from app.models.feedback import Feedback  # noqa: F401 — must import to register with Base.metadata
 from app.db.session import engine
 
 

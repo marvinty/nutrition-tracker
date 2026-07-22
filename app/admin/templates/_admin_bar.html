@@ -8,6 +8,7 @@
         <div class="actions">
             <a class="pill {% if active_page == 'users' %}is-active{% endif %}" href="/admin/users">Nutzer</a>
             <a class="pill {% if active_page == 'invites' %}is-active{% endif %}" href="/admin/invites">Einladungen</a>
+            <a class="pill {% if active_page == 'feedback' %}is-active{% endif %}" href="/admin/feedback">Feedback</a>
             <span class="who">{{ admin_name }}</span>
             <form method="post" action="/admin/logout">
                 {{ csrf_field() }}

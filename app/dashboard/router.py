@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +28,7 @@ from app.services.goal_service import (
     get_goal,
 )
 from app.services.ai_log_service import list_user_entries
+from app.services.feedback_service import CATEGORY_LABELS, create_feedback
 from app.services.usage_service import get_credit_status
 
 templates = register_csrf_field(
@@ -145,6 +146,66 @@ async def goals_page(
             "goal": goal,
         },
     )
+
+
+@router.get("/feedback")
+async def feedback_page(
+    request: Request,
+    sent: int = Query(default=0),
+    user: Optional[User] = Depends(resolve_user),
+):
+    if user is None:
+        return RedirectResponse(url="/login", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="feedback.html",
+        context={
+            "active_page": "feedback",
+            "username": user.username,
+            "categories": CATEGORY_LABELS,
+            "sent": bool(sent),
+        },
+    )
+
+
+@router.post("/feedback")
+async def submit_feedback(
+    request: Request,
+    category: str = Form(...),
+    message: str = Form(...),
+    session: AsyncSession = Depends(get_session),
+    user: Optional[User] = Depends(resolve_user),
+):
+    if user is None:
+        return RedirectResponse(url="/login", status_code=303)
+
+    def _reject(error: str) -> HTMLResponse:
+        # Re-render with what the user typed, mirroring submit_reset_password —
+        # the app has no flash mechanism, so errors travel in the context.
+        return templates.TemplateResponse(
+            request=request,
+            name="feedback.html",
+            context={
+                "active_page": "feedback",
+                "username": user.username,
+                "categories": CATEGORY_LABELS,
+                "error": error,
+                "category": category,
+                "message": message,
+            },
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    text = message.strip()
+    if not text:
+        return _reject("Bitte schreib uns eine Nachricht.")
+    # Guard against a category posted past the <select>, matching how the admin
+    # forms treat bypassed client-side validation.
+    if category not in CATEGORY_LABELS:
+        category = "other"
+
+    await create_feedback(session, user.username, category, text)
+    return RedirectResponse(url="/feedback?sent=1", status_code=status.HTTP_303_SEE_OTHER)
 
 
 def _first_of_month(d: date) -> date:

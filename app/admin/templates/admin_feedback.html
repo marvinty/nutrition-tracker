@@ -1,0 +1,50 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Feedback — Admin{% endblock %}
+
+{% block content %}
+{% include "_admin_bar.html" %}
+<main>
+    <div class="wrap">
+        <span class="sec-tag">Rückmeldungen</span>
+        <h1 class="page-h">Feedback</h1>
+
+        {% if entries %}
+        <div class="table-wrap">
+            <table class="data">
+                <thead>
+                    <tr>
+                        <th>Zeitpunkt</th>
+                        <th>Nutzer</th>
+                        <th>Kategorie</th>
+                        <th>Nachricht</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in entries %}
+                    <tr>
+                        <td class="name">{{ e.created_at | de_date }}, {{ e.created_at | localtime }}</td>
+                        <td><a href="/admin/users/{{ e.user_id }}">{{ e.user_id }}</a></td>
+                        <td><span class="badge">{{ category_labels.get(e.category, e.category) }}</span></td>
+                        <td class="wrap-cell">
+                            {% if e.message | length > 140 %}
+                            <details class="log-detail">
+                                <summary>{{ e.message[:140] }}…</summary>
+                                <pre>{{ e.message }}</pre>
+                            </details>
+                            {% else %}
+                            <pre>{{ e.message }}</pre>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="count-note">Die letzten {{ entries | length }} Rückmeldungen.</p>
+        {% else %}
+        <p class="empty">Noch kein Feedback.</p>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback{% endblock %}
+
+{% block extra_head %}
+<style>
+    .feedback-card{max-width:640px}
+    .feedback-card .hint{margin-bottom:24px}
+    .feedback-card .field{margin-bottom:16px}
+    .feedback-card textarea{min-height:160px;resize:vertical}
+    .feedback-actions{display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap}
+    .feedback-actions .status{margin:0}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Sag uns was</span>
+        <h1 class="page-h"><em>Feedback</em></h1>
+    </div>
+</div>
+
+<div class="card feat feedback-card">
+    <p class="hint">Ein Fehler, eine Idee, oder etwas anderes? Wir lesen jede Nachricht.</p>
+
+    {% if sent %}
+    <p class="status">Danke! Deine Nachricht ist bei uns angekommen. ✓</p>
+    {% endif %}
+    {% if error %}
+    <p class="status error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="/feedback" class="feedback-form">
+        {{ csrf_field() }}
+        <div class="field">
+            <label for="category">Worum geht's?</label>
+            <select id="category" name="category">
+                {% for key, label in categories.items() %}
+                <option value="{{ key }}"{% if category == key %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field">
+            <label for="message">Deine Nachricht</label>
+            <textarea id="message" name="message" maxlength="4000" required
+                      placeholder="Erzähl uns, was dir aufgefallen ist…">{{ message or "" }}</textarea>
+        </div>
+        <div class="feedback-actions">
+            <button type="submit" class="btn">Absenden</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

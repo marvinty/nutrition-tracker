@@ -24,6 +24,7 @@ from app.services.admin_service import (
     set_user_tier,
 )
 from app.services.ai_log_service import list_logs_for_user
+from app.services.feedback_service import CATEGORY_LABELS, list_feedback
 from app.services import rate_limit_service as rl
 from app.services.settings_service import is_signup_closed, set_signup_closed
 from app.services.signup_code_service import create_code, list_codes, revoke_code
@@ -195,6 +196,26 @@ async def admin_set_user_tier(
     # detail form asks to be returned to instead of the list.
     target = f"/admin/users/{username}" if back == "detail" else "/admin/users"
     return RedirectResponse(url=target, status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/feedback")
+async def admin_feedback(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    admin: Optional[AdminUser] = Depends(resolve_admin),
+):
+    if admin is None:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_feedback.html",
+        context={
+            "admin_name": admin.username,
+            "active_page": "feedback",
+            "entries": await list_feedback(session),
+            "category_labels": CATEGORY_LABELS,
+        },
+    )
 
 
 @router.get("/invites")
