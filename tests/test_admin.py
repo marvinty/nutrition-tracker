@@ -25,6 +25,7 @@ from app.models.ai_usage import AiUsage
 from app.models.auth_token import AuthToken
 from app.models.meal import Meal
 from app.models.user import User
+from app.models.user_token_total import UserTokenTotal
 from app.services.admin_service import (
     authenticate_admin,
     create_admin_token,
@@ -316,6 +317,9 @@ async def test_user_detail_reports_profile_and_activity(session, monkeypatch):
         ]
     )
     session.add(AiUsage(user_id="alice", day=today, count=7))
+    session.add(
+        UserTokenTotal(user_id="alice", prompt_tokens=1200, completion_tokens=340)
+    )
     await session.commit()
 
     detail = await get_user_detail(session, "alice")
@@ -326,6 +330,34 @@ async def test_user_detail_reports_profile_and_activity(session, monkeypatch):
     assert detail.credits_today == 7
     assert detail.meal_count == 2  # bob's meal must not be counted
     assert detail.last_meal_at.replace(tzinfo=timezone.utc) == newer
+    assert (detail.tokens_in, detail.tokens_out) == (1200, 340)
+
+
+@pytest.mark.asyncio
+async def test_user_detail_reports_zero_tokens_when_never_counted(session):
+    session.add(User(username="alice", password_hash="x"))
+    await session.commit()
+
+    detail = await get_user_detail(session, "alice")
+    assert (detail.tokens_in, detail.tokens_out) == (0, 0)
+
+
+@pytest.mark.asyncio
+async def test_user_list_sums_tokens_per_user(session):
+    session.add_all(
+        [
+            User(username="alice", password_hash="x"),
+            User(username="bob", password_hash="x"),
+        ]
+    )
+    session.add(
+        UserTokenTotal(user_id="alice", prompt_tokens=1000, completion_tokens=250)
+    )
+    await session.commit()
+
+    by_name = {r.username: r for r in await list_users_with_stats(session)}
+    assert by_name["alice"].tokens_total == 1250
+    assert by_name["bob"].tokens_total == 0  # no counter row yet
 
 
 @pytest.mark.asyncio

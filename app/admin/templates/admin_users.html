@@ -19,6 +19,7 @@
                         <th class="num">Mahlzeiten</th>
                         <th>Letzte Aktivität</th>
                         <th class="num">Credits heute</th>
+                        <th class="num">Tokens</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,6 +47,7 @@
                             {% endif %}
                         </td>
                         <td class="num">{{ u.credits_used }} / {{ u.credit_limit }}</td>
+                        <td class="num">{{ u.tokens_total }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

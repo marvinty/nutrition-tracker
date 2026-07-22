@@ -16,6 +16,7 @@ from app.models.ai_usage import AiUsage
 from app.models.auth_token import AuthToken
 from app.models.meal import Meal
 from app.models.user import User
+from app.services.ai_log_service import get_token_totals, token_totals_by_user
 from app.services.usage_service import get_usage, limit_for
 
 
@@ -30,6 +31,7 @@ class UserRow:
     last_meal_at: Optional[datetime]
     credits_used: int
     credit_limit: int
+    tokens_total: int
 
 
 @dataclass
@@ -47,6 +49,8 @@ class UserDetail:
     last_meal_at: Optional[datetime]
     active_sessions: int
     last_login_at: Optional[datetime]
+    tokens_in: int
+    tokens_out: int
 
 
 @dataclass
@@ -171,6 +175,7 @@ async def list_users_with_stats(session: AsyncSession) -> list[UserRow]:
     # we only index by real usernames.
     usage_stmt = select(AiUsage.user_id, AiUsage.count).where(AiUsage.day == today_local())
     credits_by_user = {u: c for u, c in (await session.execute(usage_stmt)).all()}
+    tokens_by_user = await token_totals_by_user(session)
 
     return [
         UserRow(
@@ -181,6 +186,7 @@ async def list_users_with_stats(session: AsyncSession) -> list[UserRow]:
             last_meal_at=row.last_meal_at,
             credits_used=credits_by_user.get(row.username, 0),
             credit_limit=limit_for(row.tier),
+            tokens_total=sum(tokens_by_user.get(row.username, (0, 0))),
         )
         for row in rows
     ]
@@ -219,6 +225,8 @@ async def get_user_detail(session: AsyncSession, username: str) -> Optional[User
         )
     ).one()
 
+    tokens_in, tokens_out = await get_token_totals(session, username)
+
     return UserDetail(
         username=user.username,
         email=user.email,
@@ -233,6 +241,8 @@ async def get_user_detail(session: AsyncSession, username: str) -> Optional[User
         # Newest live session standing in for a real last-login timestamp, which
         # the user table does not carry.
         last_login_at=session_stats[1],
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
     )
 
 

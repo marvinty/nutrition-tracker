@@ -40,6 +40,11 @@
                 </dd>
                 <dt>Credits heute</dt>
                 <dd>{{ detail.credits_today }} / {{ detail.credit_limit }}</dd>
+                <dt>KI-Tokens (gesamt)</dt>
+                <dd>
+                    {{ detail.tokens_in + detail.tokens_out }}
+                    <span class="muted">— {{ detail.tokens_in }} Input / {{ detail.tokens_out }} Output</span>
+                </dd>
                 <dt>Mahlzeiten</dt>
                 <dd>
                     {{ detail.meal_count }}

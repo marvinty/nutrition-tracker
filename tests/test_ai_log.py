@@ -22,12 +22,14 @@ from app.models.ai_request_log import AiRequestLog
 from app.models.base import Base
 from app.services import ai_log_service
 from app.services.ai_log_service import (
+    get_token_totals,
     list_logs_for_user,
     list_user_entries,
     log_ai_call,
     prune_old_logs,
     serialize_prompt,
     set_ai_context,
+    token_totals_by_user,
 )
 
 
@@ -291,3 +293,78 @@ async def test_prune_drops_only_rows_past_retention(session):
     assert await prune_old_logs(session) == 1
     rows = await _rows(session)
     assert [r.request_text for r in rows] == ["frisch"]
+
+
+# --- lifetime token counter --------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_tokens_accumulate_into_lifetime_counter(session):
+    set_ai_context("alice", "text", "/api/meals/text")
+    async with log_ai_call(kind="llm_analyze", provider="claude") as rec:
+        rec.set_prompt("x")
+        rec.set_response("y", tokens_in=12, tokens_out=5)
+
+    assert await get_token_totals(session, "alice") == (12, 5)
+
+    async with log_ai_call(kind="llm_ingredients", provider="claude") as rec:
+        rec.set_prompt("x")
+        rec.set_response("y", tokens_in=8, tokens_out=3)
+
+    assert await get_token_totals(session, "alice") == (20, 8)
+
+
+@pytest.mark.asyncio
+async def test_calls_without_tokens_leave_the_counter_untouched(session):
+    """Transcription and failures carry no token usage, so they must not create
+    or bump a counter row."""
+    set_ai_context("bob", "voice", "/api/audio")
+    async with log_ai_call(kind="transcribe", provider="openai") as rec:
+        rec.set_prompt("<audio>")
+        rec.set_response("Zwei Eier")  # no token counts
+
+    with pytest.raises(RuntimeError):
+        async with log_ai_call(kind="llm_analyze", provider="claude") as rec:
+            rec.set_prompt("x")
+            raise RuntimeError("weg")
+
+    assert await get_token_totals(session, "bob") == (0, 0)
+
+
+@pytest.mark.asyncio
+async def test_anonymous_call_is_not_counted(session):
+    """No user context means no counter to credit — the log row is enough."""
+    async with log_ai_call(kind="llm_analyze", provider="claude") as rec:
+        rec.set_prompt("x")
+        rec.set_response("y", tokens_in=7, tokens_out=2)
+
+    assert await token_totals_by_user(session) == {}
+
+
+@pytest.mark.asyncio
+async def test_totals_are_kept_per_user(session):
+    for name, tin, tout in [("alice", 10, 4), ("bob", 3, 1), ("alice", 5, 2)]:
+        set_ai_context(name, "text", "/api/meals/text")
+        async with log_ai_call(kind="llm_analyze", provider="claude") as rec:
+            rec.set_prompt("x")
+            rec.set_response("y", tokens_in=tin, tokens_out=tout)
+
+    assert await token_totals_by_user(session) == {"alice": (15, 6), "bob": (3, 1)}
+
+
+@pytest.mark.asyncio
+async def test_counter_survives_log_pruning(session):
+    set_ai_context("alice", "text", "/api/meals/text")
+    async with log_ai_call(kind="llm_analyze", provider="claude") as rec:
+        rec.set_prompt("x")
+        rec.set_response("y", tokens_in=12, tokens_out=5)
+
+    # Age the log row past retention and prune it away.
+    row = (await _rows(session))[0]
+    row.created_at = datetime.now(timezone.utc) - timedelta(days=999)
+    await session.commit()
+    assert await prune_old_logs(session) == 1
+    assert await _rows(session) == []
+
+    # The lifetime counter is independent of the pruned rows.
+    assert await get_token_totals(session, "alice") == (12, 5)

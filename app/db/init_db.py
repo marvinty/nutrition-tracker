@@ -13,6 +13,7 @@ from app.models.admin_token import AdminToken  # noqa: F401 — must import to r
 from app.models.signup_code import SignupCode  # noqa: F401 — must import to register with Base.metadata
 from app.models.app_setting import AppSetting  # noqa: F401 — must import to register with Base.metadata
 from app.models.rate_limit import RateLimitHit  # noqa: F401 — must import to register with Base.metadata
+from app.models.user_token_total import UserTokenTotal  # noqa: F401 — must import to register with Base.metadata
 from app.db.session import engine
 
 
@@ -62,8 +63,39 @@ async def _add_user_email_columns(conn) -> None:
     )
 
 
+async def _backfill_token_totals(conn) -> None:
+    """Seed the lifetime token counter from the AI logs we still have.
+
+    The counter is incremented going forward as calls are logged, but a deployment
+    that already has logged requests would otherwise start every user at zero. This
+    one-time seed sums the surviving ``airequestlog`` rows so the counter reflects
+    the current retention window from day one. Idempotent via the empty-table guard:
+    it runs only on the first boot after the table is created, never overwriting the
+    live counter on later restarts. Requests already pruned are gone and cannot be
+    recovered — the counter is exact only from here on.
+    """
+    existing = await conn.execute(text("SELECT 1 FROM usertokentotal LIMIT 1"))
+    if existing.first() is not None:
+        return
+    await conn.execute(
+        text(
+            """
+            INSERT INTO usertokentotal (user_id, prompt_tokens, completion_tokens)
+            SELECT user_id,
+                   COALESCE(SUM(prompt_tokens), 0),
+                   COALESCE(SUM(completion_tokens), 0)
+            FROM airequestlog
+            WHERE user_id IS NOT NULL
+            GROUP BY user_id
+            HAVING COALESCE(SUM(prompt_tokens), 0) + COALESCE(SUM(completion_tokens), 0) > 0
+            """
+        )
+    )
+
+
 async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await _add_user_tier_column(conn)
         await _add_user_email_columns(conn)
+        await _backfill_token_totals(conn)

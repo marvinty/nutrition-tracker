@@ -25,12 +25,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import AsyncIterator, Optional
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.db.session import async_session_maker
 from app.models.ai_request_log import AiRequestLog
+from app.models.user_token_total import UserTokenTotal
 
 logger = logging.getLogger(__name__)
 
@@ -121,9 +123,49 @@ async def _write(**fields) -> None:
     try:
         async with async_session_maker() as session:
             session.add(AiRequestLog(**fields))
+            await _add_token_total(
+                session,
+                fields.get("user_id"),
+                fields.get("prompt_tokens"),
+                fields.get("completion_tokens"),
+            )
             await session.commit()
     except Exception:  # noqa: BLE001 — see docstring: must never reach the caller
         logger.exception("KI-Anfrage konnte nicht protokolliert werden")
+
+
+async def _add_token_total(
+    session: AsyncSession,
+    user_id: Optional[str],
+    prompt_tokens: Optional[int],
+    completion_tokens: Optional[int],
+) -> None:
+    """Fold this call's tokens into the user's lifetime counter, in the same
+    transaction as the log row so the two never disagree.
+
+    A no-op without a user or without any tokens: transcription and failed calls
+    carry no usage, and an anonymous call has no counter to credit. The upsert is
+    atomic (``count = count + excluded``) rather than read-modify-write so two
+    concurrent calls for the same user cannot lose an update.
+    """
+    if not user_id:
+        return
+    tokens_in = prompt_tokens or 0
+    tokens_out = completion_tokens or 0
+    if tokens_in == 0 and tokens_out == 0:
+        return
+    stmt = sqlite_insert(UserTokenTotal).values(
+        user_id=user_id, prompt_tokens=tokens_in, completion_tokens=tokens_out
+    )
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[UserTokenTotal.user_id],
+        set_={
+            "prompt_tokens": UserTokenTotal.prompt_tokens + stmt.excluded.prompt_tokens,
+            "completion_tokens": UserTokenTotal.completion_tokens
+            + stmt.excluded.completion_tokens,
+        },
+    )
+    await session.execute(stmt)
 
 
 @asynccontextmanager
@@ -190,6 +232,36 @@ async def list_logs_for_user(
         .limit(limit)
     )
     return list(result.scalars().all())
+
+
+async def get_token_totals(session: AsyncSession, username: str) -> tuple[int, int]:
+    """One user's lifetime (input, output) token totals; (0, 0) when never counted."""
+    row = (
+        await session.execute(
+            select(
+                UserTokenTotal.prompt_tokens, UserTokenTotal.completion_tokens
+            ).where(UserTokenTotal.user_id == username)
+        )
+    ).one_or_none()
+    if row is None:
+        return (0, 0)
+    return (row[0] or 0, row[1] or 0)
+
+
+async def token_totals_by_user(
+    session: AsyncSession,
+) -> dict[str, tuple[int, int]]:
+    """Every user's lifetime (input, output) token totals, for the admin list."""
+    rows = (
+        await session.execute(
+            select(
+                UserTokenTotal.user_id,
+                UserTokenTotal.prompt_tokens,
+                UserTokenTotal.completion_tokens,
+            )
+        )
+    ).all()
+    return {r[0]: (r[1] or 0, r[2] or 0) for r in rows}
 
 
 @dataclass
