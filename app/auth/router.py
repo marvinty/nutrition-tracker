@@ -227,15 +227,15 @@ async def register(
 RESEND_INTERVAL = timedelta(seconds=60)
 
 
-async def _send_verification(session: AsyncSession, user: User) -> None:
-    """Issue a fresh verification token and mail it.
+async def _send_verification(session: AsyncSession, user: User) -> bool:
+    """Issue a fresh verification token and mail it. Returns whether it went out.
 
     Old tokens are dropped first so only the most recent link works — otherwise every
     resend leaves another live credential in another inbox copy.
     """
     await delete_user_tokens(session, user, VERIFY_TOKEN)
     token = await create_token(session, user, kind=VERIFY_TOKEN)
-    await send_verification_email(user.email, user.username, token.token)
+    return await send_verification_email(user.email, user.username, token.token)
 
 
 @router.get("/verify-email", response_class=HTMLResponse)
@@ -293,15 +293,15 @@ async def resend_verification(
         last_sent is not None
         and datetime.now(timezone.utc) - last_sent < RESEND_INTERVAL
     )
-    if not throttled:
-        await _send_verification(session, user)
+    sent = await _send_verification(session, user) if not throttled else False
     return templates.TemplateResponse(
         request=request,
         name="verify_required.html",
         context={
             "email": user.email,
-            "sent": not throttled,
+            "sent": sent,
             "throttled": throttled,
+            "failed": not throttled and not sent,
         },
     )
 

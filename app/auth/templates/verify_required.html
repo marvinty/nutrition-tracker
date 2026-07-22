@@ -28,6 +28,8 @@
         <p class="status">Neue Mail ist unterwegs. Schau auch im Spam-Ordner nach.</p>
         {% elif throttled %}
         <p class="status">Gerade erst verschickt — bitte warte eine Minute.</p>
+        {% elif failed %}
+        <p class="status error">Mail konnte nicht verschickt werden. Bitte versuch es gleich nochmal oder wende dich an den Support.</p>
         {% endif %}
         <form method="post" action="/verify-email/resend" class="auth-form">
             {{ csrf_field() }}
