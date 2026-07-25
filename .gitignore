@@ -21,6 +21,9 @@ env/
 *.sqlite
 data/
 
+# ddns-updater config.json holds the Hetzner API token
+ddns-data/
+
 # macOS
 .DS_Store
 

@@ -14,5 +14,15 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
     restart: unless-stopped
 
+  ddns-updater:
+    image: ghcr.io/qdm12/ddns-updater
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./ddns-data:/updater/data
+    environment:
+      PERIOD: "5m"
+    restart: unless-stopped
+
 volumes:
   macromic_data:
