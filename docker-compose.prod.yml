@@ -14,14 +14,17 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
     restart: unless-stopped
 
-  ddns-updater:
-    image: ghcr.io/qdm12/ddns-updater
-    ports:
-      - "8080:8000"
-    volumes:
-      - ./ddns-data:/updater/data
+  # Keeps app.macromic.de pointed at this connection's IPv4, which isn't static.
+  # ddns-updater's Hetzner provider targets the legacy DNS API, which Hetzner retired
+  # in the console migration (dns.hetzner.com now redirects, see qdm12/ddns-updater#1039)
+  # — this image speaks the new Hetzner Cloud API instead.
+  hetzner-ddns:
+    image: mbaiti/hetzner-ddns:latest
     environment:
-      PERIOD: "5m"
+      HETZNER_CLOUD_API_TOKEN: ${HETZNER_CLOUD_API_TOKEN}
+      HETZNER_DNS_ZONE_NAME: macromic.de
+      HETZNER_DNS_RECORD_NAME: app
+      CHECK_INTERVAL_SECONDS: "300"
     restart: unless-stopped
 
 volumes:
