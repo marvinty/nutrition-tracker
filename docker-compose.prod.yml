@@ -27,5 +27,20 @@ services:
       CHECK_INTERVAL_SECONDS: "300"
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+
 volumes:
   macromic_data:
+  caddy_data:
+  caddy_config:
