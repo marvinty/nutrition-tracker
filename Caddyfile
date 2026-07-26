@@ -1,3 +1,14 @@
 app.macromic.de {
 	reverse_proxy api:8000
 }
+
+macromic.de, www.macromic.de {
+	@public path / /faq /faq/* /static/*
+	handle @public {
+		reverse_proxy api:8000
+	}
+	# Everything else (login, register, dashboard, ...) lives under app.macromic.de.
+	handle {
+		redir https://app.macromic.de{uri} 302
+	}
+}
