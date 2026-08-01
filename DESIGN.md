@@ -11,20 +11,28 @@ Ton, Farben, Fonts und Komponenten hier sind verbindlich — nichts dazuerfinden
 - Animationen nur CSS-basiert und dezent; `prefers-reduced-motion` immer respektieren.
 - Kein Dark Mode.
 
-## Fonts (Google Fonts)
+## Fonts (selbst gehostet)
 - **Newsreader** — Überschriften und Zahlenwerte (Serif, echte Kursiven für Betonung).
 - **Inter** — Fließtext und UI.
 - **Space Grotesk** — **ausschließlich** die Wortmarke (`_wordmark.html`), nie für UI-Text.
 
 ```html
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<link rel="preload" href="/static/fonts/newsreader-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/fonts.css">
 ```
+
+**Nicht** von `fonts.googleapis.com` einbinden. Das CDN überträgt die IP-Adresse jedes
+Besuchers an Google, bevor irgendjemand zugestimmt hat — genau der Punkt aus
+LG München I, 20.01.2022 (3 O 17493/20). Die Dateien liegen unter `app/static/fonts/`,
+die `@font-face`-Regeln in `app/static/fonts.css`. Beides ist generiert; wer eine
+Schnitt­stärke ergänzt, erzeugt die Dateien neu, statt die CSS von Hand zu editieren.
 
 Große typografische Momente in Newsreader; Betonung als `<em>` (kursiv, in `--accent`).
 
-Space Grotesk wird nur geladen, weil die Wortmarke als inline-`<text>` vorliegt. Sobald
-der offene BRAND.md-Punkt erledigt ist (Text in Pfade umwandeln), fällt der Font aus dem
-Link und aus dieser Liste — dann ist die Marke font-unabhängig.
+Space Grotesk liegt nur bei, weil die Wortmarke als inline-`<text>` vorliegt. Sobald
+der offene BRAND.md-Punkt erledigt ist (Text in Pfade umwandeln), fallen die beiden
+Dateien und dieser Listenpunkt weg — dann ist die Marke font-unabhängig.
 
 ## Farb-Tokens (exakt, keine neuen Grundfarben)
 ```css

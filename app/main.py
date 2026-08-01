@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request, status
@@ -77,8 +78,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="MacroMic API", lifespan=lifespan)
 app.add_middleware(CSRFMiddleware)
 
-# Brand assets (wordmark, favicon). The first static files the app has had — every
-# other stylesheet and icon is inlined in its template.
+# Brand assets (wordmark, favicon) und die selbst gehosteten Schriften. Alles andere
+# an CSS und Icons liegt weiterhin inline im jeweiligen Template.
+#
+# mimetypes kennt woff2 in der Standardbibliothek nicht, StaticFiles liefert die
+# Dateien sonst als application/octet-stream aus. Browser erraten den Typ zwar, aber
+# ein <link rel="preload" as="font" type="font/woff2"> passt dann nicht zur Antwort,
+# und manche Proxies komprimieren nach Content-Type — woff2 ist bereits komprimiert.
+mimetypes.add_type("font/woff2", ".woff2")
+
 app.mount(
     "/static",
     StaticFiles(directory=Path(__file__).parent / "static"),

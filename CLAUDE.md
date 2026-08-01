@@ -167,7 +167,12 @@ The rules that get violated most often:
 - Fonts: Newsreader (headings, numbers), Inter (body). Du-Ansprache, no marketing voice.
 - Responsive down to 375px, no horizontal scroll. CSS-only animation, always respecting
   `prefers-reduced-motion`.
-- CSS is inlined per template; `/static` holds brand assets only ([BRAND.md](BRAND.md)).
+- CSS is inlined per template. The two exceptions under `/static` are the brand assets
+  ([BRAND.md](BRAND.md)) and the self-hosted fonts (`static/fonts.css` + `static/fonts/`).
+- **Never link `fonts.googleapis.com`.** The CDN hands every visitor's IP to Google before
+  anyone consented — the fonts were moved in-house for exactly that reason, and the
+  Datenschutzerklärung now states that no third party sees an IP. A new template that
+  reaches for the CDN silently makes that page a lie. Copy the three tags from DESIGN.md.
 
 ## Tooling in `.claude/`
 
