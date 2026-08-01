@@ -38,6 +38,21 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/run-tests-on-app-edit.sh\"",
+            "timeout": 120,
+            "asyncRewake": true,
+            "rewakeSummary": "pytest failed after an app/ edit",
+            "statusMessage": "Running tests"
+          }
+        ]
+      }
     ]
   }
 }
