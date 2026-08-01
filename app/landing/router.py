@@ -35,7 +35,12 @@ async def landing(
     return templates.TemplateResponse(
         request=request,
         name="landing.html",
-        context={"needs_code": await signup_requires_code(session)},
+        context={
+            "needs_code": await signup_requires_code(session),
+            # Canonical/OG URLs must be absolute and must not depend on the Host
+            # header, which Caddy rewrites — so they come from config, not the request.
+            "base_url": settings.public_base_url.rstrip("/"),
+        },
     )
 
 

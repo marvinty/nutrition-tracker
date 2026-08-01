@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MacroMic — Sag einfach, was du gegessen hast.</title>
+<meta name="description" content="Sag einfach, was du gegessen hast — per Sprache oder Text. Die App schätzt Kalorien und Makros und fragt lieber kurz nach, statt eine Zahl zu erfinden.">
+<link rel="canonical" href="{{ base_url }}/">
+{# Ohne diese Tags zeigen WhatsApp, Slack und Co. beim geteilten Link nur die nackte
+   URL. og:image fehlt bewusst: die Marke liegt nur als SVG vor, und die meisten
+   Plattformen rendern SVG nicht — der Raster-Export hängt am offenen Punkt in
+   BRAND.md („Font vor echtem Launch fixieren“). #}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MacroMic">
+<meta property="og:locale" content="de_DE">
+<meta property="og:url" content="{{ base_url }}/">
+<meta property="og:title" content="MacroMic — Sag einfach, was du gegessen hast.">
+<meta property="og:description" content="Voice-first Ernährungslog: Mahlzeit einsprechen oder tippen, Kalorien und Makros landen im Tagesprotokoll.">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="/static/brand/macromic-mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,6 +27,13 @@
     --text:#2b241f; --text-muted:#7a7164; --text-subtle:#a39a8d;
     --accent:#c96442; --accent-hover:#b4553a; --accent-soft:#f2e2d6;
     --border:#e4dcc9;
+    /* Tints für die beiden invertierten Flächen, die DESIGN.md erlaubt (dunkles
+       Panel auf --text, Accent-Block auf --accent). Keine neuen Grundfarben —
+       abgestufte Helligkeiten derselben Familie. Siehe DESIGN.md. */
+    --on-dark:#f4efe6; --on-dark-muted:#b7ab99; --on-dark-label:#a49887;
+    --on-dark-subtle:#8a7f6f; --on-dark-surface:#39312a; --on-dark-border:#4a4038;
+    --on-accent:#fdf3ee; --on-accent-soft:#fbe7de; --on-accent-muted:#f6d9cc;
+    --on-accent-subtle:#f0c3b1;
     --serif:'Newsreader',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -45,8 +65,8 @@
     border:none;cursor:pointer;transition:background .2s,transform .2s}
   .btn:hover{background:var(--accent-hover);color:#fff;transform:translateY(-1px)}
   .btn.lg{height:54px;padding:0 30px;font-size:16px;border-radius:13px}
-  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
-  .btn.ghost:hover{background:var(--surface);color:var(--text);border-color:var(--text-subtle)}
+  /* Kein .btn.ghost hier: /login ist auf dieser Seite bewusst nur ein Textlink
+     (siehe DESIGN.md, Routen/CTAs). Die Ghost-Variante lebt in base.html. */
   .nav-actions .btn{height:40px;padding:0 18px}
 
   /* ---------- hero ---------- */
@@ -66,30 +86,30 @@
   .hero-note a{color:var(--text-muted);font-weight:500}
 
   /* ---------- demo panel (hero right) ---------- */
-  .demo{background:var(--text);color:#f4efe6;border-radius:22px;padding:26px;
+  .demo{background:var(--text);color:var(--on-dark);border-radius:22px;padding:26px;
     box-shadow:0 40px 80px -40px rgba(43,36,31,.5);position:relative;overflow:hidden}
   .demo-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-  .demo-top .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#b7ab99}
+  .demo-top .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-dark-muted)}
   .mic{width:40px;height:40px;border-radius:50%;background:var(--accent);display:grid;place-items:center;
     color:#fff;position:relative;flex:none}
   .mic::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent);
     opacity:0;animation:ring 2.4s ease-out infinite}
-  .demo-said{font-size:14px;color:#b7ab99;margin-bottom:6px}
-  .demo-quote{font-family:var(--serif);font-size:23px;line-height:1.3;color:#fbf8f2;min-height:1.3em}
+  .demo-said{font-size:14px;color:var(--on-dark-muted);margin-bottom:6px}
+  .demo-quote{font-family:var(--serif);font-size:23px;line-height:1.3;color:var(--surface);min-height:1.3em}
   .demo-quote .caret{display:inline-block;width:2px;height:1em;background:var(--accent);
     vertical-align:-2px;margin-left:2px;animation:blink 1s step-end infinite}
-  .demo-arrow{display:flex;align-items:center;gap:10px;margin:20px 0 16px;color:#8a7f6f;font-size:12px;
+  .demo-arrow{display:flex;align-items:center;gap:10px;margin:20px 0 16px;color:var(--on-dark-subtle);font-size:12px;
     letter-spacing:.1em;text-transform:uppercase}
-  .demo-arrow .line{height:1px;background:#4a4038;flex:1}
+  .demo-arrow .line{height:1px;background:var(--on-dark-border);flex:1}
   .macros{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .macro{background:#39312a;border-radius:12px;padding:13px 12px;opacity:0;transform:translateY(8px);
+  .macro{background:var(--on-dark-surface);border-radius:12px;padding:13px 12px;opacity:0;transform:translateY(8px);
     transition:opacity .5s,transform .5s}
   .macro.in{opacity:1;transform:none}
-  .macro .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#a4988700;color:#a49887}
-  .macro .v{font-family:var(--serif);font-size:26px;line-height:1;margin-top:6px;color:#fbf8f2}
-  .macro .u{font-size:11px;color:#8a7f6f;margin-left:2px}
+  .macro .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--on-dark-label)}
+  .macro .v{font-family:var(--serif);font-size:26px;line-height:1;margin-top:6px;color:var(--surface)}
+  .macro .u{font-size:11px;color:var(--on-dark-subtle);margin-left:2px}
   .macro.kcal{background:var(--accent)}
-  .macro.kcal .k{color:#f6d9cc}.macro.kcal .v{color:#fff}.macro.kcal .u{color:#f0c3b1}
+  .macro.kcal .k{color:var(--on-accent-muted)}.macro.kcal .v{color:#fff}.macro.kcal .u{color:var(--on-accent-subtle)}
 
   /* ---------- section frame ---------- */
   section{padding:88px 0}
@@ -99,16 +119,16 @@
   .sec-lede{font-size:19px;color:var(--text-muted);max-width:52ch;margin-top:20px;text-wrap:pretty}
 
   /* ---------- clarify (inverted accent block) ---------- */
-  .clarify{background:var(--accent);color:#fdf3ee;border-radius:32px;overflow:hidden}
+  .clarify{background:var(--accent);color:var(--on-accent);border-radius:32px;overflow:hidden}
   .clarify-in{display:grid;grid-template-columns:1fr 1fr;gap:0}
   .clarify-copy{padding:72px 56px}
-  .clarify .sec-tag{color:#f6d3c6}
+  .clarify .sec-tag{color:var(--on-accent-muted)}
   .clarify h2{font-family:var(--serif);font-weight:500;letter-spacing:-.025em;line-height:1.05;
     font-size:clamp(34px,4.6vw,56px);margin:16px 0 20px;color:#fff}
-  .clarify p{font-size:19px;color:#f6d9cc;max-width:40ch;text-wrap:pretty}
-  .clarify .pt{display:flex;gap:14px;margin-top:22px;font-size:16px;color:#fbe7de;align-items:flex-start}
+  .clarify p{font-size:19px;color:var(--on-accent-muted);max-width:40ch;text-wrap:pretty}
+  .clarify .pt{display:flex;gap:14px;margin-top:22px;font-size:16px;color:var(--on-accent-soft);align-items:flex-start}
   .clarify .pt svg{flex:none;margin-top:2px}
-  .chat{background:#fbf8f2;color:var(--text);padding:56px 48px;display:flex;flex-direction:column;
+  .chat{background:var(--surface);color:var(--text);padding:56px 48px;display:flex;flex-direction:column;
     justify-content:center;gap:14px}
   .bubble{max-width:82%;padding:14px 18px;border-radius:18px;font-size:16px;line-height:1.45}
   .bubble.user{align-self:flex-end;background:var(--accent-soft);border-bottom-right-radius:5px}
@@ -117,7 +137,7 @@
   .bubble.app strong{font-weight:600}
   .bubble .meta{display:block;font-size:12px;color:var(--text-subtle);margin-bottom:4px;font-weight:500}
   .chat-result{align-self:flex-start;display:flex;gap:8px;margin-top:2px}
-  .chip{font-family:var(--serif);font-size:14px;background:var(--text);color:#fbf8f2;padding:6px 12px;
+  .chip{font-family:var(--serif);font-size:14px;background:var(--text);color:var(--surface);padding:6px 12px;
     border-radius:9px}
 
   /* ---------- features grid (bento) ---------- */
@@ -221,7 +241,6 @@
           <a class="btn lg" href="/register">Jetzt registrieren
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
-          <a class="btn lg ghost" href="/login">Anmelden</a>
         </div>
         <p class="hero-note rv">{% if needs_code %}Zugang aktuell nur mit Invite-Code. &nbsp;·&nbsp; {% endif %}Schon dabei? <a href="/login">Anmelden</a></p>
       </div>
@@ -262,7 +281,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
         </div>
         <h3>1 — Einsprechen oder tippen</h3>
-        <p>Aufnahme starten und die Mahlzeit sagen, oder „gegrilltes Hähnchen mit Reis" tippen. Beides führt zum selben Ziel.</p>
+        <p>Aufnahme starten und die Mahlzeit sagen, oder „gegrilltes Hähnchen mit Reis“ tippen. Beides führt zum selben Ziel.</p>
       </div>
       <div class="card rv feat">
         <div class="ico">
@@ -290,21 +309,21 @@
         <div class="clarify-copy">
           <span class="sec-tag">Der Unterschied</span>
           <h2>Fragt nach, statt eine Zahl zu erfinden.</h2>
-          <p>Andere Tracker raten, wenn eine Angabe fehlt. Diese App stellt eine kurze Rückfrage — nur dann, wenn es das Ergebnis wirklich verändert.</p>
+          <p>Fehlt eine Angabe, die das Ergebnis deutlich verändert, fragt die App kurz nach — statt die Lücke mit einer Zahl zu füllen. Nur dann, und höchstens zweimal.</p>
           <div class="pt">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbe7de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
             <span>Eine gezielte Frage, keine Formularschlacht.</span>
           </div>
           <div class="pt">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbe7de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
             <span>Keine erfundenen Werte in deinem Protokoll.</span>
           </div>
         </div>
         <div class="chat">
           <div class="bubble user"><span class="meta">Du</span>Nudeln mit Pesto</div>
-          <div class="bubble app"><span class="meta">Tracker</span>Kurze Frage: <strong>Wie viel Nudeln ungefähr</strong> — ein kleiner oder ein großer Teller?</div>
+          <div class="bubble app"><span class="meta">MacroMic</span>Kurze Frage: <strong>Wie viel Nudeln ungefähr</strong> — ein kleiner oder ein großer Teller?</div>
           <div class="bubble user"><span class="meta">Du</span>Großer Teller</div>
-          <div class="bubble app"><span class="meta">Tracker</span>Alles klar. Im Log:</div>
+          <div class="bubble app"><span class="meta">MacroMic</span>Alles klar. Im Log:</div>
           <div class="chat-result">
             <span class="chip">610 kcal</span>
             <span class="chip">18 g E</span>
@@ -321,8 +340,8 @@
 <section id="features" style="padding-top:20px">
   <div class="wrap">
     <div class="rv">
-      <span class="sec-tag">Und der Rest</span>
-      <h2 class="sec-h">Alles, was ernsthaftes Tracken braucht.</h2>
+      <span class="sec-tag">Funktionen</span>
+      <h2 class="sec-h">Was du sonst noch brauchst.</h2>
     </div>
     <div class="bento">
       <div class="card wide rv feat">
@@ -373,7 +392,7 @@
   <div class="wrap">
     <div class="outro rv">
       {% with mark_class = "wordmark-lg" %}{% include "_wordmark.html" %}{% endwith %}
-      <h2>Weniger tippen.<br><em>Genauer</em> tracken.</h2>
+      <h2>Weniger tippen.<br><em>Mehr</em> im Log.</h2>
       <div class="oc">
         <a class="btn lg" href="/register">Jetzt registrieren
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
