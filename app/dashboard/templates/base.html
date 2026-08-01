@@ -225,7 +225,12 @@
         .clarify .status{color:var(--text-muted)}
 
         /* ---------- auth ---------- */
-        .auth-wrap{min-height:calc(100vh - 68px);display:grid;place-items:center;padding:40px 0}
+        /* Alles, was neben der zentrierten Karte senkrecht Platz belegt: Nav 69,
+           main-Polsterung 40 + 72, Seitenfuß 93. Vorher wurde nur die Nav abgezogen,
+           weshalb eine Auth-Seite schon immer gut 110px über den Viewport hinausragte;
+           mit dem Fuß wären daraus über 200px geworden. Unter 640px setzt die
+           Media Query weiter unten min-height:0, dort spielt der Wert keine Rolle. */
+        .auth-wrap{min-height:calc(100vh - 274px);display:grid;place-items:center;padding:40px 0}
         .auth-card{width:100%;max-width:440px}
         .auth-title{font-family:var(--serif);font-weight:500;font-size:38px;letter-spacing:-.03em;
             line-height:1.1;margin-bottom:8px;text-wrap:balance}
@@ -238,6 +243,15 @@
         .field-hint{font-size:13px;color:var(--text-subtle);margin-top:-8px}
         .auth-footer{font-size:14px;color:var(--text-subtle);margin-top:22px}
         .auth-footer a{color:var(--text-muted);font-weight:500}
+
+        /* Seitenfuß. Impressum und Datenschutz müssen nach §5 DDG von jeder Seite aus
+           erreichbar sein, nicht nur von der Landing Page — deshalb hier im base
+           und nicht je Template. */
+        .site-foot{border-top:1px solid var(--border);padding:26px 0 44px;
+            color:var(--text-subtle);font-size:14px}
+        .site-foot-in{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+        .site-foot a{color:var(--text-muted);font-weight:500}
+        .site-foot a:hover{color:var(--text)}
 
         /* ---------- reveal ---------- */
         .rv{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
@@ -332,6 +346,21 @@
         {% block content %}{% endblock %}
     </div>
 </main>
+{% endblock %}
+
+{% block footer %}
+{# .wrap verschachtelt statt danebengestellt: `.wrap` wird in der 640px-Media-Query
+   neu gesetzt und würde die vertikale Polsterung des Fußes sonst überschreiben. #}
+<footer class="site-foot">
+    <div class="wrap site-foot-in">
+        <span>MacroMic</span>
+        <span>
+            <a href="/faq">FAQ</a> &middot;
+            <a href="/impressum">Impressum</a> &middot;
+            <a href="/datenschutz">Datenschutz</a>
+        </span>
+    </div>
+</footer>
 {% endblock %}
 
 <script>

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Datenschutz — MacroMic{% endblock %}
+
+{% block extra_head %}
+<style>
+    .legal{max-width:680px}
+    .legal p{color:var(--text-muted)}
+    .legal p + p{margin-top:14px}
+    .legal address{font-style:normal;color:var(--text);line-height:1.7}
+    .legal h2{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.02em;
+        margin:42px 0 12px;color:var(--text)}
+    .legal h2:first-of-type{margin-top:0}
+    .legal h3{font-size:16px;font-weight:600;color:var(--text);margin:22px 0 6px}
+    .legal a{font-weight:500}
+    .legal ul{margin:12px 0 0 20px;color:var(--text-muted)}
+    .legal li + li{margin-top:7px}
+    .legal li strong{color:var(--text);font-weight:600}
+
+    /* Empfängertabelle als Liste, nicht als <table>: sie muss auf 375px umbrechen
+       können, ohne einen horizontalen Scroller zu erzeugen. */
+    .recv{list-style:none;margin:14px 0 0;border:1px solid var(--border);
+        border-radius:var(--r-btn);overflow:hidden;background:var(--surface)}
+    .recv li{padding:13px 16px;margin:0}
+    .recv li + li{border-top:1px solid var(--border)}
+    .recv .who{display:block;color:var(--text);font-weight:600;font-size:15px}
+    .recv .what{display:block;color:var(--text-muted);font-size:15px;margin-top:2px}
+
+    /* p.legal-missing, nicht nur .legal-missing: `.legal p` oben ist spezifischer
+       und würde die Warnfarbe sonst überschreiben. */
+    .legal p.legal-missing{color:var(--danger);background:var(--danger-soft);
+        border-radius:var(--r-btn);padding:12px 16px;font-size:15px}
+    .legal-foot{margin-top:40px;color:var(--text-subtle);font-size:14px}
+
+    @media(max-width:640px){
+        .legal h2{font-size:21px;margin-top:34px}
+    }
+</style>
+{% endblock %}
+
+{% block nav %}
+{% if username %}{{ super() }}{% else %}
+<nav id="nav">
+    <div class="wrap nav-in">
+        <a class="brand" href="/">{% include "_wordmark.html" %}</a>
+        <div class="nav-actions">
+            <a class="nav-link" href="/login">Anmelden</a>
+            <a class="btn sm" href="/register">Registrieren</a>
+        </div>
+    </div>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Datenschutz</span>
+        <h1 class="page-h">Was mit deinen <em>Daten</em> passiert</h1>
+    </div>
+</div>
+
+<div class="legal">
+    <h2>Verantwortlicher</h2>
+    {% if imprint.name and imprint.street and imprint.city %}
+    <address>
+        {{ imprint.name }}<br>
+        {{ imprint.street }}<br>
+        {{ imprint.city }}{% if imprint.email %}<br>
+        <a href="mailto:{{ imprint.email }}">{{ imprint.email }}</a>{% endif %}
+    </address>
+    {% else %}
+    <p class="legal-missing">Auf diesem Server sind keine Verantwortlichen-Daten
+        hinterlegt. Siehe <a href="/impressum">Impressum</a>.</p>
+    {% endif %}
+
+    <h2>Welche Daten die App speichert</h2>
+    <ul>
+        <li><strong>Konto:</strong> Benutzername, E-Mail-Adresse, Passwort (nur als
+            Hash, nie im Klartext), Tarif und Registrierungszeitpunkt.</li>
+        <li><strong>Mahlzeiten:</strong> dein eingegebener oder eingesprochener Text,
+            die daraus geschätzten Nährwerte und der Zeitpunkt.</li>
+        <li><strong>Rezepte und Ziele:</strong> Rezeptnamen, Zutaten als Freitext, die
+            berechneten Werte und deine Makroziele.</li>
+        <li><strong>KI-Protokoll:</strong> zu jeder KI-Anfrage der vollständige
+            Anfrage- und Antworttext, Modell, Token-Zahlen und Dauer. Du siehst dein
+            eigenes Protokoll unter <a href="/ai-log">KI-Anfragen</a>.</li>
+        <li><strong>Verbrauch:</strong> wie viele Credits du an einem Tag genutzt hast,
+            und ein Zähler über die insgesamt verbrauchten Token.</li>
+        <li><strong>Feedback:</strong> was du über das Feedback-Formular schickst.</li>
+        <li><strong>Anmeldeversuche:</strong> bei <em>fehlgeschlagenen</em> Anmeldungen
+            die IP-Adresse und der verwendete Benutzername, ausschließlich zur
+            Begrenzung von Rateversuchen.</li>
+    </ul>
+
+    <h3>Bitte keine Gesundheitsangaben eintragen</h3>
+    <p>Beschreib deine Mahlzeiten, nicht deinen Gesundheitszustand. Angaben zu
+        Krankheiten, Diagnosen oder Medikamenten sind besondere Kategorien
+        personenbezogener Daten nach Art. 9 DSGVO — die App ist dafür nicht ausgelegt,
+        und sie werden für die Nährwertschätzung auch nicht gebraucht.</p>
+
+    <h2>Wozu, und auf welcher Grundlage</h2>
+    <p>Konto, Mahlzeiten, Rezepte und Ziele verarbeite ich, um dir die App
+        bereitzustellen — Art. 6 Abs. 1 lit. b DSGVO (Vertrag bzw. vorvertragliche
+        Maßnahmen). Das KI-Protokoll, die Verbrauchszähler und die gespeicherten
+        Anmeldeversuche dienen dem sicheren und bezahlbaren Betrieb: Fehlersuche,
+        Missbrauchserkennung und Kostenkontrolle, Art. 6 Abs. 1 lit. f DSGVO
+        (berechtigtes Interesse). Die Bestätigungs- und Passwort-Mails sind für den
+        Betrieb des Kontos erforderlich, ebenfalls lit. b.</p>
+
+    <h2>Wer die Daten außerdem zu sehen bekommt</h2>
+    <p>Die App läuft auf eigener Hardware, nicht bei einem Cloud-Anbieter. An diesen
+        Stellen gehen Daten trotzdem nach außen:</p>
+    <ul class="recv">
+        <li>
+            <span class="who">OpenAI (USA) — Sprachaufnahmen</span>
+            <span class="what">Nimmst du eine Mahlzeit per Sprache auf, wird die
+                Aufnahme zur Transkription an OpenAI übertragen.</span>
+        </li>
+        <li>
+            {# Muss alle drei Werte aus dem Literal in config.py abdecken. Ein
+               else-Zweig würde bei einem vierten Anbieter still den falschen
+               Empfänger nennen — in einer Datenschutzerklärung keine Kleinigkeit. #}
+            <span class="who">
+                {%- if llm_provider == 'claude' %}Anthropic (USA)
+                {%- elif llm_provider == 'openai' %}OpenAI (USA)
+                {%- elif llm_provider == 'gemini' %}Google (USA)
+                {%- else %}der konfigurierte KI-Anbieter{% endif %}
+                — Nährwertschätzung</span>
+            <span class="what">Der Text deiner Mahlzeit wird an das Sprachmodell
+                übertragen, das daraus Kalorien und Makros schätzt.</span>
+        </li>
+        <li>
+            <span class="who">Resend (USA) — E-Mail-Versand</span>
+            <span class="what">Deine E-Mail-Adresse und der Mailinhalt, ausschließlich
+                für Bestätigungs- und Passwort-Mails.</span>
+        </li>
+        <li>
+            <span class="who">Google (USA) — Schriftarten</span>
+            <span class="what">Die Seiten laden ihre Schriften von Google Fonts. Dabei
+                wird deine IP-Adresse an Google übertragen, schon bevor du dich
+                anmeldest.</span>
+        </li>
+    </ul>
+    <p>Alle vier sitzen in den USA. Die Übermittlung stützt sich auf die
+        Standardvertragsklauseln der EU-Kommission bzw. das EU-US Data Privacy
+        Framework. Ein Schutzniveau wie in der EU lässt sich damit nicht garantieren —
+        insbesondere ein Zugriff durch US-Behörden ist nicht auszuschließen.</p>
+
+    <h2>Cookies</h2>
+    <p>Die App setzt nur technisch notwendige Cookies, kein Tracking, keine Analyse,
+        keine Werbung:</p>
+    <ul>
+        <li><strong>session</strong> — hält dich angemeldet, {{ session_ttl_days }} Tage,
+            für JavaScript nicht lesbar.</li>
+        <li><strong>csrftoken</strong> — schützt Formulare vor fremden Absendern. Muss
+            für JavaScript lesbar sein, weil das Verfahren den Wert mitschickt.</li>
+    </ul>
+    <p>Weil beide für den ausdrücklich gewünschten Dienst erforderlich sind, brauchen
+        sie nach §25 Abs. 2 TDDDG keine Einwilligung — deshalb gibt es hier auch kein
+        Cookie-Banner.</p>
+
+    <h2>Wie lange gespeichert wird</h2>
+    <ul>
+        <li>Konto, Mahlzeiten, Rezepte und Ziele: bis du sie löschst oder das Konto
+            aufgibst.</li>
+        <li>KI-Protokoll: {{ ai_log_retention_days }} Tage, danach automatisch.</li>
+        <li>Sitzungen: {{ session_ttl_days }} Tage ab Anmeldung.</li>
+        <li>Fehlgeschlagene Anmeldeversuche: nur für die Dauer des Zeitfensters, danach
+            automatisch.</li>
+    </ul>
+
+    <h2>Deine Rechte</h2>
+    <p>Du hast das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung
+        (Art. 17), Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20) und
+        Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen
+        (Art. 21 DSGVO). Einzelne Mahlzeiten, Rezepte und Ziele kannst du jederzeit
+        selbst in der App ändern oder löschen.</p>
+    {% if imprint.email %}
+    <p>Für alles Weitere — Auskunft, Export oder Löschung des gesamten Kontos —
+        schreib an <a href="mailto:{{ imprint.email }}">{{ imprint.email }}</a>.</p>
+    {% endif %}
+    <p>Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren,
+        Art. 77 DSGVO. Zuständig ist die Behörde deines Wohnsitzes oder die am Sitz des
+        Verantwortlichen.</p>
+
+    <h2>Keine automatisierte Entscheidung</h2>
+    <p>Die Nährwerte schätzt ein Sprachmodell, aber daran hängt keine Entscheidung mit
+        rechtlicher Wirkung für dich im Sinne von Art. 22 DSGVO. Die Werte sind
+        Schätzungen und keine medizinische Beratung — siehe <a href="/faq">FAQ</a>.</p>
+
+    <p class="legal-foot">Zurück zum <a href="/impressum">Impressum</a>.</p>
+</div>
+{% endblock %}

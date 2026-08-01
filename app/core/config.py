@@ -46,6 +46,14 @@ class Settings(BaseSettings):
     # Absolute origin for links in outgoing mail. request.base_url reports the internal
     # address behind a reverse proxy, which would produce unreachable links.
     public_base_url: str = "http://localhost:8000"
+    # Impressum nach §5 DDG und Verantwortlicher nach Art. 4 Nr. 7 DSGVO. Bewusst aus
+    # der Umgebung statt aus dem Template: das Repo ist öffentlich, und eine
+    # Privatanschrift gehört nicht in die Git-Historie, aus der sie niemand mehr
+    # entfernt. Leer = die Seiten zeigen einen sichtbaren Platzhalter statt zu lügen.
+    imprint_name: str = ""
+    imprint_street: str = ""
+    imprint_city: str = ""
+    imprint_email: str = ""
     database_url: str = "sqlite+aiosqlite:////data/macromic.db"
     app_timezone: str = "Europe/Berlin"  # local tz for day boundaries and display
     app_port: int = 8000

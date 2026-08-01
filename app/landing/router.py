@@ -44,6 +44,41 @@ async def landing(
     )
 
 
+def _imprint_context(user: Optional[User]) -> dict:
+    """Shared context for the two legal pages.
+
+    Both must stay reachable signed out — §5 DDG requires the Impressum to be
+    permanently available, and a visitor deciding whether to register is exactly who
+    reads the Datenschutzerklärung. `username` drives the signed-out nav variant.
+    """
+    return {
+        "username": user.username if user else None,
+        "imprint": {
+            "name": settings.imprint_name,
+            "street": settings.imprint_street,
+            "city": settings.imprint_city,
+            "email": settings.imprint_email,
+        },
+        "ai_log_retention_days": settings.ai_log_retention_days,
+        "session_ttl_days": settings.session_ttl_days,
+        "llm_provider": settings.llm_provider,
+    }
+
+
+@router.get("/impressum", response_class=HTMLResponse)
+async def impressum(request: Request, user: Optional[User] = Depends(resolve_user)):
+    return templates.TemplateResponse(
+        request=request, name="impressum.html", context=_imprint_context(user)
+    )
+
+
+@router.get("/datenschutz", response_class=HTMLResponse)
+async def datenschutz(request: Request, user: Optional[User] = Depends(resolve_user)):
+    return templates.TemplateResponse(
+        request=request, name="datenschutz.html", context=_imprint_context(user)
+    )
+
+
 @router.get("/faq", response_class=HTMLResponse)
 async def faq(request: Request, user: Optional[User] = Depends(resolve_user)):
     # Deliberately unguarded: the credit rules are the main thing prospects want to

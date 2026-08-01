@@ -21,6 +21,10 @@ _LOCK_EXEMPT_PATHS = frozenset(
         "/register",
         "/forgot-password",
         "/reset-password",
+        # Pflichtangaben nach §5 DDG bzw. Art. 13 DSGVO: müssen ständig erreichbar
+        # sein, auch für ein gesperrtes Konto. Sie zeigen ohnehin keine Nutzerdaten.
+        "/impressum",
+        "/datenschutz",
     }
 )
 

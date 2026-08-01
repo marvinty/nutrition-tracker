@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Impressum — MacroMic{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Muss mit datenschutz.html übereinstimmen — die beiden Seiten verlinken
+       einander und werden direkt hintereinander gelesen. */
+    .legal{max-width:680px}
+    .legal p{color:var(--text-muted)}
+    .legal p + p{margin-top:14px}
+    .legal address{font-style:normal;color:var(--text);line-height:1.7}
+    .legal h2{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.02em;
+        margin:42px 0 12px;color:var(--text)}
+    .legal h2:first-of-type{margin-top:0}
+    .legal a{font-weight:500}
+
+    /* Sichtbar statt still: eine leere Umgebungsvariable darf nicht als fertiges
+       Impressum durchgehen. --danger, weil unvollständig = rechtlich angreifbar. */
+    /* p.legal-missing, nicht nur .legal-missing: `.legal p` oben ist spezifischer
+       und würde die Warnfarbe sonst überschreiben. */
+    .legal p.legal-missing{color:var(--danger);background:var(--danger-soft);
+        border-radius:var(--r-btn);padding:12px 16px;font-size:15px}
+    .legal p.legal-missing code{font-size:.92em}
+
+    @media(max-width:640px){
+        .legal h2{font-size:21px;margin-top:34px}
+    }
+</style>
+{% endblock %}
+
+{% block nav %}
+{% if username %}{{ super() }}{% else %}
+<nav id="nav">
+    <div class="wrap nav-in">
+        <a class="brand" href="/">{% include "_wordmark.html" %}</a>
+        <div class="nav-actions">
+            <a class="nav-link" href="/login">Anmelden</a>
+            <a class="btn sm" href="/register">Registrieren</a>
+        </div>
+    </div>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Pflichtangaben</span>
+        <h1 class="page-h">Impressum</h1>
+    </div>
+</div>
+
+<div class="legal">
+    <h2>Angaben gemäß §5 DDG</h2>
+    {% if imprint.name and imprint.street and imprint.city %}
+    <address>
+        {{ imprint.name }}<br>
+        {{ imprint.street }}<br>
+        {{ imprint.city }}
+    </address>
+    {% else %}
+    <p class="legal-missing">Impressumsdaten sind auf diesem Server nicht hinterlegt.
+        Setz <code>IMPRINT_NAME</code>, <code>IMPRINT_STREET</code> und
+        <code>IMPRINT_CITY</code> in der Umgebung und starte den Container neu.</p>
+    {% endif %}
+
+    <h2>Kontakt</h2>
+    {% if imprint.email %}
+    <p><a href="mailto:{{ imprint.email }}">{{ imprint.email }}</a></p>
+    {% else %}
+    <p class="legal-missing">Kontaktadresse fehlt — <code>IMPRINT_EMAIL</code> setzen.</p>
+    {% endif %}
+
+    <h2>Verantwortlich für den Inhalt</h2>
+    {# Dieselben drei Felder wie der Adressblock oben. Nur auf `name` zu prüfen ergäbe
+       bei halb gesetzter Config ein „Anschrift wie oben“, das auf einen Platzhalter
+       zeigt. #}
+    {% if imprint.name and imprint.street and imprint.city %}
+    <p>{{ imprint.name }}, Anschrift wie oben.</p>
+    {% else %}
+    <p class="legal-missing">Fehlt — siehe den Hinweis oben.</p>
+    {% endif %}
+
+    <h2>Streitbeilegung</h2>
+    <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung
+        bereit: <a href="https://ec.europa.eu/consumers/odr/" rel="noopener">ec.europa.eu/consumers/odr</a>.
+        Ich bin nicht verpflichtet und nicht bereit, an einem Streitbeilegungsverfahren
+        vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+
+    <h2>Haftung für Links</h2>
+    <p>Diese Seite enthält Links zu externen Websites. Auf deren Inhalte habe ich
+        keinen Einfluss und übernehme dafür keine Gewähr. Für die Inhalte der
+        verlinkten Seiten ist deren jeweiliger Anbieter verantwortlich.</p>
+
+    <p style="margin-top:28px"><a href="/datenschutz">Zur Datenschutzerklärung</a></p>
+</div>
+{% endblock %}
