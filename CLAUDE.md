@@ -20,13 +20,24 @@ Tests run on the host, not in the container — pytest is the only thing that wo
 local Python:
 
 ```bash
-python3 -m pytest -q
+python3 -m pytest -q --ignore=tests/test_rate_limit_page.py --ignore=tests/test_register_form.py
 python3 -m pytest tests/test_goals.py -q            # one file
 python3 -m pytest tests/test_goals.py -k upsert -q  # one test
 ```
 
+The two ignored modules go over httpx/ASGITransport. `httpx` is a project dependency but is
+not installed in the local Python 3.9, so without the flags the run dies at collection. They
+pass in the container, which has httpx but not pytest — so the full suite needs a one-off
+install (196 tests locally, 202 there):
+
+```bash
+docker exec nutrition-tracker-api-1 pip install -q pytest pytest-asyncio
+docker exec -w /app nutrition-tracker-api-1 python -m pytest -q
+```
+
 The local interpreter is Python 3.9 while the app targets 3.12 in Docker. Anything beyond
-pytest (starting uvicorn, importing the full app) must go through `make dev`.
+pytest (starting uvicorn, importing the full app) must go through `make dev` — `from app.main
+import app` fails locally on PEP 604 syntax.
 
 Production deploy runs on the Proxmox host:
 
@@ -157,6 +168,60 @@ The rules that get violated most often:
 - Responsive down to 375px, no horizontal scroll. CSS-only animation, always respecting
   `prefers-reduced-motion`.
 - CSS is inlined per template; `/static` holds brand assets only ([BRAND.md](BRAND.md)).
+
+## Tooling in `.claude/`
+
+All of this is checked in and applies to every checkout. `.claude/settings.local.json` is the
+one exception — gitignored, per-machine.
+
+### Hooks that run on their own
+
+**`.env` is blocked** (`hooks/block-env-access.sh`, PreToolUse on Read/Edit/Write/Bash/Grep,
+plus `permissions.deny`). `.env` and `.env.*` hold live production credentials; reading one
+copies a secret into the transcript permanently, where no later cleanup reaches it.
+`.env.example` is allowed and documents every key.
+
+The guard matches on the command text, so it cannot tell reading the file from naming it — a
+commit message or a grep pattern that merely contains `.env` is refused too. Work around it
+with `git commit -F <file>` rather than weakening the hook. If a real value is needed, ask
+Marvin; do not try to route around the block.
+
+**Tests run after edits under `app/`** (`hooks/run-tests-on-app-edit.sh`, PostToolUse on
+Write/Edit, async). Green is silent; a failure wakes the model with the failing test named. It
+covers the 196 local tests, not the six httpx ones. It is not a substitute for running the
+suite yourself before saying something works.
+
+### Skills — invoke these, don't improvise
+
+- **`/add-column`** — before adding any column to an existing table. There is no Alembic and
+  `create_all` will not add it; the skill carries the idempotency guard, the UNIQUE-via-index
+  rule and the backfill question.
+- **`/deploy`** — before deploying to the Proxmox host. Includes the three restart rules and
+  the prod env vars to re-check.
+
+Both are user-invocable only (`disable-model-invocation: true`), so suggest them rather than
+expecting them to fire on their own.
+
+### Subagents — suggest them at the right moment
+
+Neither runs automatically, and this harness does not spawn agents unbidden. Recommend them:
+
+- **`design-system-reviewer`** — after touching any template or user-facing string.
+- **`sqlite-migration-reviewer`** — after any change to `init_db.py` or `app/models/`.
+
+### MCP servers
+
+`.mcp.json` declares **context7** (live SQLAlchemy 2.0 async / FastAPI docs — recall skews to
+the older sync idioms) and the **GitHub** server. Both need approval on first connect; GitHub
+also needs an OAuth sign-in. If they are not connected, they are simply absent — do not stall
+waiting for them.
+
+### Permissions
+
+`.claude/settings.json` allows a small read-only set (pytest, `docker compose logs`/`ps`,
+`docker info`, `dig`, the page-reading browser tools). Deliberately absent: `curl`, because a
+prefix wildcard cannot be pinned to GET; and interpreters, package runners and
+`docker compose exec`, because they are arbitrary code execution. Expect prompts for those.
 
 ## Note on the README
 
