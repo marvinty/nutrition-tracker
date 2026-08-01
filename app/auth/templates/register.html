@@ -29,6 +29,8 @@
                    value="{{ email or '' }}" required>
             <input type="password" name="password" placeholder="Passwort" autocomplete="new-password"
                    minlength="10" required>
+            <input type="password" name="password_confirm" placeholder="Passwort wiederholen"
+                   autocomplete="new-password" minlength="10" required>
             <p class="field-hint">Mindestens 10 Zeichen.</p>
             {% if needs_code %}
             <input type="text" name="signup_code" placeholder="Einladungscode" autocomplete="off"

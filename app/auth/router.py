@@ -127,6 +127,11 @@ async def register_page(
     )
 
 
+# Shared by registration and reset for the same reason as the message below: the two
+# places a password gets set should say the same thing when the repeat does not match.
+PASSWORD_MISMATCH_MESSAGE = "Die beiden Passwörter stimmen nicht überein."
+
+
 def _password_error_message(exc: InvalidPasswordError) -> str:
     """The user-facing German text for a rejected password.
 
@@ -143,6 +148,9 @@ async def register(
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    # Optional at the HTTP layer, required in practice: a missing field would otherwise
+    # come back as FastAPI's raw 422 JSON instead of the form with a German message.
+    password_confirm: str = Form(default=""),
     signup_code: str = Form(default=""),
     session: AsyncSession = Depends(get_session),
 ):
@@ -190,6 +198,8 @@ async def register(
         validate_password(password)
     except InvalidPasswordError as exc:
         return _reject(_password_error_message(exc), status.HTTP_400_BAD_REQUEST)
+    if password_confirm != password:
+        return _reject(PASSWORD_MISMATCH_MESSAGE, status.HTTP_400_BAD_REQUEST)
 
     if not await signup_allowed(session, signup_code):
         return _reject(
@@ -379,6 +389,7 @@ async def submit_reset_password(
     request: Request,
     token: str = Form(...),
     password: str = Form(...),
+    password_confirm: str = Form(default=""),
     session: AsyncSession = Depends(get_session),
 ):
     def _reject(message: str = "", *, valid: bool = True) -> HTMLResponse:
@@ -401,6 +412,8 @@ async def submit_reset_password(
         validate_password(password)
     except InvalidPasswordError as exc:
         return _reject(_password_error_message(exc))
+    if password_confirm != password:
+        return _reject(PASSWORD_MISMATCH_MESSAGE)
 
     await reset_password(session, user, password)
     # Every token is gone now, including this request's own — so hand out a fresh
