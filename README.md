@@ -172,7 +172,7 @@ All settings are read from `.env` (see `.env.example`):
 | `DATABASE_URL` | `sqlite+aiosqlite:////data/macromic.db` | SQLAlchemy async DB URL |
 | `APP_PORT` | `8000` | Host port exposed by Docker |
 | `TIER_DAILY_CREDITS` | `{"free": 20, "pro": 300}` | Daily AI credit budget per user tier |
-| `CREDIT_COSTS` | `{"text": 1, "clarify": 1, "voice": 3}` | Credits each action spends |
+| `CREDIT_COSTS` | `{"text": 1, "clarify": 0, "voice": 3}` | Credits each action spends |
 | `GLOBAL_DAILY_CREDITS` | `500` | App-wide daily ceiling across all users |
 | `SIGNUP_CODE` | — | Invite code required to register; empty = open signup |
 

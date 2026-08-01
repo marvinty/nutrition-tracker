@@ -6,7 +6,12 @@ class Settings(BaseSettings):
     anthropic_api_key: str
     openai_api_key: str = ""
     llm_provider: Literal["claude", "openai", "gemini"] = "claude"
-    whisper_provider: Literal["local", "openai"] = "local"
+    # "local" runs openai-whisper in-process, but torch and openai-whisper were dropped
+    # from requirements.txt and the Dockerfile to shrink the image — the branch is kept
+    # for a future self-hosted setup and raises a clear error until those come back.
+    # Default has to be "openai" for the same reason: a deployment that does not set this
+    # would otherwise fail on its first voice request rather than at boot.
+    whisper_provider: Literal["local", "openai"] = "openai"
     whisper_model: str = "base"  # local only: tiny | base | small | medium | large
     # Cost protection: each AI call spends credits from a daily per-user budget that
     # depends on the user's tier. An unknown tier falls back to "free", so a typo in
