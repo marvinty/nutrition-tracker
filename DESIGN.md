@@ -119,3 +119,5 @@ Fehlertexte, Löschaktionen, erreichte Limits und Ziel-Überschreitung verwenden
 - Makroziele mit Tagesfortschritt, plus Auswertung Woche/Monat.
 - Rezepte mit Makros pro Portion, Zutaten auch per Sprache.
 - Verlauf mit Wochen-/Monatsansicht, Mahlzeiten nachträglich bearbeitbar.
+- Gewichts-Log mit 7-Tage-Schnitt, Wochenveränderung und geschätztem Tagesverbrauch;
+  daraus ein **Vorschlag** fürs kcal-Ziel — nie automatisch übernommen.

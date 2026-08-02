@@ -15,6 +15,7 @@ from app.models.app_setting import AppSetting  # noqa: F401 — must import to r
 from app.models.rate_limit import RateLimitHit  # noqa: F401 — must import to register with Base.metadata
 from app.models.user_token_total import UserTokenTotal  # noqa: F401 — must import to register with Base.metadata
 from app.models.feedback import Feedback  # noqa: F401 — must import to register with Base.metadata
+from app.models.weight_entry import WeightEntry  # noqa: F401 — must import to register with Base.metadata
 from app.db.session import engine
 
 
@@ -64,6 +65,25 @@ async def _add_user_email_columns(conn) -> None:
     )
 
 
+async def _add_goal_weekly_change_column(conn) -> None:
+    """Add ``macrogoal.weekly_change_kg`` — the rate of change the user is aiming for.
+
+    ``create_all`` only ever creates missing tables, so an existing deployment keeps a
+    ``macrogoal`` without the column and every goal read fails. Idempotent via the
+    column check, like the two migrations above.
+
+    Deliberately nullable with **no backfill**. An existing user has never stated a
+    target rate, and NULL is exactly that — "kein Ziel-Tempo". Defaulting to 0 would
+    claim they want to hold their weight, and /weight would then hand them a calorie
+    suggestion they never asked for. The column is only read, never written, by the
+    suggestion.
+    """
+    columns = await conn.execute(text("PRAGMA table_info(macrogoal)"))
+    if any(row[1] == "weekly_change_kg" for row in columns):
+        return
+    await conn.execute(text("ALTER TABLE macrogoal ADD COLUMN weekly_change_kg FLOAT"))
+
+
 async def _backfill_token_totals(conn) -> None:
     """Seed the lifetime token counter from the AI logs we still have.
 
@@ -99,4 +119,5 @@ async def init_db() -> None:
         await conn.run_sync(Base.metadata.create_all)
         await _add_user_tier_column(conn)
         await _add_user_email_columns(conn)
+        await _add_goal_weekly_change_column(conn)
         await _backfill_token_totals(conn)
