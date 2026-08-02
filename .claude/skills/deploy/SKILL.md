@@ -13,8 +13,19 @@ home IP.
 
 **These commands run on the Proxmox host, not here.** Claude has no shell there — this
 skill is the checklist to follow (or to hand to Marvin) once the code is on `master`.
-Per `scripts/README.md` the repo lives at `/root/nutrition-tracker`; confirm before
-assuming.
+
+**"Host" means the Docker LXC, not the Proxmox node.** SSHing to Proxmox lands you on the
+hypervisor, where `/root/nutrition-tracker` does not exist and `ls /` shows a `pve`
+directory. The repo lives inside the container. Get there first:
+
+```bash
+pct list          # VMID des Docker-LXC heraussuchen
+pct enter <VMID>
+```
+
+The prompt changes to `root@docker`. Only then is `/root/nutrition-tracker` there (path
+per `scripts/README.md`; confirm rather than assume). The backup cron lives in *this*
+container's crontab too, not the node's.
 
 ## 1. Before anything leaves the machine
 
@@ -32,6 +43,17 @@ docker exec -w /app nutrition-tracker-api-1 python -m pytest -q
 ```
 
 Push to `master`. Deploys pull from there; there is no CI.
+
+**Check that `.env` holds no key `Settings` does not declare.** `docker-compose.prod.yml`
+gives the api `env_file: .env`, so every key there is injected into the app's process, and
+`app/core/config.py` sets no `extra` — pydantic's default `extra="forbid"` then kills the
+app at import. A key belonging to a sibling service (the ddns token was the case on
+2026-08-02) has no business in `.env`; give that service its own file, as
+`.env.ddns` now is.
+
+The nasty part is the timing: the app only reads `.env` when its container is *created*,
+so a stray key sits harmless for weeks and then takes prod down on the next unrelated
+deploy. Rolling back does not help — any recreate on any commit hits it.
 
 ## 2. On the host
 
@@ -52,6 +74,19 @@ that silently did nothing.
 - **`.env` changed → `up -d`, never `restart`.** A container's environment is frozen at
   creation. `restart` reuses it and the old values survive. Settings are also read at
   import time, so even inside the container nothing re-reads the file.
+
+  If a `.env` edit provably fails to take effect even after a recreate, check that no
+  copy of the file is inside the image: `Settings` reads `env_file: ".env"` *relative to
+  the WORKDIR*, so a `/app/.env` baked in by `COPY . .` wins over the host's file, and
+  prod — unlike dev — has no bind mount to shadow it. `.dockerignore` keeps it out; the
+  one-line check is
+
+  ```bash
+  docker compose -f docker-compose.prod.yml exec api ls -la /app/.env
+  ```
+
+  which must say *No such file*. This cost an hour on 2026-08-02, because the symptom is
+  a deploy that looks applied and behaves as if nothing changed.
 - **`Caddyfile` changed → `docker compose -f docker-compose.prod.yml restart caddy`.**
   Caddy does not hot-reload its bind-mounted config, and `up -d` will not recreate the
   `caddy` service when its image, env and ports are unchanged — so nothing happens
@@ -63,8 +98,13 @@ that silently did nothing.
 
 ```bash
 docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs --tail=40 api
+docker compose -f docker-compose.prod.yml logs --tail=40 --timestamps api
+docker compose -f docker-compose.prod.yml exec api ls -la /app/.env   # muss "No such file" sagen
 ```
+
+Use `--timestamps`. Docker keeps the log across recreates, so a crash-loop traceback from
+the *previous* attempt looks exactly like a fresh failure — without timestamps there is no
+way to tell whether a fix landed.
 
 The app warns at boot about exactly the misconfigurations that are otherwise silent —
 open signup, a missing Resend key, an unverified `EMAIL_FROM`, a `PUBLIC_BASE_URL` still
