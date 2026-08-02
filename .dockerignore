@@ -1,0 +1,40 @@
+# Der Build-Kontext ist der ganze Projektordner, und das Dockerfile macht `COPY . .`.
+# Ohne diese Datei landet `.env` mit sämtlichen Produktions-Credentials in einer
+# Image-Schicht. Zwei Folgen, beide unangenehm:
+#
+#   1. Sicherheit: jeder, der das Image hat, hat die Keys — auch nach einer Rotation,
+#      weil alte Schichten liegen bleiben.
+#   2. Betrieb: `Settings.model_config` liest `env_file: ".env"` *relativ zum WORKDIR*,
+#      also `/app/.env` im Container. In Prod gibt es keinen Bind-Mount, die Datei kommt
+#      also aus dem Image — eine Änderung an der Host-`.env` wirkt dann schlicht nicht,
+#      auch nicht mit `up -d --force-recreate`. Nur ein Rebuild ändert etwas.
+#
+# Punkt 2 hat am 2026-08-02 den Prod-Ausfall verlängert. Prod bekommt seine Config über
+# `env_file:` in docker-compose.prod.yml als echte Umgebungsvariablen; die Datei im Image
+# war immer nur ein Duplikat mit eigenem, veraltetem Stand.
+.env
+.env.*
+!.env.example
+
+# Historie und lokale Artefakte gehören nicht ins Image.
+.git
+.gitignore
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Die DB lebt im macromic_data-Volume, nicht im Image.
+*.db
+*.sqlite
+data/
+
+.claude/
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# tests/ bleibt bewusst drin: die Doku fährt die Suite im Container
+# (`docker exec -w /app ... python -m pytest -q`), das braucht die Dateien.
