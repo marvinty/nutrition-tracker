@@ -7,6 +7,8 @@
     .goals-card{max-width:640px}
     .goals-card .hint{margin-bottom:24px}
     .goals-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .goals-rate{margin-top:20px;max-width:260px}
+    .goals-rate-hint{margin-top:8px}
     .goals-actions{display:flex;align-items:center;gap:16px;margin-top:24px;flex-wrap:wrap}
     .goals-actions .status{margin:0}
     @media(max-width:560px){.goals-grid{grid-template-columns:1fr}}
@@ -46,6 +48,13 @@
                        value="{{ goal.fat if goal and goal.fat is not none else '' }}">
             </div>
         </div>
+        <div class="field goals-rate">
+            <label for="goal-weekly-change">Ziel-Tempo (kg / Woche)</label>
+            <input type="number" step="0.05" min="-1.5" max="1.5" id="goal-weekly-change"
+                   placeholder="kein Ziel"
+                   value="{{ goal.weekly_change_kg if goal and goal.weekly_change_kg is not none else '' }}">
+        </div>
+        <p class="hint goals-rate-hint">Positiv = Aufbau, negativ = Abnehmen. 0,3 heißt 300 g Zunahme pro Woche. Wird nur für den Vorschlag unter <a href="/weight">Gewicht</a> benutzt — dein kcal-Ziel ändert sich dadurch nicht.</p>
         <div class="goals-actions">
             <button type="submit" id="goals-btn" class="btn">Speichern</button>
             <span id="goals-status" class="status"></span>
@@ -70,6 +79,10 @@
             protein: num('goal-protein'),
             carbs: num('goal-carbs'),
             fat: num('goal-fat'),
+            // Must be sent: the PUT has full-replace semantics (upsert_goal uses
+            // model_dump() without exclude_unset), so omitting this field would
+            // silently clear the rate on every save.
+            weekly_change_kg: num('goal-weekly-change'),
         };
         btn.disabled = true;
         status.textContent = 'Wird gespeichert…';
@@ -82,7 +95,7 @@
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || `Request failed (${res.status})`);
+                throw new Error(err.detail || `Anfrage fehlgeschlagen (${res.status})`);
             }
             status.textContent = 'Gespeichert ✓';
         } catch (err) {

@@ -61,8 +61,8 @@ argument. Tests exercise services directly (see below), which is what keeps that
 |---|---|---|
 | `landing` | `/`, `/faq` | public HTML |
 | `auth` | `/login`, `/register`, `/verify-email/*`, `/reset-password`, … | HTML forms |
-| `api` | `/meals`, `/audio`, `/api/recipes`, `/api/goals`, `/api/usage` | JSON |
-| `dashboard` | `/dashboard`, `/history`, `/goals`, `/recipes`, `/ai-log`, `/feedback` | HTML |
+| `api` | `/meals`, `/audio`, `/api/recipes`, `/api/goals`, `/api/usage`, `/api/weight` | JSON |
+| `dashboard` | `/dashboard`, `/history`, `/goals`, `/recipes`, `/weight`, `/ai-log`, `/feedback` | HTML |
 | `admin` | `/admin/*` | HTML, separate credentials |
 
 `/meals` and `/audio` sit at the root without an `/api` prefix — legacy paths for the ESP32

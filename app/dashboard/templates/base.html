@@ -269,8 +269,14 @@
             .nav-in{min-height:60px;gap:12px}
             .brand-mark{height:28px}
             .nav-who{display:none}
-            .nav-links{order:3;width:100%;gap:2px}
-            .nav-link{flex:1;text-align:center;padding:7px 8px;font-size:13px}
+            /* Wraps since the seventh link ("Gewicht"): seven flex:1 items on one
+               335px row would squeeze past legibility at 375px. With wrapping, the
+               break is driven by min-content (these are all single words) and each
+               resulting row is still grown to equal widths, so the look holds. */
+            .nav-links{order:3;width:100%;gap:2px;flex-wrap:wrap;row-gap:4px}
+            /* min-width forces four per row: left to min-content the seven links
+               break 5+2, which strands two full-width pills on the second row. */
+            .nav-link{flex:1;min-width:calc(25% - 2px);text-align:center;padding:7px 8px;font-size:13px}
             main{padding:28px 0 56px}
             .card{padding:22px}
             .accent-block{padding:26px 22px;border-radius:24px}
@@ -302,6 +308,7 @@
         <div class="nav-links">
             <a class="nav-link{% if active_page == 'dashboard' %} is-active{% endif %}" href="/dashboard">Heute</a>
             <a class="nav-link{% if active_page == 'history' %} is-active{% endif %}" href="/history">Verlauf</a>
+            <a class="nav-link{% if active_page == 'weight' %} is-active{% endif %}" href="/weight">Gewicht</a>
             <a class="nav-link{% if active_page == 'recipes' %} is-active{% endif %}" href="/recipes">Rezepte</a>
             <a class="nav-link{% if active_page == 'goals' %} is-active{% endif %}" href="/goals">Ziele</a>
             <a class="nav-link{% if active_page == 'faq' %} is-active{% endif %}" href="/faq">FAQ</a>

@@ -252,7 +252,7 @@
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || `Request failed (${res.status})`);
+                throw new Error(err.detail || `Anfrage fehlgeschlagen (${res.status})`);
             }
             status.textContent = '';
             handleLogResponse(await res.json());
@@ -281,7 +281,7 @@
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || `Request failed (${res.status})`);
+                throw new Error(err.detail || `Anfrage fehlgeschlagen (${res.status})`);
             }
             clarifyStatus.textContent = '';
             handleLogResponse(await res.json());
@@ -398,7 +398,7 @@
                 const res = await fetch(`/meals/${id}`, { method: 'DELETE' });
                 if (!res.ok && res.status !== 204) {
                     const err = await res.json().catch(() => ({}));
-                    throw new Error(err.detail || `Request failed (${res.status})`);
+                    throw new Error(err.detail || `Anfrage fehlgeschlagen (${res.status})`);
                 }
                 window.location.reload();
             } catch (err) {
@@ -431,7 +431,7 @@
                 });
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
-                    throw new Error(err.detail || `Request failed (${res.status})`);
+                    throw new Error(err.detail || `Anfrage fehlgeschlagen (${res.status})`);
                 }
                 window.location.reload();
             } catch (err) {

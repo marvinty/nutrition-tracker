@@ -30,6 +30,7 @@ from app.services.goal_service import (
 from app.services.ai_log_service import list_user_entries
 from app.services.feedback_service import CATEGORY_LABELS, create_feedback
 from app.services.usage_service import get_credit_status
+from app.services.weight_service import get_weight_page_data
 
 templates = register_csrf_field(
     Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -144,6 +145,35 @@ async def goals_page(
             "active_page": "goals",
             "username": user.username,
             "goal": goal,
+        },
+    )
+
+
+@router.get("/weight")
+async def weight_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    user: Optional[User] = Depends(resolve_user),
+):
+    """Weigh-in log, trend and the estimated expenditure.
+
+    The suggestion this page renders is read-only by design — nothing here writes
+    ``MacroGoal.calories``. The target rate it needs is set on /goals.
+    """
+    if user is None:
+        return RedirectResponse(url="/login", status_code=303)
+    today = today_local()
+    goal = await get_goal(session, user.username)
+    view = await get_weight_page_data(session, user.username, goal, today)
+    return templates.TemplateResponse(
+        request=request,
+        name="weight.html",
+        context={
+            "active_page": "weight",
+            "username": user.username,
+            "view": view,
+            "entries": list(reversed(view["points"])),
+            "today": today.isoformat(),
         },
     )
 

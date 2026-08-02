@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Gewicht{% endblock %}
+
+{% block extra_head %}
+<style>
+    .wlog-card{max-width:640px}
+    .wlog-form{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:18px}
+    /* 150px is what a native date input needs before it clips the year behind the
+       calendar icon; below that the two fields wrap and each takes a full row. */
+    .wlog-form .field{flex:1;min-width:150px}
+    .wlog-form .btn{flex:none}
+
+    .wchart-svg{display:block;width:100%;height:auto;max-width:640px;margin:0 auto}
+    .wchart-line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .wchart-dot{fill:var(--text-subtle)}
+    .wchart-grid{stroke:var(--border);stroke-width:1}
+    /* Same max-width as the SVG so the end labels sit under the plot edges. The
+       explicit width:100% is load-bearing: .card is a column flex container, and the
+       auto side margins suppress the usual stretch, leaving the row shrink-wrapped. */
+    .wchart-axis{display:flex;justify-content:space-between;gap:10px;margin:10px auto 0;
+        width:100%;max-width:640px;font-size:13px;color:var(--text-subtle)}
+    .wchart-axis .mid{font-family:var(--serif)}
+
+    .wsuggest{margin-top:18px}
+    .wsuggest p{margin-bottom:10px}
+    .wsuggest p:last-child{margin-bottom:0}
+    .wsuggest .lead{font-family:var(--serif);font-size:22px;line-height:1.35;letter-spacing:-.01em}
+    .wsuggest .sub{color:#f6d9cc;font-size:15px}
+    .wsuggest a{color:#fff;text-decoration:underline}
+    .wsuggest a:hover{color:#fff}
+
+    .wblocked{margin-top:18px}
+    .wnote{margin-top:14px}
+    .wrow-kg{font-family:var(--serif);font-size:17px;color:var(--accent);white-space:nowrap}
+    .wrow-avg{font-size:13px;color:var(--text-subtle);flex:1}
+
+    @media(max-width:560px){
+        .wsuggest .lead{font-size:19px}
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <span class="sec-tag">Gewicht</span>
+        <h1 class="page-h">Dein <em>Verlauf</em></h1>
+    </div>
+</div>
+
+<div class="card feat wlog-card">
+    <p class="hint">Eine Wiegung pro Tag. Ein zweiter Eintrag am selben Tag ersetzt den ersten. Am besten morgens, nüchtern, nach dem Aufstehen.</p>
+    <form id="w-form" class="wlog-form">
+        <div class="field">
+            <label for="w-day">Tag</label>
+            <input type="date" id="w-day" max="{{ today }}" value="{{ today }}" required>
+        </div>
+        <div class="field">
+            <label for="w-kg">Gewicht (kg)</label>
+            <input type="number" step="0.1" min="20" max="400" id="w-kg" placeholder="z. B. 80.4" required>
+        </div>
+        <button type="submit" id="w-btn" class="btn">Speichern</button>
+    </form>
+    <span id="w-status" class="status"></span>
+</div>
+
+<h2 class="sub-h">Verlauf</h2>
+<div class="card">
+    {% if view.chart %}
+    <svg class="wchart-svg" viewBox="0 0 {{ view.chart.view_w }} {{ view.chart.view_h }}"
+         role="img" aria-label="Gewichtsverlauf der letzten Wochen, geglättet über sieben Tage">
+        <line class="wchart-grid" x1="8" y1="12" x2="{{ view.chart.view_w - 8 }}" y2="12"/>
+        <line class="wchart-grid" x1="8" y1="{{ view.chart.view_h - 12 }}" x2="{{ view.chart.view_w - 8 }}" y2="{{ view.chart.view_h - 12 }}"/>
+        {% if not view.chart.single %}
+        <polyline class="wchart-line" points="{{ view.chart.line }}" vector-effect="non-scaling-stroke"/>
+        {% endif %}
+        {% for dot in view.chart.dots %}
+        <circle class="wchart-dot" cx="{{ dot.x }}" cy="{{ dot.y }}" r="4">
+            <title>{{ dot.label }}: {{ dot.kg }} kg</title>
+        </circle>
+        {% endfor %}
+    </svg>
+    <div class="wchart-axis">
+        <span>{{ view.chart.x_first_label }}</span>
+        <span class="mid">{{ view.chart.y_min }}–{{ view.chart.y_max }} kg</span>
+        <span>{{ view.chart.x_last_label }}</span>
+    </div>
+    {% else %}
+    <p class="empty">Noch keine Wiegungen.</p>
+    {% endif %}
+</div>
+
+<h2 class="sub-h">Zahlen</h2>
+<div class="totals-grid totals-grid--compact">
+    <div class="totals-card">
+        <div class="label">Ø 7 Tage</div>
+        <div class="value">{% if view.latest %}{{ view.latest.avg_kg }}<span class="unit">kg</span>{% else %}—{% endif %}</div>
+    </div>
+    <div class="totals-card">
+        <div class="label">Letzte Wiegung</div>
+        <div class="value">{% if view.latest %}{{ view.latest.raw_kg }}<span class="unit">kg</span>{% else %}—{% endif %}</div>
+    </div>
+    <div class="totals-card">
+        <div class="label">Pro Woche</div>
+        <div class="value">{% if view.trend %}{% if view.trend.per_week_g > 0 %}+{% endif %}{{ view.trend.per_week_g }}<span class="unit">g</span>{% else %}—{% endif %}</div>
+    </div>
+    <div class="totals-card totals-card--cal">
+        <div class="label">Verbrauch (geschätzt)</div>
+        <div class="value">{% if view.estimate %}{{ view.estimate.tdee }}{% else %}—{% endif %}</div>
+    </div>
+</div>
+
+{% if view.estimate %}
+<div class="accent-block wsuggest">
+    <p class="lead">
+        {% if view.trend.direction == 'flat' %}
+        Seit {{ view.estimate.weeks }} Wochen hältst du dein Gewicht bei Ø {{ view.intake.avg_calories }} kcal.
+        {% elif view.trend.direction == 'up' %}
+        Seit {{ view.estimate.weeks }} Wochen nimmst du bei Ø {{ view.intake.avg_calories }} kcal um {{ view.trend.per_week_g }} g pro Woche zu.
+        {% else %}
+        Seit {{ view.estimate.weeks }} Wochen nimmst du bei Ø {{ view.intake.avg_calories }} kcal um {{ view.trend.per_week_g | abs }} g pro Woche ab.
+        {% endif %}
+        Geschätzter Verbrauch: <strong>{{ view.estimate.tdee }} kcal</strong> pro Tag.
+    </p>
+    {% if view.estimate.suggested is not none %}
+    <p class="lead">
+        {% if view.estimate.desired_rate_g_week == 0 %}
+        Zum Halten deines Gewichts: <strong>{{ view.estimate.suggested }} kcal</strong>.
+        {% elif view.estimate.desired_rate_g_week > 0 %}
+        Für {{ view.estimate.desired_rate_g_week }} g Zunahme pro Woche: <strong>{{ view.estimate.suggested }} kcal</strong>.
+        {% else %}
+        Für {{ view.estimate.desired_rate_g_week | abs }} g Abnahme pro Woche: <strong>{{ view.estimate.suggested }} kcal</strong>.
+        {% endif %}
+    </p>
+    {% if view.estimate.goal_calories is not none %}
+    <p class="sub">Dein aktuelles Ziel: {{ view.estimate.goal_calories }} kcal ({% if view.estimate.delta_to_goal > 0 %}+{% endif %}{{ view.estimate.delta_to_goal }} kcal).</p>
+    {% endif %}
+    {% else %}
+    <p class="sub">Trag unter <a href="/goals">Ziele</a> ein Ziel-Tempo ein, dann rechne ich dir den passenden kcal-Wert aus.</p>
+    {% endif %}
+    {% if view.estimate.uncertain %}
+    <p class="sub">Der Wert liegt außerhalb des üblichen Bereichs — nimm ihn als groben Anhaltspunkt.</p>
+    {% endif %}
+    <p class="sub">Nur ein Vorschlag — dein kcal-Ziel bleibt unverändert. <a href="/goals">Ziel anpassen</a></p>
+</div>
+{% else %}
+<div class="card wblocked">
+    <p class="hint">{{ view.blocked_message }}</p>
+</div>
+{% endif %}
+
+<p class="hint wnote">Grundlage: 7.700 kcal pro Kilo Körpermasse, der Ø-Kalorienwert deiner erfassten Tage und der geglättete Gewichtsverlauf. Eine Schätzung, kein Messwert.</p>
+
+{% if entries %}
+<h2 class="sub-h">Wiegungen</h2>
+<div class="row-list">
+    {% for entry in entries %}
+    <div class="row-item">
+        <span class="row-day">{{ entry.date | de_short }}</span>
+        <span class="wrow-kg">{{ '%.1f' | format(entry.raw) }} kg</span>
+        <span class="wrow-avg">Ø {{ '%.1f' | format(entry.avg) }} kg</span>
+        <button type="button" class="row-btn" data-day="{{ entry.date.isoformat() }}">Löschen</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<script>
+    const wForm = document.getElementById('w-form');
+    const wBtn = document.getElementById('w-btn');
+    const wStatus = document.getElementById('w-status');
+
+    function wFail(err) {
+        wStatus.textContent = err.message;
+        wStatus.className = 'status error';
+    }
+
+    wForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const kg = parseFloat(document.getElementById('w-kg').value);
+        if (isNaN(kg)) { wFail(new Error('Bitte trag ein Gewicht ein.')); return; }
+        wBtn.disabled = true;
+        wStatus.textContent = 'Wird gespeichert…';
+        wStatus.className = 'status';
+        try {
+            const res = await fetch('/api/weight', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ day: document.getElementById('w-day').value, weight_kg: kg }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Anfrage fehlgeschlagen (${res.status})`);
+            }
+            window.location.reload();
+        } catch (err) {
+            wFail(err);
+            wBtn.disabled = false;
+        }
+    });
+
+    document.querySelectorAll('.row-btn[data-day]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/weight/' + btn.dataset.day, { method: 'DELETE' });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || `Anfrage fehlgeschlagen (${res.status})`);
+                }
+                window.location.reload();
+            } catch (err) {
+                wFail(err);
+                btn.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
