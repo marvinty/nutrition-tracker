@@ -32,6 +32,23 @@ class Settings(BaseSettings):
     # stops one pathological request from bloating the SQLite file.
     ai_log_retention_days: int = 90
     ai_log_max_text_chars: int = 20000
+    # What the AI actually costs, for /admin/costs. Kept in USD per 1M tokens, exactly
+    # as the providers publish them, so checking a price against anthropic.com/pricing
+    # or openai.com/api/pricing stays a glance rather than a conversion. A model missing
+    # from this table is NOT counted as free — cost_service reports it as unpriced, since
+    # a silently zero-cost model would shrink the total precisely where it is trusted most.
+    model_prices_usd: dict[str, dict[str, float]] = {
+        # Retired 2026-02-19, kept for log rows written before the switch.
+        "claude-3-5-haiku-20241022": {"in": 0.80, "out": 4.00},
+        "claude-haiku-4-5": {"in": 1.00, "out": 5.00},
+        "gpt-4o-mini": {"in": 0.15, "out": 0.60},
+    }
+    # Whisper bills per minute of audio rather than per token, so it needs its own table.
+    audio_prices_usd_per_minute: dict[str, float] = {"whisper-1": 0.006}
+    usd_to_eur: float = 0.92
+    # Without a VAT ID the tax on the provider's invoice is a real cost, so the euro
+    # figure is gross by default. Set to 0.0 when reverse charge applies.
+    price_vat_rate: float = 0.19
     # Invite code required to register. Empty means registration is open, which the
     # app warns about at startup.
     signup_code: str = ""

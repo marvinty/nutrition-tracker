@@ -17,6 +17,7 @@ from app.models.auth_token import AuthToken
 from app.models.meal import Meal
 from app.models.user import User
 from app.services.ai_log_service import get_token_totals, token_totals_by_user
+from app.services.cost_service import CostBucket, collect_costs
 from app.services.usage_service import get_usage, limit_for
 
 
@@ -32,6 +33,10 @@ class UserRow:
     credits_used: int
     credit_limit: int
     tokens_total: int
+    # Euro spend over the cost window, not lifetime — see cost_service. The whole
+    # bucket rather than a plain float so the template's eur_bucket filter can tell
+    # a complete sum from a lower bound from a figure we cannot compute at all.
+    cost: CostBucket
 
 
 @dataclass
@@ -51,6 +56,7 @@ class UserDetail:
     last_login_at: Optional[datetime]
     tokens_in: int
     tokens_out: int
+    cost: CostBucket
 
 
 @dataclass
@@ -176,6 +182,10 @@ async def list_users_with_stats(session: AsyncSession) -> list[UserRow]:
     usage_stmt = select(AiUsage.user_id, AiUsage.count).where(AiUsage.day == today_local())
     credits_by_user = {u: c for u, c in (await session.execute(usage_stmt)).all()}
     tokens_by_user = await token_totals_by_user(session)
+    # Same reasoning again: costs come from airequestlog, another one-to-many table,
+    # so they are collected separately rather than joined into the query above.
+    costs_by_user = (await collect_costs(session)).buckets_by_user()
+    empty_cost = CostBucket()
 
     return [
         UserRow(
@@ -187,6 +197,7 @@ async def list_users_with_stats(session: AsyncSession) -> list[UserRow]:
             credits_used=credits_by_user.get(row.username, 0),
             credit_limit=limit_for(row.tier),
             tokens_total=sum(tokens_by_user.get(row.username, (0, 0))),
+            cost=costs_by_user.get(row.username, empty_cost),
         )
         for row in rows
     ]
@@ -226,6 +237,7 @@ async def get_user_detail(session: AsyncSession, username: str) -> Optional[User
     ).one()
 
     tokens_in, tokens_out = await get_token_totals(session, username)
+    cost = (await collect_costs(session)).buckets_by_user().get(username, CostBucket())
 
     return UserDetail(
         username=user.username,
@@ -243,6 +255,7 @@ async def get_user_detail(session: AsyncSession, username: str) -> Optional[User
         last_login_at=session_stats[1],
         tokens_in=tokens_in,
         tokens_out=tokens_out,
+        cost=cost,
     )
 
 

@@ -27,6 +27,17 @@ class OpenAIWhisperProvider(WhisperProvider):
             transcript = await self._client.audio.transcriptions.create(
                 model=_MODEL,
                 file=audio_file,
+                # verbose_json is the only response format that returns the audio's
+                # duration, and whisper-1 is billed per minute — without it the call
+                # carries no billable quantity at all, since this endpoint reports no
+                # tokens either. `.text` is present in this format too, so nothing
+                # downstream of transcribe() changes.
+                response_format="verbose_json",
             )
-            rec.set_response(transcript.text)  # no token counts on this endpoint
+            # getattr, not attribute access: the SDK types the plain-format response
+            # without `duration`, and a missing duration should cost a log field, not
+            # the transcription. cost_service reads None as "not recorded".
+            rec.set_response(
+                transcript.text, audio_seconds=getattr(transcript, "duration", None)
+            )
         return transcript.text

@@ -10,6 +10,7 @@ from app.core.csrf import register_csrf_field
 from app.core.client_ip import client_ip
 from app.core.config import settings
 from app.core.dates_de import format_day_month
+from app.core.money import eur, eur_auto, eur_bucket
 from app.core.time import to_local
 from app.db.session import get_session
 from app.models.admin_user import AdminUser
@@ -24,6 +25,7 @@ from app.services.admin_service import (
     set_user_tier,
 )
 from app.services.ai_log_service import list_logs_for_user
+from app.services.cost_service import collect_costs
 from app.services.feedback_service import CATEGORY_LABELS, list_feedback
 from app.services import rate_limit_service as rl
 from app.services.settings_service import is_signup_closed, set_signup_closed
@@ -52,6 +54,13 @@ def _de_date(value) -> str:
 
 
 templates.env.filters["de_date"] = _de_date
+
+
+templates.env.filters["eur"] = eur
+templates.env.filters["eur_auto"] = eur_auto
+templates.env.filters["eur_bucket"] = eur_bucket
+# Headline tiles: same honesty rules, precision scaled to the amount.
+templates.env.filters["eur_headline"] = lambda b: eur_bucket(b, digits=None)
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 # German labels for the statuses computed in signup_code_service.
@@ -196,6 +205,31 @@ async def admin_set_user_tier(
     # detail form asks to be returned to instead of the list.
     target = f"/admin/users/{username}" if back == "detail" else "/admin/users"
     return RedirectResponse(url=target, status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/costs")
+async def admin_costs(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    admin: Optional[AdminUser] = Depends(resolve_admin),
+):
+    if admin is None:
+        return RedirectResponse(url="/admin/login", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_costs.html",
+        context={
+            "admin_name": admin.username,
+            "active_page": "costs",
+            "report": await collect_costs(session),
+            # The window is bounded by pruning, so the page says so rather than
+            # letting the total read as lifetime spend.
+            "retention_days": settings.ai_log_retention_days,
+            # Spelled out in the footnote so the figures can be reproduced by hand.
+            "vat_percent": round(settings.price_vat_rate * 100),
+            "usd_to_eur": settings.usd_to_eur,
+        },
+    )
 
 
 @router.get("/feedback")

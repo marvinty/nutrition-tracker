@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, func
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text, func
 from app.models.base import Base
 
 
@@ -43,6 +43,12 @@ class AiRequestLog(Base):
     response_text = Column(Text, nullable=True)
     prompt_tokens = Column(Integer, nullable=True)
     completion_tokens = Column(Integer, nullable=True)
+    # Length of the transcribed audio. Whisper bills per minute rather than per token,
+    # so without this a transcription row carries no billable quantity at all and
+    # cannot be priced. Null on every LLM row, and on transcription rows written
+    # before this column existed — null means "not recorded", never "zero seconds",
+    # which is why cost_service reports such a row as unpriced instead of free.
+    audio_seconds = Column(Float, nullable=True)
     latency_ms = Column(Integer, nullable=False)
     success = Column(Boolean, nullable=False, default=True)
     error = Column(String, nullable=True)

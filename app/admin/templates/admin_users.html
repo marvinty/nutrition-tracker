@@ -20,6 +20,7 @@
                         <th>Letzte Aktivität</th>
                         <th class="num">Credits heute</th>
                         <th class="num">Tokens</th>
+                        <th class="num">Kosten (30 T.)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,6 +49,7 @@
                         </td>
                         <td class="num">{{ u.credits_used }} / {{ u.credit_limit }}</td>
                         <td class="num">{{ u.tokens_total }}</td>
+                        <td class="num">{{ u.cost | eur_bucket }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

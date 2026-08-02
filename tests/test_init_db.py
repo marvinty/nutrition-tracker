@@ -19,7 +19,11 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from sqlalchemy import text
 
-from app.db.init_db import _add_goal_weekly_change_column, _backfill_token_totals
+from app.db.init_db import (
+    _add_ai_log_audio_seconds_column,
+    _add_goal_weekly_change_column,
+    _backfill_token_totals,
+)
 from app.models.ai_request_log import AiRequestLog
 from app.models.base import Base
 from app.models.user_token_total import UserTokenTotal
@@ -165,3 +169,77 @@ async def test_weekly_change_migration_is_a_noop_on_a_fresh_schema(engine):
     async with engine.begin() as conn:
         await _add_goal_weekly_change_column(conn)
     assert "weekly_change_kg" in await _macrogoal_columns(engine)
+
+
+async def _ai_log_columns(engine) -> list[str]:
+    async with engine.begin() as conn:
+        rows = await conn.execute(text("PRAGMA table_info(airequestlog)"))
+        return [r[1] for r in rows]
+
+
+@pytest_asyncio.fixture
+async def legacy_log_engine():
+    """An engine whose ``airequestlog`` predates the audio_seconds column.
+
+    Hand-built for the same reason as ``legacy_engine``: against a current schema the
+    migration only ever takes its early return.
+    """
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as conn:
+        await conn.execute(
+            text(
+                """
+                CREATE TABLE airequestlog (
+                    id INTEGER NOT NULL PRIMARY KEY,
+                    user_id VARCHAR, action VARCHAR, kind VARCHAR NOT NULL,
+                    provider VARCHAR NOT NULL, model VARCHAR, endpoint VARCHAR,
+                    request_text TEXT NOT NULL, response_text TEXT,
+                    prompt_tokens INTEGER, completion_tokens INTEGER,
+                    latency_ms INTEGER NOT NULL, success BOOLEAN NOT NULL,
+                    error VARCHAR,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )
+        await conn.execute(
+            text(
+                "INSERT INTO airequestlog "
+                "(kind, provider, model, request_text, latency_ms, success) "
+                "VALUES ('transcribe', 'openai', 'whisper-1', '<audio>', 10, 1)"
+            )
+        )
+    yield engine
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_adds_audio_seconds_column_to_a_legacy_ai_log(legacy_log_engine):
+    assert "audio_seconds" not in await _ai_log_columns(legacy_log_engine)
+
+    async with legacy_log_engine.begin() as conn:
+        await _add_ai_log_audio_seconds_column(conn)
+
+    assert "audio_seconds" in await _ai_log_columns(legacy_log_engine)
+
+    # No backfill: the duration of an already-transcribed recording is unrecoverable,
+    # and NULL says exactly that. Zero would be indistinguishable from a zero-length
+    # clip and would price the call as free — see cost_service.
+    async with legacy_log_engine.begin() as conn:
+        rows = await conn.execute(text("SELECT audio_seconds FROM airequestlog"))
+        assert rows.first() == (None,)
+
+
+@pytest.mark.asyncio
+async def test_audio_seconds_migration_is_idempotent(legacy_log_engine):
+    for _ in range(2):
+        async with legacy_log_engine.begin() as conn:
+            await _add_ai_log_audio_seconds_column(conn)
+    assert (await _ai_log_columns(legacy_log_engine)).count("audio_seconds") == 1
+
+
+@pytest.mark.asyncio
+async def test_audio_seconds_migration_is_a_noop_on_a_fresh_schema(engine):
+    async with engine.begin() as conn:
+        await _add_ai_log_audio_seconds_column(conn)
+    assert "audio_seconds" in await _ai_log_columns(engine)

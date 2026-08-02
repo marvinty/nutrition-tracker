@@ -139,6 +139,19 @@
         .back-link{font-size:14px;color:var(--text-muted)}
         .back-link:hover{color:var(--accent)}
 
+        /* costs page: the four headline figures. Serif and tabular so the amounts
+           line up under each other, the same treatment the numeric table cells get. */
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:24px}
+        .stats .stat-k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+            color:var(--text-subtle)}
+        .stats .stat-v{font-family:var(--serif);font-variant-numeric:tabular-nums;font-size:30px;
+            letter-spacing:-.02em;color:var(--text);margin-top:6px}
+        .stats .stat-note{font-size:13px;color:var(--text-subtle);margin-top:4px}
+        /* Shown only when some calls could not be priced — the total is then a lower
+           bound, and saying so beats a confident wrong number. */
+        .notice{background:var(--danger-soft);border-radius:var(--r-card);padding:16px 20px;
+            font-size:14px;color:var(--text);margin-top:24px}
+
         /* one AI request's full prompt and response, collapsed by default: the
            rows are long enough that expanding them all would bury the table */
         .log-detail{margin-top:10px}

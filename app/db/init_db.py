@@ -84,6 +84,26 @@ async def _add_goal_weekly_change_column(conn) -> None:
     await conn.execute(text("ALTER TABLE macrogoal ADD COLUMN weekly_change_kg FLOAT"))
 
 
+async def _add_ai_log_audio_seconds_column(conn) -> None:
+    """Add ``airequestlog.audio_seconds`` — how long the transcribed audio was.
+
+    Needed to put a price on transcription: Whisper bills per minute, and the row
+    otherwise records only tokens, which are NULL on every transcription. Without it
+    /admin/costs can price the LLM half of a voice log and nothing else. Idempotent
+    via the column check, like the migrations above.
+
+    Deliberately nullable with **no backfill**. Rows written before this column
+    existed have no recoverable duration, and NULL says exactly that. Filling them
+    with 0 would be indistinguishable from a zero-length recording and would price
+    them as free, quietly shrinking the very total the page exists to report — so
+    cost_service treats a NULL here as unpriced instead.
+    """
+    columns = await conn.execute(text("PRAGMA table_info(airequestlog)"))
+    if any(row[1] == "audio_seconds" for row in columns):
+        return
+    await conn.execute(text("ALTER TABLE airequestlog ADD COLUMN audio_seconds FLOAT"))
+
+
 async def _backfill_token_totals(conn) -> None:
     """Seed the lifetime token counter from the AI logs we still have.
 
@@ -120,4 +140,5 @@ async def init_db() -> None:
         await _add_user_tier_column(conn)
         await _add_user_email_columns(conn)
         await _add_goal_weekly_change_column(conn)
+        await _add_ai_log_audio_seconds_column(conn)
         await _backfill_token_totals(conn)

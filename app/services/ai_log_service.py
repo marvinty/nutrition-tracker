@@ -92,6 +92,7 @@ class AiCallRecorder:
         self.response_text: Optional[str] = None
         self.prompt_tokens: Optional[int] = None
         self.completion_tokens: Optional[int] = None
+        self.audio_seconds: Optional[float] = None
 
     def set_prompt(self, text: str) -> None:
         self.request_text = text
@@ -102,10 +103,15 @@ class AiCallRecorder:
         *,
         tokens_in: Optional[int] = None,
         tokens_out: Optional[int] = None,
+        audio_seconds: Optional[float] = None,
     ) -> None:
+        """``audio_seconds`` is the transcription counterpart to the token counts:
+        Whisper bills per minute, so it is the only billable quantity such a call
+        has. Left None by the LLM providers, which have no audio."""
         self.response_text = text
         self.prompt_tokens = tokens_in
         self.completion_tokens = tokens_out
+        self.audio_seconds = audio_seconds
 
 
 async def _write(**fields) -> None:
@@ -200,6 +206,7 @@ async def log_ai_call(
             response_text=_truncate(recorder.response_text),
             prompt_tokens=recorder.prompt_tokens,
             completion_tokens=recorder.completion_tokens,
+            audio_seconds=recorder.audio_seconds,
             latency_ms=int((time.perf_counter() - started) * 1000),
             success=success,
             error=error,
