@@ -1,6 +1,13 @@
 x-hetzner-ddns: &hetzner-ddns
   image: mbaiti/hetzner-ddns:latest
   restart: unless-stopped
+  # Deliberately its own file rather than a key in .env. The api service does
+  # `env_file: .env`, which injects *every* key there into the app's process — and
+  # Settings sets no `extra`, so pydantic's default `extra="forbid"` rejects any key
+  # it doesn't declare and the app dies at import. Keeping the ddns token out of .env
+  # means the api never sees a credential it has no use for, and `extra="forbid"`
+  # goes on catching typos in the keys the app *does* own.
+  env_file: .env.ddns
 
 services:
   api:
@@ -26,7 +33,6 @@ services:
   hetzner-ddns-app:
     <<: *hetzner-ddns
     environment:
-      HETZNER_CLOUD_API_TOKEN: ${HETZNER_CLOUD_API_TOKEN}
       HETZNER_DNS_ZONE_NAME: macromic.de
       HETZNER_DNS_RECORD_NAME: app
       CHECK_INTERVAL_SECONDS: "300"
@@ -34,7 +40,6 @@ services:
   hetzner-ddns-root:
     <<: *hetzner-ddns
     environment:
-      HETZNER_CLOUD_API_TOKEN: ${HETZNER_CLOUD_API_TOKEN}
       HETZNER_DNS_ZONE_NAME: macromic.de
       HETZNER_DNS_RECORD_NAME: "@"
       CHECK_INTERVAL_SECONDS: "300"
@@ -42,7 +47,6 @@ services:
   hetzner-ddns-www:
     <<: *hetzner-ddns
     environment:
-      HETZNER_CLOUD_API_TOKEN: ${HETZNER_CLOUD_API_TOKEN}
       HETZNER_DNS_ZONE_NAME: macromic.de
       HETZNER_DNS_RECORD_NAME: www
       CHECK_INTERVAL_SECONDS: "300"
