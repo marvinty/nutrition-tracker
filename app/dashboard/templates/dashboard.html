@@ -215,7 +215,7 @@
             <div class="row-title">{{ meal.description }}</div>
             <div class="row-sub">
                 {{ (meal.protein | string + "g P") if meal.protein is not none else "—" }} ·
-                {{ (meal.carbs | string + "g C") if meal.carbs is not none else "—" }} ·
+                {{ (meal.carbs | string + "g KH") if meal.carbs is not none else "—" }} ·
                 {{ (meal.fat | string + "g F") if meal.fat is not none else "—" }}
             </div>
         </div>

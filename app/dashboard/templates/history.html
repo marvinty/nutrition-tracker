@@ -69,7 +69,7 @@
     {% for day in series %}
     <div class="row-item row-item--link" onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'">
         <span class="row-day">{{ day.date | de_short }}</span>
-        <span class="row-macros">{{ day.calories | int }} kcal · {{ day.protein }}g P · {{ day.carbs }}g C · {{ day.fat }}g F</span>
+        <span class="row-macros">{{ day.calories | int }} kcal · {{ day.protein }}g P · {{ day.carbs }}g KH · {{ day.fat }}g F</span>
         {% if adherence and day.meal_count > 0 and day.protein >= adherence.protein_target %}
         <span class="goal-tick" title="Proteinziel erreicht">✓</span>
         {% endif %}
@@ -78,7 +78,7 @@
     {% endfor %}
     <div class="row-item row-item--total">
         <span class="row-day">Total ({{ summary.days }} Tage)</span>
-        <span class="row-macros">{{ summary.total.calories | int }} kcal · {{ summary.total.protein }}g P · {{ summary.total.carbs }}g C · {{ summary.total.fat }}g F</span>
+        <span class="row-macros">{{ summary.total.calories | int }} kcal · {{ summary.total.protein }}g P · {{ summary.total.carbs }}g KH · {{ summary.total.fat }}g F</span>
         <span class="row-count">{{ summary.total.meal_count }} Mahlz.</span>
     </div>
 </div>

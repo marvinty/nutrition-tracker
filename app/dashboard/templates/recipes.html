@@ -121,7 +121,7 @@
         return res.status === 204 ? null : res.json();
     }
     function macroLine(m) {
-        return `${Math.round(m.calories)} kcal · ${m.protein}g P · ${m.carbs}g C · ${m.fat}g F`;
+        return `${Math.round(m.calories)} kcal · ${m.protein}g P · ${m.carbs}g KH · ${m.fat}g F`;
     }
     function el(tag, cls, text) {
         const e = document.createElement(tag);
@@ -172,7 +172,7 @@
             main.appendChild(el('div', 'rp-ing__desc', ing.description));
             const sub = [
                 ing.protein != null ? `${ing.protein}g P` : '—',
-                ing.carbs != null ? `${ing.carbs}g C` : '—',
+                ing.carbs != null ? `${ing.carbs}g KH` : '—',
                 ing.fat != null ? `${ing.fat}g F` : '—',
             ].join(' · ');
             main.appendChild(el('div', 'rp-ing__sub', sub));
