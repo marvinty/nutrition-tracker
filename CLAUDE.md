@@ -234,3 +234,17 @@ prefix wildcard cannot be pinned to GET; and interpreters, package runners and
 describes `--workers 2` (prod now runs one worker deliberately), Whisper via a provider that no
 longer ships, and an API surface without authentication. Treat the code as authoritative and
 DESIGN.md/BRAND.md as current.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `marvinty/nutrition-tracker`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary as-is: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one root `CONTEXT.md` plus `docs/adr/`, both created lazily. See `docs/agents/domain.md`.
