@@ -188,7 +188,7 @@
         {% endif %}
     </div>
     <div class="totals-card">
-        <div class="label">Carbs</div>
+        <div class="label">Kohlenhydrate</div>
         <div class="value">{{ totals.carbs }}<span class="unit">g</span></div>
         {% if progress.carbs %}
         <div class="goal-meta">Ziel {{ progress.carbs.target }}g · {{ progress.carbs.percent }}%{% if progress.carbs.over %} · über Ziel{% endif %}</div>
@@ -236,7 +236,7 @@
                 <input type="number" step="any" id="m{{ meal.id }}-protein" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}">
             </div>
             <div class="row-edit__field">
-                <label for="m{{ meal.id }}-carbs">Carbs</label>
+                <label for="m{{ meal.id }}-carbs">Kohlenhydrate</label>
                 <input type="number" step="any" id="m{{ meal.id }}-carbs" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
             </div>
             <div class="row-edit__field">

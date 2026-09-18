@@ -218,7 +218,11 @@
         .row-edit{display:flex;flex-direction:column;gap:12px;background:var(--surface);
             border:1px solid var(--accent);border-radius:14px;padding:16px 18px}
         .row-edit__macros{display:flex;gap:10px;flex-wrap:wrap}
-        .row-edit__field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:78px}
+        /* 118px, weil "Kohlenhydrate" als unteilbares Wort 117px braucht und ein
+           Label nicht umbrechen kann. Bei 375px stehen damit zwei Felder pro Reihe
+           statt drei plus einem verwaisten — die 2x2-Aufteilung liest sich ohnehin
+           besser als 3+1. */
+        .row-edit__field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:118px}
         .row-edit__field input{height:40px;font-size:14px;padding:0 12px}
         .row-edit__actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .row-edit__actions .status{margin:0;flex:1;min-width:120px}
