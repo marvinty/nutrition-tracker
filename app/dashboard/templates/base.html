@@ -24,6 +24,14 @@
             --border:#e4dcc9;
             --danger:#a33520;
             --danger-soft:#f4ded6;
+            /* Tints fuer Text auf --accent-Flaeche, exakt nach DESIGN.md. Vorher stand
+               hier #f6d3c6 hart im Regelwerk — ein Wert, den DESIGN.md nicht kennt.
+               Der Block fuer dunkle Panels (--on-dark-*) fehlt bewusst: auf diesen
+               Seiten gibt es keine; er steht in DESIGN.md, falls einer dazukommt. */
+            --on-accent:#fdf3ee;
+            --on-accent-soft:#fbe7de;
+            --on-accent-muted:#f6d9cc;
+            --on-accent-subtle:#f0c3b1;
             --serif:'Newsreader',Georgia,serif;
             --sans:'Inter',system-ui,-apple-system,sans-serif;
             --r-btn:11px;
@@ -61,7 +69,7 @@
         .nav-link:hover{background:var(--surface);color:var(--text)}
         .nav-link.is-active{background:var(--accent-soft);color:var(--accent)}
         .nav-actions{display:flex;align-items:center;gap:16px}
-        .nav-who{font-size:13px;color:var(--text-subtle);text-align:right;line-height:1.35}
+        .nav-who{font-size:13px;color:var(--text-muted);text-align:right;line-height:1.35}
         .nav-who strong{color:var(--text-muted);font-weight:600}
         .credit-line--blocked{color:var(--danger);font-weight:500}
         .nav-actions form{margin:0}
@@ -111,10 +119,10 @@
             font-family:inherit;font-size:16px;padding:0 16px;height:46px;
             border:1px solid var(--border);border-radius:var(--r-btn);
             background:var(--surface);color:var(--text);width:100%}
-        input::placeholder{color:var(--text-subtle)}
+        input::placeholder{color:var(--text-muted)}
         input:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
         label{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-            color:var(--text-subtle)}
+            color:var(--text-muted)}
         .field{display:flex;flex-direction:column;gap:6px}
         .log-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .log-form input[type=text],.log-form input[type=password]{flex:1;min-width:0;width:auto}
@@ -128,8 +136,8 @@
             display:flex;align-items:center;gap:10px;flex-wrap:wrap}
         .verify-banner form{margin:0}
         .verify-banner .link-btn{color:inherit;text-decoration:underline;padding:0}
-        .empty{color:var(--text-subtle);font-style:italic;font-size:16px}
-        .hint{font-size:14px;color:var(--text-subtle);text-wrap:pretty}
+        .empty{color:var(--text-muted);font-style:italic;font-size:16px}
+        .hint{font-size:14px;color:var(--text-muted);text-wrap:pretty}
 
         /* record button — dot marks the live-recording affordance */
         .btn.rec::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
@@ -160,17 +168,17 @@
             padding:22px}
         .totals-card--cal{background:var(--accent);border-color:var(--accent);color:#fff}
         .totals-card .label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-            color:var(--text-subtle)}
-        .totals-card--cal .label{color:#f6d3c6}
+            color:var(--text-muted)}
+        .totals-card--cal .label{color:var(--on-accent)}
         .totals-card .value{font-family:var(--serif);font-variant-numeric:tabular-nums;
             font-size:38px;line-height:1;margin-top:10px;letter-spacing:-.02em}
         .totals-card--cal .value{color:#fff}
         .totals-grid--compact .totals-card{padding:18px}
         .totals-grid--compact .totals-card .value{font-size:30px}
-        .totals-card .unit{font-size:.55em;color:var(--text-subtle);margin-left:2px}
-        .totals-card--cal .unit{color:#f6d3c6}
-        .goal-meta{font-size:12px;color:var(--text-subtle);margin-top:12px}
-        .totals-card--cal .goal-meta{color:#f6d3c6}
+        .totals-card .unit{font-size:.55em;color:var(--text-muted);margin-left:2px}
+        .totals-card--cal .unit{color:var(--on-accent)}
+        .goal-meta{font-size:12px;color:var(--text-muted);margin-top:12px}
+        .totals-card--cal .goal-meta{color:var(--on-accent)}
         .goal-bar{height:5px;border-radius:3px;background:var(--surface-2);margin-top:7px;overflow:hidden}
         .totals-card--cal .goal-bar{background:rgba(255,255,255,.28)}
         .goal-bar__fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s ease}
@@ -179,9 +187,9 @@
         .totals-card--cal .goal-bar__fill--over{background:var(--danger)}
 
         /* ---------- inverted accent block ---------- */
-        .accent-block{background:var(--accent);color:#fdf3ee;border-radius:var(--r-block);padding:32px 36px}
+        .accent-block{background:var(--accent);color:var(--on-accent);border-radius:var(--r-block);padding:32px 36px}
         .accent-block strong{color:#fff}
-        .accent-block .sub{color:#f6d9cc;font-size:15px}
+        .accent-block .sub{color:var(--on-accent-muted);font-size:15px}
 
         /* ---------- rows ---------- */
         .row-list{display:flex;flex-direction:column;gap:10px}
@@ -190,19 +198,19 @@
         .row-item--link{cursor:pointer;transition:border-color .2s,transform .2s}
         .row-item--link:hover{border-color:var(--accent);transform:translateX(2px)}
         .row-item--total{background:var(--surface-2)}
-        .row-time{font-size:13px;color:var(--text-subtle);width:46px;flex:none;font-variant-numeric:tabular-nums}
+        .row-time{font-size:13px;color:var(--text-muted);width:46px;flex:none;font-variant-numeric:tabular-nums}
         .row-main{flex:1;min-width:0}
         .row-title{font-size:16px}
-        .row-sub{font-size:13px;color:var(--text-subtle);margin-top:2px}
+        .row-sub{font-size:13px;color:var(--text-muted);margin-top:2px}
         .row-day{font-size:15px;font-weight:500;width:110px;flex:none}
         .row-macros{font-size:14px;color:var(--text-muted);flex:1}
-        .row-count{font-size:13px;color:var(--text-subtle)}
+        .row-count{font-size:13px;color:var(--text-muted)}
         .row-cal{font-family:var(--serif);font-size:17px;color:var(--accent);white-space:nowrap;
             font-variant-numeric:tabular-nums}
         .row-item--total .row-day,.row-item--total .row-macros{font-weight:600;color:var(--text)}
         .goal-tick{color:var(--accent);font-weight:600;flex:none}
         .row-actions{display:flex;gap:4px;flex:none}
-        .row-btn{border:none;background:none;font:inherit;font-size:13px;color:var(--text-subtle);
+        .row-btn{border:none;background:none;font:inherit;font-size:13px;color:var(--text-muted);
             padding:6px 10px;border-radius:9px;cursor:pointer}
         .row-btn:hover{background:var(--surface-2);color:var(--text)}
 
@@ -215,7 +223,7 @@
         .row-edit__actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .row-edit__actions .status{margin:0;flex:1;min-width:120px}
         .row-edit__delete{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;
-            border:none;background:none;color:var(--text-subtle);border-radius:9px;cursor:pointer}
+            border:none;background:none;color:var(--text-muted);border-radius:9px;cursor:pointer}
         .row-edit__delete:hover{background:var(--danger-soft);color:var(--danger)}
 
         /* ---------- clarify prompt ---------- */
@@ -240,15 +248,15 @@
         .auth-form .btn{margin-top:6px}
         /* Pulled up against the field it describes — the form's 14px gap reads as a
            separate row otherwise. */
-        .field-hint{font-size:13px;color:var(--text-subtle);margin-top:-8px}
-        .auth-footer{font-size:14px;color:var(--text-subtle);margin-top:22px}
+        .field-hint{font-size:13px;color:var(--text-muted);margin-top:-8px}
+        .auth-footer{font-size:14px;color:var(--text-muted);margin-top:22px}
         .auth-footer a{color:var(--text-muted);font-weight:500}
 
         /* Seitenfuß. Impressum und Datenschutz müssen nach §5 DDG von jeder Seite aus
            erreichbar sein, nicht nur von der Landing Page — deshalb hier im base
            und nicht je Template. */
         .site-foot{border-top:1px solid var(--border);padding:26px 0 44px;
-            color:var(--text-subtle);font-size:14px}
+            color:var(--text-muted);font-size:14px}
         .site-foot-in{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
         .site-foot a{color:var(--text-muted);font-weight:500}
         .site-foot a:hover{color:var(--text)}
@@ -279,6 +287,13 @@
             .nav-link{flex:1;min-width:calc(25% - 2px);text-align:center;padding:7px 8px;font-size:13px}
             main{padding:28px 0 56px}
             .card{padding:22px}
+            /* Das Textfeld ist die Hauptsteuerung dieser Seiten. Neben zwei Buttons
+               in derselben Zeile bleiben davon bei 375px rund 46px übrig — etwa fünf
+               Zeichen, der Platzhalter ist dann unsichtbar. min-width:0 sorgt dafür,
+               dass es zerquetscht wird statt umzubrechen. Also: Feld auf eine eigene
+               Zeile, Buttons teilen sich die Zeile darunter. */
+            .log-form > input[type=text]{flex-basis:100%}
+            .log-form .btn{flex:1}
             .accent-block{padding:26px 22px;border-radius:24px}
             .totals-card{padding:18px}
             .totals-card .value{font-size:30px}
@@ -289,6 +304,22 @@
             .row-macros{flex-basis:100%;order:3;font-size:13px}
             .row-count,.goal-tick{order:2}
             .auth-wrap{min-height:0;padding:24px 0 48px}
+        }
+
+        /* Touch statt Breite: ein Laptop mit Touchscreen braucht dieselben Flächen
+           wie ein Handy, ein schmales Fenster mit Maus nicht. Alles hier hebt nur
+           die Trefferfläche an — Schriftgrößen, Farben und Radien bleiben. */
+        @media(pointer:coarse){
+            /* .nav-link bleibt bewusst bei ~35px: sieben Links auf zwei Reihen mit je
+               44px ziehen die klebende Navigation von ~74 auf ~96px, und die frisst auf
+               375px mehr, als die größere Fläche einbringt. 35px liegt über dem
+               24px-Minimum; die eigentliche Lösung ist weniger Navigation, nicht höhere. */
+            .nav-btn{height:44px;min-width:44px}
+            .day-nav input[type=date]{height:44px}
+            .link-btn{display:inline-flex;align-items:center;min-height:44px}
+            .btn.sm{height:44px}
+            .row-btn{min-height:44px;padding:6px 12px}
+            .row-edit__delete{width:44px;height:44px}
         }
 
         @media(prefers-reduced-motion:reduce){

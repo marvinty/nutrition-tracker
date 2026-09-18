@@ -56,7 +56,7 @@ async def log_meal_from_text(
     user: User = Depends(require_credits("text")),
 ) -> LogResponse:
     if not body.text.strip():
-        raise HTTPException(status_code=400, detail="Text must not be empty")
+        raise HTTPException(status_code=400, detail="Schreib zuerst, was du gegessen hast.")
 
     messages = [{"role": "user", "content": body.text}]
     try:
@@ -64,7 +64,7 @@ async def log_meal_from_text(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"LLM extraction failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Die Mahlzeit konnte nicht ausgewertet werden. Versuch es gleich noch einmal.") from exc
 
 
 @router.post("/clarify", response_model=LogResponse)
@@ -75,7 +75,7 @@ async def clarify_meal(
     user: User = Depends(require_credits("clarify")),
 ) -> LogResponse:
     if not body.messages:
-        raise HTTPException(status_code=400, detail="Conversation must not be empty")
+        raise HTTPException(status_code=400, detail="Der Verlauf zur Rückfrage fehlt. Beschreib die Mahlzeit noch einmal.")
 
     messages = [m.model_dump() for m in body.messages]
     try:
@@ -83,7 +83,7 @@ async def clarify_meal(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"LLM extraction failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Die Mahlzeit konnte nicht ausgewertet werden. Versuch es gleich noch einmal.") from exc
 
 
 @router.get("", response_model=list[MealRead])
@@ -104,7 +104,7 @@ async def edit_meal(
 ) -> MealRead:
     meal = await update_meal(session, meal_id, user.username, body)
     if meal is None:
-        raise HTTPException(status_code=404, detail="Meal not found")
+        raise HTTPException(status_code=404, detail="Diese Mahlzeit gibt es nicht mehr.")
     return meal
 
 
@@ -115,4 +115,4 @@ async def remove_meal(
     user: User = Depends(get_current_user),
 ) -> None:
     if not await delete_meal(session, meal_id, user.username):
-        raise HTTPException(status_code=404, detail="Meal not found")
+        raise HTTPException(status_code=404, detail="Diese Mahlzeit gibt es nicht mehr.")

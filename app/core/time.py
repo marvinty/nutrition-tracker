@@ -45,7 +45,7 @@ def resolve_timestamp(log_date: Optional[date]) -> Optional[datetime]:
         return None
     today = today_local()
     if log_date > today:
-        raise ValueError("log_date must not be in the future")
+        raise ValueError("Datum darf nicht in der Zukunft liegen.")
     if log_date == today:
         return None
     now = datetime.now(local_tz())

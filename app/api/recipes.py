@@ -38,7 +38,7 @@ router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 async def _require_recipe(session: AsyncSession, recipe_id: int, user_id: str):
     recipe = await get_recipe(session, recipe_id, user_id)
     if recipe is None:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+        raise HTTPException(status_code=404, detail="Dieses Rezept gibt es nicht mehr.")
     return recipe
 
 
@@ -49,7 +49,7 @@ async def new_recipe(
     user: User = Depends(get_current_user),
 ) -> RecipeRead:
     if not body.name.strip():
-        raise HTTPException(status_code=400, detail="Name must not be empty")
+        raise HTTPException(status_code=400, detail="Gib dem Rezept zuerst einen Namen.")
     recipe = await create_recipe(session, user.username, body)
     return to_recipe_read(recipe)
 
@@ -82,7 +82,7 @@ async def edit_recipe(
 ) -> RecipeRead:
     recipe = await update_recipe(session, recipe_id, user.username, body)
     if recipe is None:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+        raise HTTPException(status_code=404, detail="Dieses Rezept gibt es nicht mehr.")
     return to_recipe_read(recipe)
 
 
@@ -93,7 +93,7 @@ async def remove_recipe(
     user: User = Depends(get_current_user),
 ) -> None:
     if not await delete_recipe(session, recipe_id, user.username):
-        raise HTTPException(status_code=404, detail="Recipe not found")
+        raise HTTPException(status_code=404, detail="Dieses Rezept gibt es nicht mehr.")
 
 
 async def _add_ingredient(
@@ -101,7 +101,7 @@ async def _add_ingredient(
 ) -> None:
     text = text.strip()
     if not text:
-        raise HTTPException(status_code=400, detail="Ingredient text must not be empty")
+        raise HTTPException(status_code=400, detail="Nenn zuerst eine Zutat.")
     # A single utterance may name several ingredients ("200g pasta and 20g olive
     # oil"); extract_ingredients splits them so each is tracked separately. It
     # always estimates (never asks), which is what we want while cooking.
@@ -124,7 +124,7 @@ async def add_ingredient_text(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"LLM extraction failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Die Zutat konnte nicht ausgewertet werden. Versuch es gleich noch einmal.") from exc
     return to_recipe_read(recipe)
 
 
@@ -139,17 +139,17 @@ async def add_ingredient_audio(
     recipe = await _require_recipe(session, recipe_id, user.username)
     audio_bytes = await file.read()
     if not audio_bytes:
-        raise HTTPException(status_code=400, detail="Empty audio file")
+        raise HTTPException(status_code=400, detail="Die Aufnahme ist leer. Nimm sie noch einmal auf.")
     try:
         transcript = await transcribe_audio(audio_bytes, file.filename or "audio.wav")
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Whisper transcription failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Die Aufnahme konnte nicht transkribiert werden. Versuch es gleich noch einmal.") from exc
     try:
         await _add_ingredient(provider, session, recipe, transcript)
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"LLM extraction failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Die Zutat konnte nicht ausgewertet werden. Versuch es gleich noch einmal.") from exc
     return to_recipe_read(recipe)
 
 
@@ -161,7 +161,7 @@ async def remove_ingredient(
     user: User = Depends(get_current_user),
 ) -> None:
     if not await delete_ingredient(session, recipe_id, ingredient_id, user.username):
-        raise HTTPException(status_code=404, detail="Ingredient not found")
+        raise HTTPException(status_code=404, detail="Diese Zutat gibt es nicht mehr.")
 
 
 @router.post("/{recipe_id}/log", response_model=MealRead, status_code=201)
@@ -172,7 +172,7 @@ async def log_portion(
     user: User = Depends(get_current_user),
 ) -> MealRead:
     if body.portions <= 0:
-        raise HTTPException(status_code=400, detail="Portions must be greater than 0")
+        raise HTTPException(status_code=400, detail="Die Portionszahl muss größer als 0 sein.")
     recipe = await _require_recipe(session, recipe_id, user.username)
     try:
         resolve_timestamp(body.log_date)

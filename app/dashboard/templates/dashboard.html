@@ -8,10 +8,43 @@
     .log-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:22px;flex-wrap:wrap}
     .log-head h3{margin-bottom:2px}
     .log-head > div{flex:1;min-width:220px}
-    .credit-badge{font-size:12px;font-weight:500;color:var(--text-subtle);background:var(--surface);
+    .credit-badge{font-size:12px;font-weight:500;color:var(--text-muted);background:var(--surface);
         border:1px solid var(--border);border-radius:99px;padding:6px 13px;white-space:nowrap}
     .credit-badge.credit-line--blocked{color:var(--danger);border-color:var(--danger);background:var(--danger-soft)}
-    .credit-link{font-size:12px;color:var(--text-subtle);white-space:nowrap}
+    .credit-link{font-size:12px;color:var(--text-muted);white-space:nowrap}
+
+    /* Quittung nach einer fertigen Schaetzung. Rahmen wie .row-edit — dieselbe
+       Sprache fuer "diese eine Zeile ist gerade dran". Bewusst nicht die Optik der
+       Rueckfrage: die gehoert dem Gespraech, das hier ist das Ergebnis. */
+    .logged{margin-top:18px;padding:18px 20px;border-radius:16px;background:var(--surface);
+        border:1px solid var(--accent)}
+    .logged-head{display:flex;align-items:flex-start;gap:12px}
+    .logged-tick{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+        display:grid;place-items:center;flex:none;margin-top:1px}
+    .logged-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+        color:var(--text-muted)}
+    .logged-desc{font-family:var(--serif);font-size:19px;line-height:1.3;margin-top:3px;
+        overflow-wrap:anywhere}
+    .logged-macros{display:flex;flex-wrap:wrap;gap:6px 18px;margin:14px 0 0 38px;
+        font-size:14px;color:var(--text-muted)}
+    .logged-macros b{font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text);
+        font-variant-numeric:tabular-nums;margin-right:3px}
+    .logged-actions{margin:14px 0 0 38px}
+    @media(max-width:640px){
+        .logged-macros,.logged-actions{margin-left:0}
+    }
+    /* Ein einziger authored Moment: die Quittung kommt herein, die dazugehoerige
+       Zeile in der Liste leuchtet einmal auf. Sonst bewegt sich auf der Seite nichts. */
+    .logged{animation:logged-in .42s cubic-bezier(.16,1,.3,1) both}
+    .row-item--logged{animation:row-lit 1.8s ease-out both}
+    @keyframes logged-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    @keyframes row-lit{0%{background:var(--accent-soft);border-color:var(--accent)}
+        100%{background:var(--surface);border-color:var(--border)}}
+    @media(prefers-reduced-motion:reduce){
+        /* Der Zustand bleibt sichtbar, nur die Bewegung faellt weg — die Quittung
+           ist serverseitig gerendert, sie ist ohne Animation schon da. */
+        .row-item--logged{background:var(--accent-soft);border-color:var(--accent)}
+    }
     .credit-link:hover{color:var(--accent)}
     h2.sub-h .count{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text-subtle);
         background:var(--surface-2);border-radius:99px;padding:3px 11px;vertical-align:middle;margin-left:6px}
@@ -21,7 +54,18 @@
            and keep its link directly under it rather than stranded mid-row */
         .credit-badge{order:99;width:100%;text-align:center;white-space:normal}
         .credit-link{order:100;width:100%;text-align:center}
+        /* Die 640er-Regeln in base.html regeln .row-day/.row-macros — das sind die
+           Klassen von history.html. Die Mahlzeitenzeile hier besteht aus .row-time
+           (46px), .row-main, .row-cal (~75px) und .row-actions (~92px); in einer
+           297px breiten Karte bleiben für die Beschreibung ~48px, und sie stapelt
+           zu einer schmalen Säule. Beschreibung kriegt die erste Zeile für sich,
+           Uhrzeit/kcal/Bearbeiten rücken darunter. */
+        .row-main{flex-basis:100%;order:-1}
+        .row-actions{margin-left:auto}
     }
+    /* Eine Beschreibung ohne Leerzeichen (langer Produktname) schiebt die Zeile
+       sonst über den Viewport hinaus — body{overflow-x:hidden} kaschiert das nur. */
+    .row-title{overflow-wrap:anywhere}
 </style>
 {% endblock %}
 
@@ -51,12 +95,17 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
         </span>
         <div>
-            <h3>Sag einfach, was du gegessen hast.</h3>
+            <h3 id="log-card-title">Sag einfach, was du gegessen hast.</h3>
             <p class="hint">Sprich einen Satz ein oder tipp ihn — Makros landen automatisch im Log.</p>
         </div>
-        <span id="credit-line" class="credit-badge{% if not credits.system_available %} credit-line--blocked{% endif %}">
+        {# Zwei Arten von "aus": das Systemlimit trifft alle, das eigene Limit nur dich.
+           Vorher wurde nur das erste angezeigt — ein eigenes Limit von 0 sah aus wie
+           jeder andere Wert, und der Nutzer erfuhr davon erst durch den 429. #}
+        <span id="credit-line" class="credit-badge{% if credits_blocked %} credit-line--blocked{% endif %}">
             {%- if not credits.system_available -%}
             Systemlimit erreicht — heute keine KI-Analysen
+            {%- elif credits.remaining <= 0 -%}
+            Dein Tageslimit ist erreicht — morgen wieder {{ credits.limit }} Credits
             {%- else -%}
             noch {{ credits.remaining }} von {{ credits.limit }} Credits heute
             {%- endif -%}
@@ -67,22 +116,57 @@
     </div>
 
     <form id="text-meal-form" class="log-form">
-        <input type="text" id="meal-text-input" placeholder="z.B. gegrilltes Hähnchen mit Reis" required>
-        <button type="submit" id="text-submit-btn" class="btn">Loggen</button>
-        <button type="button" id="record-btn" class="btn ghost rec" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen">Sprachaufnahme</button>
-        <span id="record-indicator" class="rec-indicator hidden">Aufnahme läuft…</span>
+        {# Die Überschrift der Karte ist das Label des Feldes — ein zweites darüber
+           würde dasselbe zweimal sagen. Platzhalter sind Beispiele, keine Labels. #}
+        <input type="text" id="meal-text-input" aria-labelledby="log-card-title"
+               placeholder="z.B. gegrilltes Hähnchen mit Reis" enterkeyhint="send"
+               autocapitalize="sentences" required{% if credits_blocked %} disabled{% endif %}>
+        <button type="submit" id="text-submit-btn" class="btn"{% if credits_blocked %} disabled{% endif %}>Loggen</button>
+        <button type="button" id="record-btn" class="btn ghost rec" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen"{% if credits_blocked %} disabled{% endif %}>Sprechen</button>
     </form>
-    <p id="text-status" class="status"></p>
-    <p id="voice-status" class="status"></p>
+    {# Außerhalb des Formulars: innerhalb verändert das Einblenden die intrinsische
+       Breite der Flex-Zeile und löst mitten in der Aufnahme einen Reflow aus. #}
+    <span id="record-indicator" class="rec-indicator hidden" role="status">Aufnahme läuft…</span>
+    <p id="text-status" class="status" role="status" aria-live="polite"></p>
+    <p id="voice-status" class="status" role="status" aria-live="polite"></p>
 
-    <div id="clarify-box" class="clarify hidden">
+    {# aria-live am Kasten: die Rückfrage ist der Kern des Produkts und wurde vorher
+       niemandem angesagt. Das Eingabefeld wird von der Frage selbst benannt, damit
+       wer hineinspringt auch hört, worauf er antwortet. #}
+    <div id="clarify-box" class="clarify hidden" role="status" aria-live="polite">
         <p id="clarify-question" class="clarify-question"></p>
         <form id="clarify-form" class="log-form">
-            <input type="text" id="clarify-input" placeholder="Deine Antwort…" autocomplete="off" required>
+            <input type="text" id="clarify-input" aria-labelledby="clarify-question"
+                   placeholder="Deine Antwort…" autocomplete="off" enterkeyhint="send" required>
             <button type="submit" id="clarify-submit-btn" class="btn">Antworten</button>
         </form>
-        <p id="clarify-status" class="status"></p>
+        <p id="clarify-status" class="status" role="status" aria-live="polite"></p>
     </div>
+
+    {% if logged_meal %}
+    {# Der Moment nach der Schätzung. Vorher war er ein window.location.reload() —
+       der Nutzer sprach, wartete und landete wieder im leeren Formular. #}
+    <div class="logged">
+        <div class="logged-head">
+            <span class="logged-tick" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div>
+                <p class="logged-label">Im Log</p>
+                <p class="logged-desc">{{ logged_meal.description }}</p>
+            </div>
+        </div>
+        <div class="logged-macros">
+            <span><b>{{ logged_meal.calories | int if logged_meal.calories is not none else "—" }}</b>kcal</span>
+            <span><b>{{ logged_meal.protein if logged_meal.protein is not none else "—" }}</b>g Eiweiß</span>
+            <span><b>{{ logged_meal.carbs if logged_meal.carbs is not none else "—" }}</b>g Kohlenhydrate</span>
+            <span><b>{{ logged_meal.fat if logged_meal.fat is not none else "—" }}</b>g Fett</span>
+        </div>
+        <div class="logged-actions">
+            <button type="button" class="btn sm ghost" data-correct-id="{{ logged_meal.id }}">Korrigieren</button>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <h2 class="sub-h">Tagesbilanz</h2>
@@ -91,7 +175,7 @@
         <div class="label">kcal</div>
         <div class="value">{{ totals.calories | int }}</div>
         {% if progress.calories %}
-        <div class="goal-meta">Ziel {{ progress.calories.target | int }} · {{ progress.calories.percent }}%</div>
+        <div class="goal-meta">Ziel {{ progress.calories.target | int }} · {{ progress.calories.percent }}%{% if progress.calories.over %} · über Ziel{% endif %}</div>
         <div class="goal-bar"><div class="goal-bar__fill{% if progress.calories.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.calories.bar_pct }}%"></div></div>
         {% endif %}
     </div>
@@ -99,7 +183,7 @@
         <div class="label">Protein</div>
         <div class="value">{{ totals.protein }}<span class="unit">g</span></div>
         {% if progress.protein %}
-        <div class="goal-meta">Ziel {{ progress.protein.target }}g · {{ progress.protein.percent }}%</div>
+        <div class="goal-meta">Ziel {{ progress.protein.target }}g · {{ progress.protein.percent }}%{% if progress.protein.over %} · über Ziel{% endif %}</div>
         <div class="goal-bar"><div class="goal-bar__fill{% if progress.protein.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.protein.bar_pct }}%"></div></div>
         {% endif %}
     </div>
@@ -107,7 +191,7 @@
         <div class="label">Carbs</div>
         <div class="value">{{ totals.carbs }}<span class="unit">g</span></div>
         {% if progress.carbs %}
-        <div class="goal-meta">Ziel {{ progress.carbs.target }}g · {{ progress.carbs.percent }}%</div>
+        <div class="goal-meta">Ziel {{ progress.carbs.target }}g · {{ progress.carbs.percent }}%{% if progress.carbs.over %} · über Ziel{% endif %}</div>
         <div class="goal-bar"><div class="goal-bar__fill{% if progress.carbs.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.carbs.bar_pct }}%"></div></div>
         {% endif %}
     </div>
@@ -115,7 +199,7 @@
         <div class="label">Fett</div>
         <div class="value">{{ totals.fat }}<span class="unit">g</span></div>
         {% if progress.fat %}
-        <div class="goal-meta">Ziel {{ progress.fat.target }}g · {{ progress.fat.percent }}%</div>
+        <div class="goal-meta">Ziel {{ progress.fat.target }}g · {{ progress.fat.percent }}%{% if progress.fat.over %} · über Ziel{% endif %}</div>
         <div class="goal-bar"><div class="goal-bar__fill{% if progress.fat.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.fat.bar_pct }}%"></div></div>
         {% endif %}
     </div>
@@ -125,7 +209,7 @@
 {% if meals %}
 <div class="row-list">
     {% for meal in meals %}
-    <div class="row-item" data-meal-id="{{ meal.id }}">
+    <div class="row-item{% if logged_meal and meal.id == logged_meal.id %} row-item--logged{% endif %}" data-meal-id="{{ meal.id }}">
         <span class="row-time">{{ meal.timestamp | localtime }}</span>
         <div class="row-main">
             <div class="row-title">{{ meal.description }}</div>
@@ -141,23 +225,23 @@
         </div>
     </div>
     <form class="row-edit hidden" data-meal-id="{{ meal.id }}">
-        <input type="text" class="row-edit__desc" value="{{ meal.description }}" placeholder="Beschreibung" required>
+        <input type="text" class="row-edit__desc" id="m{{ meal.id }}-desc" aria-label="Beschreibung der Mahlzeit" value="{{ meal.description }}" placeholder="Beschreibung" required>
         <div class="row-edit__macros">
             <div class="row-edit__field">
-                <label>kcal</label>
-                <input type="number" step="any" name="calories" value="{{ meal.calories if meal.calories is not none else '' }}">
+                <label for="m{{ meal.id }}-calories">kcal</label>
+                <input type="number" step="any" id="m{{ meal.id }}-calories" name="calories" value="{{ meal.calories if meal.calories is not none else '' }}">
             </div>
             <div class="row-edit__field">
-                <label>Protein</label>
-                <input type="number" step="any" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}">
+                <label for="m{{ meal.id }}-protein">Protein</label>
+                <input type="number" step="any" id="m{{ meal.id }}-protein" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}">
             </div>
             <div class="row-edit__field">
-                <label>Carbs</label>
-                <input type="number" step="any" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
+                <label for="m{{ meal.id }}-carbs">Carbs</label>
+                <input type="number" step="any" id="m{{ meal.id }}-carbs" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
             </div>
             <div class="row-edit__field">
-                <label>Fett</label>
-                <input type="number" step="any" name="fat" value="{{ meal.fat if meal.fat is not none else '' }}">
+                <label for="m{{ meal.id }}-fat">Fett</label>
+                <input type="number" step="any" id="m{{ meal.id }}-fat" name="fat" value="{{ meal.fat if meal.fat is not none else '' }}">
             </div>
         </div>
         <div class="row-edit__actions">
@@ -177,6 +261,30 @@
 
 <script>
     const SELECTED_DATE = "{{ selected }}";
+    // Serverseitig gerendert: stimmt beim ersten Paint, refreshCredits() zieht nach.
+    let creditsBlocked = {{ 'true' if credits_blocked else 'false' }};
+    // Getrennt gefuehrt, weil eine Rueckfrage den Nutzer 0 Credits kostet, aber
+    // weiterhin gegen das app-weite Tageslimit zaehlt (siehe usage_service): das
+    // eigene Limit sperrt sie nicht, das Systemlimit schon.
+    let systemBlocked = {{ 'true' if not credits.system_available else 'false' }};
+    let busy = false;
+
+    // Eine Anfrage nach der anderen. Vorher waren "Loggen" und "Sprechen" unabhaengig
+    // voneinander gesperrt, also liefen zwei KI-Aufrufe nebeneinander — zwei Credits,
+    // zwei konkurrierende Weiterleitungen.
+    function setBusy(on) {
+        busy = on;
+        syncControls();
+    }
+    function syncControls() {
+        const off = busy || creditsBlocked;
+        for (const id of ['meal-text-input', 'text-submit-btn', 'record-btn']) {
+            const el = document.getElementById(id);
+            if (el) el.disabled = off;
+        }
+        const cs = document.getElementById('clarify-submit-btn');
+        if (cs) cs.disabled = busy || systemBlocked;
+    }
 
     const datePicker = document.getElementById('date-picker');
     datePicker.addEventListener('change', () => {
@@ -206,10 +314,18 @@
             if (!res.ok) return;
             const u = await res.json();
             const line = document.getElementById('credit-line');
-            line.textContent = u.system_available
-                ? `noch ${u.remaining} von ${u.limit} Credits heute`
-                : 'Systemlimit erreicht — heute keine KI-Analysen';
-            line.classList.toggle('credit-line--blocked', !u.system_available);
+            if (!u.system_available) {
+                line.textContent = 'Systemlimit erreicht — heute keine KI-Analysen';
+            } else if (u.remaining <= 0) {
+                line.textContent = `Dein Tageslimit ist erreicht — morgen wieder ${u.limit} Credits`;
+            } else {
+                line.textContent = `noch ${u.remaining} von ${u.limit} Credits heute`;
+            }
+            // Laeuft nach jeder Rueckfrage — genau dort geht die Null ueber die Kante.
+            systemBlocked = !u.system_available;
+            creditsBlocked = systemBlocked || u.remaining <= 0;
+            line.classList.toggle('credit-line--blocked', creditsBlocked);
+            syncControls();
         } catch (err) {
             /* the line is cosmetic — leave the stale value rather than break logging */
         }
@@ -228,7 +344,13 @@
         }
         // complete
         hideClarify();
-        window.location.reload();
+        // Kein blankes reload(): die frisch geloggte Mahlzeit wird auf der neu
+        // geladenen Seite als Quittung gezeigt und ihre Zeile hervorgehoben. Die
+        // Summen kommen dabei vom Server, sind also garantiert richtig.
+        const id = data.meal && data.meal.id;
+        window.location = id
+            ? `/dashboard?d=${SELECTED_DATE}&logged=${encodeURIComponent(id)}`
+            : `/dashboard?d=${SELECTED_DATE}`;
     }
 
     const textForm = document.getElementById('text-meal-form');
@@ -236,11 +358,10 @@
         e.preventDefault();
         const input = document.getElementById('meal-text-input');
         const status = document.getElementById('text-status');
-        const btn = document.getElementById('text-submit-btn');
         const text = input.value.trim();
         if (!text) return;
 
-        btn.disabled = true;
+        setBusy(true);
         status.textContent = 'Wird geloggt…';
         status.className = 'status';
         hideClarify();
@@ -260,7 +381,7 @@
             status.textContent = err.message;
             status.className = 'status error';
         } finally {
-            btn.disabled = false;
+            setBusy(false);
         }
     });
 
@@ -270,7 +391,7 @@
         if (!answer) return;
 
         convo.push({ role: 'user', content: answer });
-        clarifySubmitBtn.disabled = true;
+        setBusy(true);
         clarifyStatus.textContent = 'Wird gesendet…';
         clarifyStatus.className = 'status';
         try {
@@ -289,7 +410,7 @@
             clarifyStatus.textContent = err.message;
             clarifyStatus.className = 'status error';
         } finally {
-            clarifySubmitBtn.disabled = false;
+            setBusy(false);
         }
     });
 
@@ -299,6 +420,18 @@
     let mediaRecorder = null;
     let chunks = [];
     let isRecording = false;
+    // Die letzte Aufnahme bleibt liegen, bis sie durchgegangen ist. Vorher war sie
+    // nach einem fehlgeschlagenen Upload weg — der Credit war trotzdem gebucht
+    // (core/deps.require_credits bucht vor dem Provider-Aufruf, ohne Rueckerstattung),
+    // und der Satz musste neu gesprochen werden.
+    let lastBlob = null;
+
+    // aria-label und sichtbarer Text muessen denselben Zustand melden; vorher blieb
+    // das Label statisch, der Screenreader hoerte den Wechsel nie.
+    function setRecordLabel(text, label) {
+        recordBtn.textContent = text;
+        recordBtn.setAttribute('aria-label', label);
+    }
 
     recordBtn.addEventListener('click', async () => {
         if (!isRecording) {
@@ -315,7 +448,7 @@
                 mediaRecorder.onstop = () => uploadRecording(new Blob(chunks, { type: 'audio/webm' }), stream);
                 mediaRecorder.start();
                 isRecording = true;
-                recordBtn.textContent = 'Aufnahme stoppen';
+                setRecordLabel('Stoppen', 'Aufnahme beenden und auswerten');
                 recordBtn.setAttribute('aria-pressed', 'true');
                 indicator.classList.remove('hidden');
                 voiceStatus.textContent = '';
@@ -326,16 +459,17 @@
         } else {
             mediaRecorder.stop();
             isRecording = false;
-            recordBtn.textContent = 'Sprachaufnahme';
+            setRecordLabel('Sprechen', 'Mahlzeit per Sprache aufnehmen');
             recordBtn.setAttribute('aria-pressed', 'false');
             indicator.classList.add('hidden');
         }
     });
 
     async function uploadRecording(blob, stream) {
-        stream.getTracks().forEach((t) => t.stop());
-        recordBtn.disabled = true;
-        voiceStatus.textContent = 'Wird hochgeladen…';
+        if (stream) stream.getTracks().forEach((t) => t.stop());
+        lastBlob = blob;
+        setBusy(true);
+        voiceStatus.textContent = 'Wird transkribiert und ausgewertet…';
         voiceStatus.className = 'status';
         hideClarify();
         const formData = new FormData();
@@ -351,13 +485,28 @@
                 throw new Error(err.detail || `Upload fehlgeschlagen (${res.status})`);
             }
             voiceStatus.textContent = '';
+            lastBlob = null;
             handleLogResponse(await res.json());
         } catch (err) {
-            voiceStatus.textContent = err.message;
-            voiceStatus.className = 'status error';
+            showVoiceError(err.message);
         } finally {
-            recordBtn.disabled = false;
+            setBusy(false);
         }
+    }
+
+    // Die Fehlermeldung allein laesst den Nutzer mit einem verbrauchten Credit und
+    // einer verlorenen Aufnahme stehen. Solange das Blob noch da ist, gibt es einen
+    // Weg zurueck.
+    function showVoiceError(message) {
+        voiceStatus.textContent = message + ' ';
+        voiceStatus.className = 'status error';
+        if (!lastBlob) return;
+        const again = document.createElement('button');
+        again.type = 'button';
+        again.className = 'btn sm ghost';
+        again.textContent = 'Nochmal senden';
+        again.addEventListener('click', () => uploadRecording(lastBlob, null));
+        voiceStatus.appendChild(again);
     }
 
     // Edit / delete existing meals.
@@ -368,14 +517,34 @@
         return document.querySelector(`.row-item[data-meal-id="${id}"]`);
     }
 
+    // "Korrigieren" auf der Quittung oeffnet denselben Editor wie "Bearbeiten" in
+    // der Zeile — eine Korrekturoberflaeche, nicht zwei.
+    function openEditor(id) {
+        const form = editFormFor(id);
+        const item = rowItemFor(id);
+        if (!form || !item) return;
+        item.classList.add('hidden');
+        form.classList.remove('hidden');
+        form.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        const desc = form.querySelector('.row-edit__desc');
+        if (desc) desc.focus();
+    }
+
+    // Die Quittung ist ein Moment, kein Zustand: ?logged= verschwindet aus der Adresse,
+    // damit ein Neuladen oder ein geteilter Link sie nicht konserviert.
+    if (document.querySelector('.logged') && window.history.replaceState) {
+        window.history.replaceState({}, '', `/dashboard?d=${SELECTED_DATE}`);
+    }
+
+    const correctBtn = document.querySelector('[data-correct-id]');
+    if (correctBtn) {
+        correctBtn.addEventListener('click', () => openEditor(correctBtn.dataset.correctId));
+    }
+
     document.querySelectorAll('.row-item .row-actions').forEach((actions) => {
         const item = actions.closest('.row-item');
         const id = item.dataset.mealId;
-        actions.querySelector('[data-action="edit"]').addEventListener('click', () => {
-            const form = editFormFor(id);
-            item.classList.add('hidden');
-            form.classList.remove('hidden');
-        });
+        actions.querySelector('[data-action="edit"]').addEventListener('click', () => openEditor(id));
     });
 
     document.querySelectorAll('.row-edit').forEach((form) => {

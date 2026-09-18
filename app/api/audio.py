@@ -31,12 +31,12 @@ async def process_audio(
 
     audio_bytes = await file.read()
     if not audio_bytes:
-        raise HTTPException(status_code=400, detail="Empty audio file")
+        raise HTTPException(status_code=400, detail="Die Aufnahme ist leer. Nimm sie noch einmal auf.")
 
     try:
         transcript = await transcribe_audio(audio_bytes, file.filename or "audio.wav")
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Whisper transcription failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Die Aufnahme konnte nicht transkribiert werden. Versuch es gleich noch einmal.") from exc
 
     messages = [{"role": "user", "content": transcript}]
     try:
@@ -46,4 +46,4 @@ async def process_audio(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"LLM extraction failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="Die Mahlzeit konnte nicht ausgewertet werden. Versuch es gleich noch einmal.") from exc

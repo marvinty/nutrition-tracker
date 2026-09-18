@@ -32,3 +32,6 @@ data/
 # Claude Code: the .local variant is the per-machine permission allowlist and
 # fills up with paths that only exist on one checkout. launch.json stays tracked.
 .claude/settings.local.json
+
+# Impeccable: die .local-Variante haelt Zustimmungen pro Maschine, nicht pro Projekt.
+.impeccable/config.local.json

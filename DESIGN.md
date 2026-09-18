@@ -95,6 +95,9 @@ Fehlertexte, Löschaktionen, erreichte Limits und Ziel-Überschreitung verwenden
 - **Karte** `.card`: `--surface`, 1px `--border`, Radius 20px, Padding 32px;
   Hover hebt an (`translateY(-3px)` + weicher Schatten). Abgesetzt: `--surface-2`.
 - **Icon-Badge**: 46px, Radius 13px, `--accent-soft` Hintergrund, `--accent` Icon.
+- **Bestätigungs-Badge**: 26px, Kreis, `--accent` Hintergrund, Icon in `#fff`.
+  Nur für den Abschluss einer Aktion (Quittung nach einer fertigen Schätzung),
+  nie als Dekoration und nie mehr als eines pro Ansicht.
 - **Invertierter Accent-Block**: Hintergrund `--accent`, Text `--on-accent`/`--on-accent-muted`, Radius 32px.
 - **Bento-Grid**: `repeat(6,1fr)`, Karten spannen 2/3 Spalten; auf Mobile 1 Spalte.
 - **Reveal-on-scroll** `.rv`: `IntersectionObserver`, bei reduced-motion sofort sichtbar.
@@ -109,7 +112,11 @@ Fehlertexte, Löschaktionen, erreichte Limits und Ziel-Überschreitung verwenden
   großer Button neben dem Primär-CTA: zwei gleich große Buttons teilen die
   Aufmerksamkeit, und Anmelden ist nicht das Ziel der Seite. In der Nav ist der
   schlichte Textlink erlaubt.
-- Hinweis in `--text-subtle`: „Zugang aktuell nur mit Invite-Code.“
+- Hinweis in `--text-subtle`: „Zugang aktuell nur mit Invite-Code.“ — **nur auf der
+  Landing Page** (`.hero-note`/`.outro-note`). Auf `/register` steht derselbe Satz in
+  `.auth-footer`, und die Klasse trägt dort auch die Navigationslinks („Zurück zur
+  Anmeldung“); `--text-subtle` erreicht gegen `--surface` nur 2,62:1, deshalb gilt
+  im Auth-Bereich `--text-muted`.
 
 ## Feature-Wording (nur diese, nichts dazuerfinden)
 - Sprachaufnahme im Browser → transkribiert → Makros.

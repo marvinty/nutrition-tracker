@@ -47,6 +47,7 @@ router = APIRouter(tags=["dashboard"])
 async def dashboard(
     request: Request,
     d: Optional[date] = Query(default=None),
+    logged: Optional[str] = Query(default=None),
     session: AsyncSession = Depends(get_session),
     user: Optional[User] = Depends(resolve_user),
 ):
@@ -61,9 +62,17 @@ async def dashboard(
     totals = await get_daily_totals(session, user_id=user.username, for_date=selected)
     goal = await get_goal(session, user.username)
     progress = build_progress(totals, goal)
-    # Rendered server-side so the credit line is right on first paint; the page
-    # reloads after every completed log, so it stays current on its own.
+    # Rendered server-side so the credit line is right on first paint; a completed
+    # log reloads the page, so it stays current on its own.
     credits = await get_credit_status(session, user.username, user.tier)
+    # Nach einem fertigen Log lädt die Seite sich selbst mit ?logged=<id> und zeigt
+    # die Mahlzeit als Quittung. Sie kommt aus der ohnehin geladenen Liste — keine
+    # zweite Abfrage, und eine fremde oder unbekannte ID findet dort nichts, womit
+    # der Parameter niemandem fremde Daten zeigen kann.
+    logged_meal = next((m for m in meals if str(m.id) == logged), None) if logged else None
+    # Zwei Gründe, warum gerade nichts geht: das Systemlimit trifft alle, das eigene
+    # nur diesen Nutzer. Die Vorlage kannte vorher nur den ersten.
+    credits_blocked = not credits.system_available or credits.remaining <= 0
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
@@ -80,6 +89,8 @@ async def dashboard(
             "today": today.isoformat(),
             "username": user.username,
             "credits": credits,
+            "credits_blocked": credits_blocked,
+            "logged_meal": logged_meal,
         },
     )
 
