@@ -77,13 +77,13 @@
         {% endif %}
         {% for dot in view.chart.dots %}
         <circle class="wchart-dot" cx="{{ dot.x }}" cy="{{ dot.y }}" r="4">
-            <title>{{ dot.label }}: {{ dot.kg }} kg</title>
+            <title>{{ dot.label }}: {{ dot.kg | de_fixed }} kg</title>
         </circle>
         {% endfor %}
     </svg>
     <div class="wchart-axis">
         <span>{{ view.chart.x_first_label }}</span>
-        <span class="mid">{{ view.chart.y_min }}–{{ view.chart.y_max }} kg</span>
+        <span class="mid">{{ view.chart.y_min | de_fixed }}–{{ view.chart.y_max | de_fixed }} kg</span>
         <span>{{ view.chart.x_last_label }}</span>
     </div>
     {% else %}
@@ -95,19 +95,19 @@
 <div class="totals-grid totals-grid--compact">
     <div class="totals-card">
         <div class="label">Ø 7 Tage</div>
-        <div class="value">{% if view.latest %}{{ view.latest.avg_kg }}<span class="unit">kg</span>{% else %}—{% endif %}</div>
+        <div class="value">{% if view.latest %}{{ view.latest.avg_kg | de_fixed }}<span class="unit">kg</span>{% else %}—{% endif %}</div>
     </div>
     <div class="totals-card">
         <div class="label">Letzte Wiegung</div>
-        <div class="value">{% if view.latest %}{{ view.latest.raw_kg }}<span class="unit">kg</span>{% else %}—{% endif %}</div>
+        <div class="value">{% if view.latest %}{{ view.latest.raw_kg | de_fixed }}<span class="unit">kg</span>{% else %}—{% endif %}</div>
     </div>
     <div class="totals-card">
         <div class="label">Pro Woche</div>
-        <div class="value">{% if view.trend %}{% if view.trend.per_week_g > 0 %}+{% endif %}{{ view.trend.per_week_g }}<span class="unit">g</span>{% else %}—{% endif %}</div>
+        <div class="value">{% if view.trend %}{% if view.trend.per_week_g > 0 %}+{% endif %}{{ view.trend.per_week_g | de_num(0) }}<span class="unit">g</span>{% else %}—{% endif %}</div>
     </div>
     <div class="totals-card totals-card--cal">
         <div class="label">Verbrauch (geschätzt)</div>
-        <div class="value">{% if view.estimate %}{{ view.estimate.tdee }}{% else %}—{% endif %}</div>
+        <div class="value">{% if view.estimate %}{{ view.estimate.tdee | de_num(0) }}{% else %}—{% endif %}</div>
     </div>
 </div>
 
@@ -115,26 +115,26 @@
 <div class="accent-block wsuggest">
     <p class="lead">
         {% if view.trend.direction == 'flat' %}
-        Seit {{ view.estimate.weeks }} Wochen hältst du dein Gewicht bei Ø {{ view.intake.avg_calories }} kcal.
+        Seit {{ view.estimate.weeks }} Wochen hältst du dein Gewicht bei Ø {{ view.intake.avg_calories | de_num(0) }} kcal.
         {% elif view.trend.direction == 'up' %}
-        Seit {{ view.estimate.weeks }} Wochen nimmst du bei Ø {{ view.intake.avg_calories }} kcal um {{ view.trend.per_week_g }} g pro Woche zu.
+        Seit {{ view.estimate.weeks }} Wochen nimmst du bei Ø {{ view.intake.avg_calories | de_num(0) }} kcal um {{ view.trend.per_week_g | de_num(0) }} g pro Woche zu.
         {% else %}
-        Seit {{ view.estimate.weeks }} Wochen nimmst du bei Ø {{ view.intake.avg_calories }} kcal um {{ view.trend.per_week_g | abs }} g pro Woche ab.
+        Seit {{ view.estimate.weeks }} Wochen nimmst du bei Ø {{ view.intake.avg_calories | de_num(0) }} kcal um {{ view.trend.per_week_g | abs | de_num(0) }} g pro Woche ab.
         {% endif %}
-        Geschätzter Verbrauch: <strong>{{ view.estimate.tdee }} kcal</strong> pro Tag.
+        Geschätzter Verbrauch: <strong>{{ view.estimate.tdee | de_num(0) }} kcal</strong> pro Tag.
     </p>
     {% if view.estimate.suggested is not none %}
     <p class="lead">
         {% if view.estimate.desired_rate_g_week == 0 %}
-        Zum Halten deines Gewichts: <strong>{{ view.estimate.suggested }} kcal</strong>.
+        Zum Halten deines Gewichts: <strong>{{ view.estimate.suggested | de_num(0) }} kcal</strong>.
         {% elif view.estimate.desired_rate_g_week > 0 %}
-        Für {{ view.estimate.desired_rate_g_week }} g Zunahme pro Woche: <strong>{{ view.estimate.suggested }} kcal</strong>.
+        Für {{ view.estimate.desired_rate_g_week | de_num(0) }} g Zunahme pro Woche: <strong>{{ view.estimate.suggested | de_num(0) }} kcal</strong>.
         {% else %}
-        Für {{ view.estimate.desired_rate_g_week | abs }} g Abnahme pro Woche: <strong>{{ view.estimate.suggested }} kcal</strong>.
+        Für {{ view.estimate.desired_rate_g_week | abs | de_num(0) }} g Abnahme pro Woche: <strong>{{ view.estimate.suggested | de_num(0) }} kcal</strong>.
         {% endif %}
     </p>
     {% if view.estimate.goal_calories is not none %}
-    <p class="sub">Dein aktuelles Ziel: {{ view.estimate.goal_calories }} kcal ({% if view.estimate.delta_to_goal > 0 %}+{% endif %}{{ view.estimate.delta_to_goal }} kcal).</p>
+    <p class="sub">Dein aktuelles Ziel: {{ view.estimate.goal_calories | de_num(0) }} kcal ({% if view.estimate.delta_to_goal > 0 %}+{% endif %}{{ view.estimate.delta_to_goal | de_num(0) }} kcal).</p>
     {% endif %}
     {% else %}
     <p class="sub">Trag unter <a href="/goals">Ziele</a> ein Ziel-Tempo ein, dann rechne ich dir den passenden kcal-Wert aus.</p>
@@ -158,8 +158,8 @@
     {% for entry in entries %}
     <div class="row-item">
         <span class="row-day">{{ entry.date | de_short }}</span>
-        <span class="wrow-kg">{{ '%.1f' | format(entry.raw) }} kg</span>
-        <span class="wrow-avg">Ø {{ '%.1f' | format(entry.avg) }} kg</span>
+        <span class="wrow-kg">{{ entry.raw | de_fixed }} kg</span>
+        <span class="wrow-avg">Ø {{ entry.avg | de_fixed }} kg</span>
         <button type="button" class="row-btn" data-day="{{ entry.date.isoformat() }}">Löschen</button>
     </div>
     {% endfor %}

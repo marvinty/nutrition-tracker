@@ -14,7 +14,7 @@ from app.core.dates_de import (
     format_month_year,
     format_short_weekday,
 )
-from app.core.numbers_de import de_num
+from app.core.numbers_de import de_fixed, de_num
 from app.core.time import to_local, today_local
 from app.db.session import get_session
 from app.models.user import User
@@ -42,6 +42,9 @@ templates.env.filters["de_short"] = format_short_weekday
 # "600.0 kcal", "18.0g P". Zwei Fehler in einem String — die nachgestellte Null und
 # der Dezimalpunkt in einer Oberflaeche, die sonst deutsch schreibt.
 templates.env.filters["de_num"] = de_num
+# Fuer Messwerte statt Schaetzungen: die Nachkommastelle bleibt, weil sie bei
+# einer Wiegung Genauigkeit aussagt und nicht Rauschen ist.
+templates.env.filters["de_fixed"] = de_fixed
 # Takes a timestamp, unlike de_short which takes a date — the AI log rows carry
 # tz-aware datetimes that have to be converted before the day is read off them.
 templates.env.filters["de_day"] = lambda dt: format_short_weekday(to_local(dt).date())

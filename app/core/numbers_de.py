@@ -31,3 +31,16 @@ def de_num(value: Optional[float], digits: int = _DEFAULT_DIGITS) -> str:
     if rounded == int(rounded):
         return str(int(rounded))
     return f"{rounded:.{digits}f}".replace(".", ",")
+
+
+def de_fixed(value: Optional[float], digits: int = _DEFAULT_DIGITS) -> str:
+    """Wie ``de_num``, aber die Nachkommastelle bleibt auch bei einer runden Zahl.
+
+    Der Unterschied ist inhaltlich, nicht kosmetisch: ein Makrowert ist eine
+    Schaetzung, da ist die nachgestellte Null Rauschen und faellt weg. Eine
+    Wiegung ist ein Messwert — "71,0 kg" sagt aus, dass auf 100 g genau gewogen
+    wurde, "71 kg" waere eine Angabe geringerer Genauigkeit.
+    """
+    if value is None:
+        return "—"
+    return f"{float(value):.{digits}f}".replace(".", ",")
