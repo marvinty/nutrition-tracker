@@ -14,6 +14,7 @@ from app.core.dates_de import (
     format_month_year,
     format_short_weekday,
 )
+from app.core.numbers_de import de_num
 from app.core.time import to_local, today_local
 from app.db.session import get_session
 from app.models.user import User
@@ -37,6 +38,10 @@ templates = register_csrf_field(
 )
 templates.env.filters["localtime"] = lambda dt: to_local(dt).strftime("%H:%M")
 templates.env.filters["de_short"] = format_short_weekday
+# Makrowerte kommen als float aus der DB und gingen bisher als roher repr raus:
+# "600.0 kcal", "18.0g P". Zwei Fehler in einem String — die nachgestellte Null und
+# der Dezimalpunkt in einer Oberflaeche, die sonst deutsch schreibt.
+templates.env.filters["de_num"] = de_num
 # Takes a timestamp, unlike de_short which takes a date — the AI log rows carry
 # tz-aware datetimes that have to be converted before the day is read off them.
 templates.env.filters["de_day"] = lambda dt: format_short_weekday(to_local(dt).date())

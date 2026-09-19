@@ -35,3 +35,6 @@ data/
 
 # Impeccable: die .local-Variante haelt Zustimmungen pro Maschine, nicht pro Projekt.
 .impeccable/config.local.json
+
+# Lokale Compose-Override (Entwicklungswerte, teils Passwoerter) — pro Maschine.
+docker-compose.override.yml

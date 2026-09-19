@@ -38,19 +38,19 @@
 <div class="totals-grid totals-grid--compact">
     <div class="totals-card totals-card--cal">
         <div class="label">kcal</div>
-        <div class="value">{{ summary.avg.calories | int }}</div>
+        <div class="value">{{ summary.avg.calories | de_num(0) }}</div>
     </div>
     <div class="totals-card">
         <div class="label">Protein</div>
-        <div class="value">{{ summary.avg.protein }}<span class="unit">g</span></div>
+        <div class="value">{{ summary.avg.protein | de_num }}<span class="unit">g</span></div>
     </div>
     <div class="totals-card">
         <div class="label">Kohlenhydrate</div>
-        <div class="value">{{ summary.avg.carbs }}<span class="unit">g</span></div>
+        <div class="value">{{ summary.avg.carbs | de_num }}<span class="unit">g</span></div>
     </div>
     <div class="totals-card">
         <div class="label">Fett</div>
-        <div class="value">{{ summary.avg.fat }}<span class="unit">g</span></div>
+        <div class="value">{{ summary.avg.fat | de_num }}<span class="unit">g</span></div>
     </div>
 </div>
 
@@ -69,7 +69,7 @@
     {% for day in series %}
     <div class="row-item row-item--link" onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'">
         <span class="row-day">{{ day.date | de_short }}</span>
-        <span class="row-macros">{{ day.calories | int }} kcal · {{ day.protein }}g P · {{ day.carbs }}g KH · {{ day.fat }}g F</span>
+        <span class="row-macros">{{ day.calories | de_num(0) }} kcal · {{ day.protein | de_num }}g P · {{ day.carbs | de_num }}g KH · {{ day.fat | de_num }}g F</span>
         {% if adherence and day.meal_count > 0 and day.protein >= adherence.protein_target %}
         <span class="goal-tick" title="Proteinziel erreicht">✓</span>
         {% endif %}
@@ -78,7 +78,7 @@
     {% endfor %}
     <div class="row-item row-item--total">
         <span class="row-day">Total ({{ summary.days }} Tage)</span>
-        <span class="row-macros">{{ summary.total.calories | int }} kcal · {{ summary.total.protein }}g P · {{ summary.total.carbs }}g KH · {{ summary.total.fat }}g F</span>
+        <span class="row-macros">{{ summary.total.calories | de_num(0) }} kcal · {{ summary.total.protein | de_num }}g P · {{ summary.total.carbs | de_num }}g KH · {{ summary.total.fat | de_num }}g F</span>
         <span class="row-count">{{ summary.total.meal_count }} Mahlz.</span>
     </div>
 </div>

@@ -157,10 +157,10 @@
             </div>
         </div>
         <div class="logged-macros">
-            <span><b>{{ logged_meal.calories | int if logged_meal.calories is not none else "—" }}</b>kcal</span>
-            <span><b>{{ logged_meal.protein if logged_meal.protein is not none else "—" }}</b>g Eiweiß</span>
-            <span><b>{{ logged_meal.carbs if logged_meal.carbs is not none else "—" }}</b>g Kohlenhydrate</span>
-            <span><b>{{ logged_meal.fat if logged_meal.fat is not none else "—" }}</b>g Fett</span>
+            <span><b>{{ logged_meal.calories | de_num(0) }}</b>kcal</span>
+            <span><b>{{ logged_meal.protein | de_num }}</b>g Eiweiß</span>
+            <span><b>{{ logged_meal.carbs | de_num }}</b>g Kohlenhydrate</span>
+            <span><b>{{ logged_meal.fat | de_num }}</b>g Fett</span>
         </div>
         <div class="logged-actions">
             <button type="button" class="btn sm ghost" data-correct-id="{{ logged_meal.id }}">Korrigieren</button>
@@ -173,33 +173,33 @@
 <div class="totals-grid">
     <div class="totals-card totals-card--cal">
         <div class="label">kcal</div>
-        <div class="value">{{ totals.calories | int }}</div>
+        <div class="value">{{ totals.calories | de_num(0) }}</div>
         {% if progress.calories %}
-        <div class="goal-meta">Ziel {{ progress.calories.target | int }} · {{ progress.calories.percent }}%{% if progress.calories.over %} · über Ziel{% endif %}</div>
+        <div class="goal-meta">Ziel {{ progress.calories.target | de_num(0) }} · {{ progress.calories.percent }}%{% if progress.calories.over %} · über Ziel{% endif %}</div>
         <div class="goal-bar"><div class="goal-bar__fill{% if progress.calories.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.calories.bar_pct }}%"></div></div>
         {% endif %}
     </div>
     <div class="totals-card">
         <div class="label">Protein</div>
-        <div class="value">{{ totals.protein }}<span class="unit">g</span></div>
+        <div class="value">{{ totals.protein | de_num }}<span class="unit">g</span></div>
         {% if progress.protein %}
-        <div class="goal-meta">Ziel {{ progress.protein.target }}g · {{ progress.protein.percent }}%{% if progress.protein.over %} · über Ziel{% endif %}</div>
+        <div class="goal-meta">Ziel {{ progress.protein.target | de_num }}g · {{ progress.protein.percent }}%{% if progress.protein.over %} · über Ziel{% endif %}</div>
         <div class="goal-bar"><div class="goal-bar__fill{% if progress.protein.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.protein.bar_pct }}%"></div></div>
         {% endif %}
     </div>
     <div class="totals-card">
         <div class="label">Kohlenhydrate</div>
-        <div class="value">{{ totals.carbs }}<span class="unit">g</span></div>
+        <div class="value">{{ totals.carbs | de_num }}<span class="unit">g</span></div>
         {% if progress.carbs %}
-        <div class="goal-meta">Ziel {{ progress.carbs.target }}g · {{ progress.carbs.percent }}%{% if progress.carbs.over %} · über Ziel{% endif %}</div>
+        <div class="goal-meta">Ziel {{ progress.carbs.target | de_num }}g · {{ progress.carbs.percent }}%{% if progress.carbs.over %} · über Ziel{% endif %}</div>
         <div class="goal-bar"><div class="goal-bar__fill{% if progress.carbs.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.carbs.bar_pct }}%"></div></div>
         {% endif %}
     </div>
     <div class="totals-card">
         <div class="label">Fett</div>
-        <div class="value">{{ totals.fat }}<span class="unit">g</span></div>
+        <div class="value">{{ totals.fat | de_num }}<span class="unit">g</span></div>
         {% if progress.fat %}
-        <div class="goal-meta">Ziel {{ progress.fat.target }}g · {{ progress.fat.percent }}%{% if progress.fat.over %} · über Ziel{% endif %}</div>
+        <div class="goal-meta">Ziel {{ progress.fat.target | de_num }}g · {{ progress.fat.percent }}%{% if progress.fat.over %} · über Ziel{% endif %}</div>
         <div class="goal-bar"><div class="goal-bar__fill{% if progress.fat.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.fat.bar_pct }}%"></div></div>
         {% endif %}
     </div>
@@ -214,12 +214,12 @@
         <div class="row-main">
             <div class="row-title">{{ meal.description }}</div>
             <div class="row-sub">
-                {{ (meal.protein | string + "g P") if meal.protein is not none else "—" }} ·
-                {{ (meal.carbs | string + "g KH") if meal.carbs is not none else "—" }} ·
-                {{ (meal.fat | string + "g F") if meal.fat is not none else "—" }}
+                {{ meal.protein | de_num }}{% if meal.protein is not none %}g P{% endif %} ·
+                {{ meal.carbs | de_num }}{% if meal.carbs is not none %}g KH{% endif %} ·
+                {{ meal.fat | de_num }}{% if meal.fat is not none %}g F{% endif %}
             </div>
         </div>
-        <span class="row-cal">{{ meal.calories if meal.calories is not none else "—" }} kcal</span>
+        <span class="row-cal">{{ meal.calories | de_num(0) }} kcal</span>
         <div class="row-actions">
             <button type="button" class="row-btn" data-action="edit">Bearbeiten</button>
         </div>

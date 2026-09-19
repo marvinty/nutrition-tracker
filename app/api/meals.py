@@ -57,6 +57,11 @@ async def log_meal_from_text(
 ) -> LogResponse:
     if not body.text.strip():
         raise HTTPException(status_code=400, detail="Schreib zuerst, was du gegessen hast.")
+    # Datum vorab prüfen, wie in audio.py: run_analysis prüft es erst, nachdem das
+    # Modell geantwortet hat, und bei einer Rückfrage sogar erst in der übernächsten
+    # Runde. Ein Datum in der Zukunft kostet sonst einen LLM-Aufruf, bevor es
+    # auffällt — und der ist bezahlt, ob die Anfrage gültig war oder nicht.
+    _timestamp_for(body.log_date)
 
     messages = [{"role": "user", "content": body.text}]
     try:
@@ -76,6 +81,7 @@ async def clarify_meal(
 ) -> LogResponse:
     if not body.messages:
         raise HTTPException(status_code=400, detail="Der Verlauf zur Rückfrage fehlt. Beschreib die Mahlzeit noch einmal.")
+    _timestamp_for(body.log_date)
 
     messages = [m.model_dump() for m in body.messages]
     try:
