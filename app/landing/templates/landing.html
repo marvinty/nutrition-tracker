@@ -74,12 +74,13 @@
   .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;
     color:var(--accent);background:var(--accent-soft);padding:7px 14px;border-radius:99px;
     letter-spacing:.01em}
-  .eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);
-    animation:pulse 2s ease-in-out infinite}
   h1.hero-h{font-family:var(--serif);font-weight:500;letter-spacing:-.03em;line-height:1.02;
-    font-size:clamp(48px,8.5vw,116px);margin:26px 0 0;text-wrap:balance}
+    /* Obergrenze von 116 auf 84: bei 116px brach die Überschrift in der 609px
+       breiten Spalte auf vier Zeilen um (473px hoch) und schob den CTA auf
+       top:889px — unter die Falz jedes 900er-Laptops. */
+    font-size:clamp(48px,6.5vw,84px);margin:26px 0 0;text-wrap:balance}
   h1.hero-h em{font-style:italic;color:var(--accent)}
-  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:end;margin-top:14px}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;margin-top:14px}
   .hero-sub{font-size:19px;color:var(--text-muted);max-width:44ch;margin-top:24px;text-wrap:pretty}
   .hero-ctas{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:32px}
   .hero-note{font-size:14px;color:var(--text-subtle);margin-top:16px}
@@ -181,7 +182,6 @@
   .rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
   .rv.in{opacity:1;transform:none}
 
-  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
   @keyframes ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.9);opacity:0}}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
@@ -232,10 +232,10 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="eyebrow rv"><span class="pulse"></span>Voice-first Ernährungslog</span>
+    <span class="eyebrow rv">Voice-first Ernährungslog</span>
     <div class="hero-grid">
       <div>
-        <h1 class="hero-h rv">Sag einfach,<br>was du <em>gegessen</em> hast.</h1>
+        <h1 class="hero-h rv">Sag einfach, was du <em>gegessen</em> hast.</h1>
         <p class="hero-sub rv">Kein Klicken durch Lebensmitteldatenbanken, keine Portionsgrößen. Sprich einen Satz ein oder tipp ihn — Kalorien und Makros landen automatisch im Tagesprotokoll.</p>
         <div class="hero-ctas rv">
           <a class="btn lg" href="/register">Jetzt registrieren
@@ -256,10 +256,10 @@
         <div class="demo-quote"><span id="typed"></span><span class="caret"></span></div>
         <div class="demo-arrow"><span>im Log</span><span class="line"></span></div>
         <div class="macros" id="macros">
-          <div class="macro kcal"><div class="k">kcal</div><div class="v num">540</div></div>
-          <div class="macro"><div class="k">Eiweiß</div><div class="v num">46<span class="u">g</span></div></div>
-          <div class="macro"><div class="k">Kohl.</div><div class="v num">58<span class="u">g</span></div></div>
-          <div class="macro"><div class="k">Fett</div><div class="v num">12<span class="u">g</span></div></div>
+          <div class="macro kcal"><div class="k">kcal</div><div class="v num">410</div></div>
+          <div class="macro"><div class="k">Eiweiß</div><div class="v num">13<span class="u">g</span></div></div>
+          <div class="macro"><div class="k">Kohl.</div><div class="v num">66<span class="u">g</span></div></div>
+          <div class="macro"><div class="k">Fett</div><div class="v num">9<span class="u">g</span></div></div>
         </div>
       </div>
     </div>
@@ -275,22 +275,22 @@
       <p class="sec-lede">Kein Suchen, kein Scrollen durch Treffer, kein Abwiegen. Du beschreibst deine Mahlzeit so, wie du sie einem Menschen beschreiben würdest.</p>
     </div>
 
-    <div class="bento" style="grid-template-columns:repeat(3,1fr)">
-      <div class="card rv">
+    <div class="bento">
+      <div class="card third rv">
         <div class="ico">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
         </div>
         <h3>1 — Einsprechen oder tippen</h3>
-        <p>Aufnahme starten und die Mahlzeit sagen, oder „gegrilltes Hähnchen mit Reis“ tippen. Beides führt zum selben Ziel.</p>
+        <p>Aufnahme starten und die Mahlzeit sagen, oder „Müsli mit Joghurt und Banane“ tippen. Beides führt zum selben Ziel.</p>
       </div>
-      <div class="card rv feat">
+      <div class="card third rv feat">
         <div class="ico">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
         </div>
         <h3>2 — Wird ausgewertet</h3>
         <p>Sprache wird transkribiert, der Satz interpretiert und in Kalorien, Eiweiß, Kohlenhydrate und Fett übersetzt.</p>
       </div>
-      <div class="card rv">
+      <div class="card third rv">
         <div class="ico">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
@@ -429,7 +429,7 @@
   }
 
   // hero demo: typewriter → macros
-  var phrase = 'gegrilltes Hähnchen mit Reis';
+  var phrase = 'Müsli mit Joghurt und Banane';
   var typedEl = document.getElementById('typed');
   var macros = document.getElementById('macros').querySelectorAll('.macro');
   function showMacros(){ macros.forEach(function(m,i){ setTimeout(function(){ m.classList.add('in'); }, i*120); }); }
