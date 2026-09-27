@@ -6,7 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MacroMic — a voice-first nutrition log. The user says what they ate, Whisper transcribes it,
 an LLM estimates macros, the meal is saved. FastAPI + async SQLAlchemy + SQLite, with a
-server-rendered Jinja2 UI. Deployed as Docker Compose on a home Proxmox box behind Caddy.
+server-rendered Jinja2 UI. Deployed as Docker Compose on a home Proxmox box behind Caddy, which runs in the shared
+`marvinty/homelab-edge` stack (see `/deploy`).
 
 ## Commands
 
