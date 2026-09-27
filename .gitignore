@@ -38,3 +38,8 @@ data/
 
 # Lokale Compose-Override (Entwicklungswerte, teils Passwoerter) — pro Maschine.
 docker-compose.override.yml
+
+# Impeccable: verworfene Mockups und gerenderte Vorschauen — Arbeitsmaterial,
+# teils mit base64-eingebetteten Schriften. Die Artefakte, die zaehlen
+# (design.json, surfaces/), sind versioniert.
+.impeccable/mocks/

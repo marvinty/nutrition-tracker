@@ -1,107 +1,272 @@
-{% extends "base.html" %}
+{% extends "base_bon.html" %}
 
-{% block title %}Dashboard — {{ selected_label }}{% endblock %}
+{% block title %}Tagesbon — {{ selected_label }}{% endblock %}
 
 {% block extra_head %}
 <style>
-    .log-card{gap:4px}
-    .log-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:22px;flex-wrap:wrap}
-    .log-head h3{margin-bottom:2px}
-    .log-head > div{flex:1;min-width:220px}
-    .credit-badge{font-size:12px;font-weight:500;color:var(--text-muted);background:var(--surface);
-        border:1px solid var(--border);border-radius:99px;padding:6px 13px;white-space:nowrap}
-    .credit-badge.credit-line--blocked{color:var(--danger);border-color:var(--danger);background:var(--danger-soft)}
-    .credit-link{font-size:12px;color:var(--text-muted);white-space:nowrap}
+    /* ---------- Bonkopf: Datum und Tageswechsel ---------- */
+    .day-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
+    .day-line .tag{font-size:var(--t-print);color:var(--faint);letter-spacing:.04em}
+    .day-nav{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+    .nav-btn{
+        display:inline-grid;place-items:center;min-width:32px;min-height:32px;
+        font:inherit;font-size:var(--t-label);line-height:1;color:var(--ink-2);
+        border:1px solid var(--rule);background:transparent;text-decoration:none;
+    }
+    .nav-btn:hover{border-color:var(--ink);color:var(--ink);text-decoration:none}
+    .nav-btn svg{width:15px;height:15px}
+    .nav-btn.is-disabled{color:var(--rule);border-color:var(--rule-soft);pointer-events:none}
+    .nav-btn.nav-today{min-width:auto;padding:0 9px;font-size:var(--t-label);letter-spacing:.12em;text-transform:uppercase}
+    .day-nav input[type=date]{
+        width:auto;min-height:32px;padding:2px 4px;font-size:var(--t-print);
+        border:0;border-bottom:1px solid var(--rule);background:transparent;color:var(--ink-2);
+    }
+    .day-nav input[type=date]:focus{background:transparent}
+    .bon-datum{
+        font-family:var(--display);font-weight:700;font-size:var(--d-datum);line-height:1.05;
+        letter-spacing:.01em;margin-top:10px;text-align:center;
+    }
 
-    /* Quittung nach einer fertigen Schaetzung. Rahmen wie .row-edit — dieselbe
-       Sprache fuer "diese eine Zeile ist gerade dran". Bewusst nicht die Optik der
-       Rueckfrage: die gehoert dem Gespraech, das hier ist das Ergebnis. */
-    .logged{margin-top:18px;padding:18px 20px;border-radius:16px;background:var(--surface);
-        border:1px solid var(--accent)}
-    .logged-head{display:flex;align-items:flex-start;gap:12px}
-    .logged-tick{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
-        display:grid;place-items:center;flex:none;margin-top:1px}
-    .logged-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-        color:var(--text-muted)}
-    .logged-desc{font-family:var(--serif);font-size:19px;line-height:1.3;margin-top:3px;
-        overflow-wrap:anywhere}
-    .logged-macros{display:flex;flex-wrap:wrap;gap:6px 18px;margin:14px 0 0 38px;
-        font-size:14px;color:var(--text-muted)}
-    .logged-macros b{font-family:var(--serif);font-size:17px;font-weight:500;color:var(--text);
-        font-variant-numeric:tabular-nums;margin-right:3px}
-    .logged-actions{margin:14px 0 0 38px}
-    @media(max-width:640px){
-        .logged-macros,.logged-actions{margin-left:0}
+    /* ---------- Eingabe: die Arbeit steht vor der Bilanz ---------- */
+    .erfassen{padding:18px 0 4px;border-top:2px solid var(--ink);margin-top:14px}
+    .erfassen h2{font:inherit;font-size:var(--t-line);font-weight:700;margin-bottom:3px;letter-spacing:0;
+        text-transform:none;color:var(--ink);padding:0}
+    .erfassen .hint{font-size:var(--t-print);color:var(--faint);margin-bottom:14px;max-width:40ch}
+    .log-form{display:flex;flex-wrap:wrap;gap:9px;align-items:stretch}
+    .log-form input[type=text]{flex:1 1 100%}
+    .log-form .btn{flex:1 1 auto}
+    /* Die Sprachtaste ist die Hauptaktion eines Voice-first-Logs und traegt
+       deshalb den invertierten Druck. Rot kommt erst, wenn wirklich aufgenommen
+       wird — dann ist es ein offener Vorgang, kein Angebot. */
+    .btn.ink{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+    .btn.ink:hover:not(:disabled){background:transparent;color:var(--ink)}
+    .btn.ink.is-recording{background:var(--red);border-color:var(--red);color:var(--paper)}
+    .btn.ink.is-recording:hover:not(:disabled){background:transparent;color:var(--red)}
+    .rec-indicator{
+        display:inline-flex;align-items:center;gap:8px;margin-top:11px;
+        font-size:var(--t-label);letter-spacing:.14em;text-transform:uppercase;color:var(--red);
     }
-    /* Ein einziger authored Moment: die Quittung kommt herein, die dazugehoerige
-       Zeile in der Liste leuchtet einmal auf. Sonst bewegt sich auf der Seite nichts. */
-    .logged{animation:logged-in .42s cubic-bezier(.16,1,.3,1) both}
-    .row-item--logged{animation:row-lit 1.8s ease-out both}
-    @keyframes logged-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-    @keyframes row-lit{0%{background:var(--accent-soft);border-color:var(--accent)}
-        100%{background:var(--surface);border-color:var(--border)}}
-    @media(prefers-reduced-motion:reduce){
-        /* Der Zustand bleibt sichtbar, nur die Bewegung faellt weg — die Quittung
-           ist serverseitig gerendert, sie ist ohne Animation schon da. */
-        .row-item--logged{background:var(--accent-soft);border-color:var(--accent)}
+    .rec-indicator::before{
+        content:"";width:9px;height:9px;border-radius:50%;background:var(--red);
+        animation:rec-blink 1.4s steps(1,end) infinite;
     }
-    .credit-link:hover{color:var(--accent)}
-    h2.sub-h .count{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--text-subtle);
-        background:var(--surface-2);border-radius:99px;padding:3px 11px;vertical-align:middle;margin-left:6px}
-    @media(max-width:640px){
-        .log-head{gap:14px;margin-bottom:18px;align-items:center}
-        /* the badge is the least important thing here — send it below the heading,
-           and keep its link directly under it rather than stranded mid-row */
-        .credit-badge{order:99;width:100%;text-align:center;white-space:normal}
-        .credit-link{order:100;width:100%;text-align:center}
-        /* Die 640er-Regeln in base.html regeln .row-day/.row-macros — das sind die
-           Klassen von history.html. Die Mahlzeitenzeile hier besteht aus .row-time
-           (46px), .row-main, .row-cal (~75px) und .row-actions (~92px); in einer
-           297px breiten Karte bleiben für die Beschreibung ~48px, und sie stapelt
-           zu einer schmalen Säule. Beschreibung kriegt die erste Zeile für sich,
-           Uhrzeit/kcal/Bearbeiten rücken darunter. */
-        .row-main{flex-basis:100%;order:-1}
-        .row-actions{margin-left:auto}
+    @keyframes rec-blink{0%,55%{opacity:1}56%,100%{opacity:.25}}
+    @media(prefers-reduced-motion:reduce){.rec-indicator::before{opacity:1}}
+
+    .credit-zeile{
+        display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;
+        margin-top:14px;padding-top:9px;border-top:1px dotted var(--rule);
+        font-size:var(--t-print);color:var(--faint);
     }
-    /* Eine Beschreibung ohne Leerzeichen (langer Produktname) schiebt die Zeile
-       sonst über den Viewport hinaus — body{overflow-x:hidden} kaschiert das nur. */
-    .row-title{overflow-wrap:anywhere}
+    .credit-zeile.credit-line--blocked #credit-line{color:var(--red);font-weight:500}
+    .credit-zeile a{color:var(--faint)}
+
+    /* ---------- Rueckfrage: der rote Zwischendruck ---------- */
+    .clarify{
+        margin:18px -26px 0;padding:16px 26px 18px;
+        background:var(--grain) repeat,var(--paper-2);border-top:2px solid var(--red);border-bottom:1px solid var(--rule);
+    }
+    .clarify-marke{
+        margin-bottom:9px;text-align:center;font-size:var(--t-label);font-weight:700;
+        letter-spacing:.2em;text-transform:uppercase;color:var(--red);
+    }
+    .clarify-question{font-size:var(--t-line);line-height:1.4;font-weight:700;max-width:34ch;margin-bottom:12px}
+    .clarify input[type=text]{background:var(--paper-2)}
+
+    /* ---------- Quittung nach einer fertigen Schaetzung ---------- */
+    .gebucht{
+        margin:18px -26px 0;padding:16px 26px 18px;
+        background:var(--grain) repeat,var(--paper-2);border-top:2px solid var(--ink);border-bottom:1px solid var(--rule);
+        animation:gebucht-ein .38s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes gebucht-ein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .gebucht-marke{
+        display:flex;align-items:center;gap:8px;margin-bottom:8px;
+        font-size:var(--t-label);font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);
+    }
+    .gebucht-marke svg{width:15px;height:15px}
+    .gebucht-desc{font-size:var(--t-line);line-height:1.35;font-weight:700;overflow-wrap:anywhere}
+    .gebucht-werte{
+        display:flex;flex-wrap:wrap;gap:3px 16px;margin-top:10px;
+        font-size:var(--t-print);color:var(--faint);
+    }
+    .gebucht-werte b{font-weight:700;color:var(--ink);margin-right:3px}
+    .gebucht .btn{margin-top:13px}
+    /* Die frisch gebuchte Zeile leuchtet einmal auf — ein einziger Moment auf der Seite. */
+    .pos--neu{animation:pos-lit 1.8s ease-out both}
+    @keyframes pos-lit{0%{background:var(--paper-2)}100%{background:transparent}}
+    @media(prefers-reduced-motion:reduce){.pos--neu{background:var(--paper-2)}}
+
+    /* ---------- Positionen ---------- */
+    /* Derselbe Raster wie .pos, damit jede Beschriftung ueber ihrer Spalte steht.
+       Ein Flex-Kopf mit margin-left:auto kann einem auto-auto-1fr-auto-Raster nicht
+       folgen — und ein Spaltenkopf, der seine Spalte verfehlt, ist in einer
+       gedruckten Tabelle genau der Fehler, den die Form vermeiden soll. */
+    /* Feste Spuren statt auto: zwei getrennte Raster bemessen ihre auto-Spalten
+       an ihrem eigenen Inhalt, und dann steht ZEIT nicht mehr ueber der Uhrzeit. */
+    .pos-liste,.pos-kopf{--pos-cols:26px 46px 1fr auto}
+    .pos-kopf{
+        display:grid;grid-template-columns:var(--pos-cols);gap:2px 8px;
+        margin-top:4px;padding:8px 0;
+        font-size:var(--t-label);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+        border-bottom:1px solid var(--rule);
+    }
+    .pos-kopf .r{text-align:right}
+    .pos{
+        display:grid;
+        grid-template-columns:var(--pos-cols);
+        grid-template-areas:"nr zeit bez kcal" ". . fuss fuss";
+        align-items:baseline;gap:2px 8px;
+        padding:11px 0;border-bottom:1px dotted var(--rule);
+    }
+    .pos-nr{grid-area:nr;font-size:var(--t-print);color:var(--faint)}
+    .pos-zeit{grid-area:zeit;font-size:var(--t-print);color:var(--faint);letter-spacing:.04em}
+        /* Punktfuehrung wie auf jedem Bon: das Pseudoelement ist 100% breit und
+       zieht sich denselben Betrag als negativen Aussenabstand wieder ab, steht
+       also in der letzten Zeile der Bezeichnung und verbraucht keinen Platz.
+       overflow:hidden schneidet den Ueberhang an der Spaltenkante ab. */
+    /* Punktfuehrung als Geschwister, nicht als Pseudoelement in einem
+       overflow:hidden-Kasten: ein Scroll-Container exportiert keine Grundlinie,
+       und die Zeile richtet sich an der Grundlinie aus. */
+    .pos-bez{grid-area:bez;display:flex;align-items:baseline;gap:7px;
+        font-size:var(--t-line);line-height:1.35;font-weight:500}
+    .pos-bez__t{flex:0 1 auto;min-width:0;overflow-wrap:anywhere}
+    .pos-bez__lead{flex:1 1 12px;min-width:12px;height:1px;
+        border-bottom:1px dotted var(--lead);transform:translateY(-4px)}
+    .pos-kcal{grid-area:kcal;justify-self:end;font-size:var(--t-line);font-weight:700}
+        /* Die Werte selbst brechen nie: der Umbruch faellt zwischen zwei Makros,
+       nicht zwischen Zahl und Einheit. */
+    .pos-mak{min-width:0;font-size:var(--t-print);color:var(--faint)}
+    .pos-mak span{white-space:nowrap}
+    /* Makrozeile und "Korrigieren" teilen eine Zeile ueber beide rechten Spuren.
+       Der Knopf in einer eigenen Spur wuerde die Spur so breit wie sein Wort
+       machen und der Bezeichnung 60px wegnehmen. */
+    .pos-fuss{grid-area:fuss;display:flex;flex-wrap:wrap;align-items:baseline;
+        justify-content:space-between;gap:2px 12px;margin-top:2px}
+    .pos-edit-btn{
+        white-space:nowrap;
+        font:inherit;font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;
+        background:none;border:0;border-bottom:1px solid var(--rule);color:var(--ink-2);
+        cursor:pointer;padding:1px 0;
+    }
+    .pos-edit-btn:hover{color:var(--ink);border-color:var(--ink)}
+
+    /* ---------- Korrektur ---------- */
+    .pos-form{
+        padding:15px 0 17px;border-bottom:1px dotted var(--rule);
+    }
+    .pos-form__felder{
+        display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:13px;
+    }
+    .pos-form__feld{display:flex;flex-direction:column;gap:3px}
+    .pos-form__feld input{font-size:var(--t-line);min-height:40px;padding:6px 2px}
+    .pos-form__aktionen{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:15px}
+    .pos-form__aktionen .status{margin-top:0}
+    .pos-loeschen{
+        margin-left:auto;display:grid;place-items:center;width:38px;height:38px;
+        background:none;border:1px solid var(--rule);color:var(--faint);cursor:pointer;
+    }
+    .pos-loeschen:hover{border-color:var(--red);color:var(--red)}
+    .pos-loeschen svg{width:16px;height:16px}
+    @media(max-width:430px){
+        .pos-form__felder{grid-template-columns:repeat(2,1fr)}
+        /* .roll geht bei 430px auf 17px Polsterung herunter; die randlosen Bloecke
+           muessen mitgehen, sonst haengen sie neun Pixel ueber das Papier hinaus
+           und die Seite schiebt sich ueber den Viewport. */
+        .clarify,.gebucht{margin-left:-17px;margin-right:-17px;padding-left:17px;padding-right:17px}
+    }
+    @media(pointer:coarse){
+        .pos-edit-btn{min-height:44px}
+        .pos-loeschen{width:44px;height:44px}
+    }
+
+    /* ---------- Summe ---------- */
+    .summe{margin-top:18px;border-top:3px double var(--ink);padding-top:12px}
+    .summe-zeile{
+        display:flex;align-items:baseline;gap:8px;padding:3px 0;
+        font-size:var(--t-print);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);
+    }
+    .summe-zeile .lead{flex:1;min-width:20px;border-bottom:1px dotted var(--lead);transform:translateY(-3px)}
+    .summe-zeile .wert{font-size:var(--t-line);text-transform:none;color:var(--ink);font-weight:500;letter-spacing:0}
+    .rest{display:flex;align-items:baseline;gap:9px;margin-top:9px;padding-top:10px;
+        border-top:1px solid var(--rule)}
+    .rest-label{font-size:var(--t-label);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
+    .rest-zahl{
+        margin-left:auto;font-family:var(--display);font-weight:800;
+        font-size:var(--d-zahl);line-height:.82;letter-spacing:.005em;
+    }
+    .rest-einheit{font-size:var(--t-print);letter-spacing:.08em;color:var(--ink-2)}
+    .summe-hinweis{margin-top:10px;font-size:var(--t-print);color:var(--faint)}
+    .rest--ueber .rest-zahl,.rest--ueber .rest-label{color:var(--red)}
+
+    /* ---------- Naehrwerte ---------- */
+    .mtab{width:100%;border-collapse:collapse;margin-top:22px;font-size:var(--t-print)}
+    .mtab caption{
+        text-align:left;font-size:var(--t-label);letter-spacing:.18em;text-transform:uppercase;
+        color:var(--faint);padding-bottom:6px;
+    }
+    .mtab th,.mtab td{padding:7px 0;text-align:right;font-weight:400}
+    .mtab thead th{
+        font-size:var(--t-label);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);
+        border-bottom:1px solid var(--ink);
+    }
+    .mtab tbody th,.mtab thead th:first-child{text-align:left}
+    .mtab tbody th{font-weight:500}
+    .mtab tbody tr{border-bottom:1px dotted var(--rule)}
+    .mtab .ist{font-weight:700}
+    .mtab .offen{color:var(--ink-2)}
+    .mtab .offen--ueber{color:var(--red)}
+    .mtab .kein-ziel{color:var(--faint)}
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="page-head">
-    <div>
-        <span class="sec-tag">{% if is_today %}Heute{% else %}Rückblick{% endif %}</span>
-        <h1 class="page-h">{{ selected_label }}</h1>
-    </div>
-    <div class="day-nav">
-        <a href="/dashboard?d={{ prev_date }}" class="nav-btn" aria-label="Vorheriger Tag">‹</a>
-        {% if next_date %}
-        <a href="/dashboard?d={{ next_date }}" class="nav-btn" aria-label="Nächster Tag">›</a>
-        {% else %}
-        <span class="nav-btn is-disabled" aria-hidden="true">›</span>
-        {% endif %}
-        <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}" aria-label="Datum wählen">
-        {% if not is_today %}
-        <a href="/dashboard" class="nav-btn">Heute</a>
-        {% endif %}
+{% block bonmeta %}
+<div class="bon-meta">
+    <div class="day-line" style="flex:1">
+        <span class="tag">{% if is_today %}Heute{% else %}Rückblick{% endif %}</span>
+        <div class="day-nav">
+            <a href="/dashboard?d={{ prev_date }}" class="nav-btn" aria-label="Vorheriger Tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 5 7.5 12 14.5 19"/></svg></a>
+            {% if next_date %}
+            <a href="/dashboard?d={{ next_date }}" class="nav-btn" aria-label="Nächster Tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9.5 5 16.5 12 9.5 19"/></svg></a>
+            {% else %}
+            <span class="nav-btn is-disabled" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9.5 5 16.5 12 9.5 19"/></svg></span>
+            {% endif %}
+            <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}" aria-label="Datum wählen">
+            {% if not is_today %}
+            <a href="/dashboard" class="nav-btn nav-today">Heute</a>
+            {% endif %}
+        </div>
     </div>
 </div>
+<h1 class="bon-datum">{{ selected_label }}</h1>
+{% endblock %}
 
-<div class="card feat log-card">
-    <div class="log-head">
-        <span class="ico">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><path d="M12 18v4"/></svg>
-        </span>
-        <div>
-            <h3 id="log-card-title">Sag einfach, was du gegessen hast.</h3>
-            <p class="hint">Sprich einen Satz ein oder tipp ihn — Makros landen automatisch im Log.</p>
-        </div>
-        {# Zwei Arten von "aus": das Systemlimit trifft alle, das eigene Limit nur dich.
-           Vorher wurde nur das erste angezeigt — ein eigenes Limit von 0 sah aus wie
-           jeder andere Wert, und der Nutzer erfuhr davon erst durch den 429. #}
-        <span id="credit-line" class="credit-badge{% if credits_blocked %} credit-line--blocked{% endif %}">
+{% block content %}
+
+<section class="erfassen">
+    <h2 id="log-card-title">Sag einfach, was du gegessen hast.</h2>
+    <p class="hint">Sprich einen Satz ein oder tipp ihn — die Makros landen als Position auf dem Bon.</p>
+
+    <form id="text-meal-form" class="log-form">
+        {# Die Ueberschrift des Blocks ist das Label des Feldes — ein zweites darueber
+           wuerde dasselbe zweimal sagen. Platzhalter sind Beispiele, keine Labels. #}
+        <input type="text" id="meal-text-input" aria-labelledby="log-card-title"
+               placeholder="z.B. gegrilltes Hähnchen mit Reis" enterkeyhint="send"
+               autocapitalize="sentences" required{% if credits_blocked %} disabled{% endif %}>
+        <button type="submit" id="text-submit-btn" class="btn"{% if credits_blocked %} disabled{% endif %}>Loggen</button>
+        <button type="button" id="record-btn" class="btn ink" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen"{% if credits_blocked %} disabled{% endif %}>Sprechen</button>
+    </form>
+    {# Ausserhalb des Formulars: innerhalb veraendert das Einblenden die intrinsische
+       Breite der Flex-Zeile und loest mitten in der Aufnahme einen Reflow aus. #}
+    <span id="record-indicator" class="rec-indicator hidden" role="status">Aufnahme läuft</span>
+    <p id="text-status" class="status" role="status" aria-live="polite"></p>
+    <p id="voice-status" class="status" role="status" aria-live="polite"></p>
+
+    {# Zwei Arten von "aus": das Systemlimit trifft alle, das eigene Limit nur dich.
+       Vorher wurde nur das erste angezeigt — ein eigenes Limit von 0 sah aus wie
+       jeder andere Wert, und der Nutzer erfuhr davon erst durch den 429. #}
+    <p class="credit-zeile{% if credits_blocked %} credit-line--blocked{% endif %}" id="credit-zeile">
+        <span id="credit-line">
             {%- if not credits.system_available -%}
             Systemlimit erreicht — heute keine KI-Analysen
             {%- elif credits.remaining <= 0 -%}
@@ -110,155 +275,158 @@
             noch {{ credits.remaining }} von {{ credits.limit }} Credits heute
             {%- endif -%}
         </span>
-        {# A sibling, not a child of #credit-line: refreshCredits() overwrites that
-           element's textContent and would delete a link nested inside it. #}
-        <a href="/ai-log" class="credit-link">Was habe ich gefragt?</a>
-    </div>
+        {# Ein Geschwister, kein Kind von #credit-line: refreshCredits() ersetzt den
+           textContent dieses Elements und wuerde einen Link darin loeschen. #}
+        <a href="/ai-log">Was habe ich gefragt?</a>
+    </p>
+</section>
 
-    <form id="text-meal-form" class="log-form">
-        {# Die Überschrift der Karte ist das Label des Feldes — ein zweites darüber
-           würde dasselbe zweimal sagen. Platzhalter sind Beispiele, keine Labels. #}
-        <input type="text" id="meal-text-input" aria-labelledby="log-card-title"
-               placeholder="z.B. gegrilltes Hähnchen mit Reis" enterkeyhint="send"
-               autocapitalize="sentences" required{% if credits_blocked %} disabled{% endif %}>
-        <button type="submit" id="text-submit-btn" class="btn"{% if credits_blocked %} disabled{% endif %}>Loggen</button>
-        <button type="button" id="record-btn" class="btn ghost rec" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen"{% if credits_blocked %} disabled{% endif %}>Sprechen</button>
+{# aria-live am Kasten: die Rueckfrage ist der Kern des Produkts und wurde vorher
+   niemandem angesagt. Das Eingabefeld wird von der Frage selbst benannt, damit
+   wer hineinspringt auch hoert, worauf er antwortet. #}
+<section id="clarify-box" class="clarify hidden" role="status" aria-live="polite">
+    <p class="clarify-marke">— Rückfrage —</p>
+    <p id="clarify-question" class="clarify-question"></p>
+    <form id="clarify-form" class="log-form">
+        <input type="text" id="clarify-input" aria-labelledby="clarify-question"
+               placeholder="Deine Antwort" autocomplete="off" enterkeyhint="send" required>
+        <button type="submit" id="clarify-submit-btn" class="btn">Antworten</button>
     </form>
-    {# Außerhalb des Formulars: innerhalb verändert das Einblenden die intrinsische
-       Breite der Flex-Zeile und löst mitten in der Aufnahme einen Reflow aus. #}
-    <span id="record-indicator" class="rec-indicator hidden" role="status">Aufnahme läuft…</span>
-    <p id="text-status" class="status" role="status" aria-live="polite"></p>
-    <p id="voice-status" class="status" role="status" aria-live="polite"></p>
+    <p id="clarify-status" class="status" role="status" aria-live="polite"></p>
+</section>
 
-    {# aria-live am Kasten: die Rückfrage ist der Kern des Produkts und wurde vorher
-       niemandem angesagt. Das Eingabefeld wird von der Frage selbst benannt, damit
-       wer hineinspringt auch hört, worauf er antwortet. #}
-    <div id="clarify-box" class="clarify hidden" role="status" aria-live="polite">
-        <p id="clarify-question" class="clarify-question"></p>
-        <form id="clarify-form" class="log-form">
-            <input type="text" id="clarify-input" aria-labelledby="clarify-question"
-                   placeholder="Deine Antwort…" autocomplete="off" enterkeyhint="send" required>
-            <button type="submit" id="clarify-submit-btn" class="btn">Antworten</button>
-        </form>
-        <p id="clarify-status" class="status" role="status" aria-live="polite"></p>
-    </div>
+{% if logged_meal %}
+{# Der Moment nach der Schaetzung. Vorher war er ein window.location.reload() —
+   der Nutzer sprach, wartete und landete wieder im leeren Formular. #}
+<section class="gebucht">
+    <p class="gebucht-marke">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        Gebucht
+    </p>
+    <p class="gebucht-desc">{{ logged_meal.description }}</p>
+    <p class="gebucht-werte">
+        <span><b>{{ logged_meal.calories | de_num(0) }}</b>kcal</span>
+        <span><b>{{ logged_meal.protein | de_num }}</b>g Eiweiß</span>
+        <span><b>{{ logged_meal.carbs | de_num }}</b>g Kohlenhydrate</span>
+        <span><b>{{ logged_meal.fat | de_num }}</b>g Fett</span>
+    </p>
+    <button type="button" class="btn sm ghost" data-correct-id="{{ logged_meal.id }}">Korrigieren</button>
+</section>
+{% endif %}
 
-    {% if logged_meal %}
-    {# Der Moment nach der Schätzung. Vorher war er ein window.location.reload() —
-       der Nutzer sprach, wartete und landete wieder im leeren Formular. #}
-    <div class="logged">
-        <div class="logged-head">
-            <span class="logged-tick" aria-hidden="true">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </span>
-            <div>
-                <p class="logged-label">Im Log</p>
-                <p class="logged-desc">{{ logged_meal.description }}</p>
-            </div>
-        </div>
-        <div class="logged-macros">
-            <span><b>{{ logged_meal.calories | de_num(0) }}</b>kcal</span>
-            <span><b>{{ logged_meal.protein | de_num }}</b>g Eiweiß</span>
-            <span><b>{{ logged_meal.carbs | de_num }}</b>g Kohlenhydrate</span>
-            <span><b>{{ logged_meal.fat | de_num }}</b>g Fett</span>
-        </div>
-        <div class="logged-actions">
-            <button type="button" class="btn sm ghost" data-correct-id="{{ logged_meal.id }}">Korrigieren</button>
-        </div>
-    </div>
-    {% endif %}
-</div>
-
-<h2 class="sub-h">Tagesbilanz</h2>
-<div class="totals-grid">
-    <div class="totals-card totals-card--cal">
-        <div class="label">kcal</div>
-        <div class="value">{{ totals.calories | de_num(0) }}</div>
-        {% if progress.calories %}
-        <div class="goal-meta">Ziel {{ progress.calories.target | de_num(0) }} · {{ progress.calories.percent }}%{% if progress.calories.over %} · über Ziel{% endif %}</div>
-        <div class="goal-bar"><div class="goal-bar__fill{% if progress.calories.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.calories.bar_pct }}%"></div></div>
-        {% endif %}
-    </div>
-    <div class="totals-card">
-        <div class="label">Protein</div>
-        <div class="value">{{ totals.protein | de_num }}<span class="unit">g</span></div>
-        {% if progress.protein %}
-        <div class="goal-meta">Ziel {{ progress.protein.target | de_num }}g · {{ progress.protein.percent }}%{% if progress.protein.over %} · über Ziel{% endif %}</div>
-        <div class="goal-bar"><div class="goal-bar__fill{% if progress.protein.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.protein.bar_pct }}%"></div></div>
-        {% endif %}
-    </div>
-    <div class="totals-card">
-        <div class="label">Kohlenhydrate</div>
-        <div class="value">{{ totals.carbs | de_num }}<span class="unit">g</span></div>
-        {% if progress.carbs %}
-        <div class="goal-meta">Ziel {{ progress.carbs.target | de_num }}g · {{ progress.carbs.percent }}%{% if progress.carbs.over %} · über Ziel{% endif %}</div>
-        <div class="goal-bar"><div class="goal-bar__fill{% if progress.carbs.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.carbs.bar_pct }}%"></div></div>
-        {% endif %}
-    </div>
-    <div class="totals-card">
-        <div class="label">Fett</div>
-        <div class="value">{{ totals.fat | de_num }}<span class="unit">g</span></div>
-        {% if progress.fat %}
-        <div class="goal-meta">Ziel {{ progress.fat.target | de_num }}g · {{ progress.fat.percent }}%{% if progress.fat.over %} · über Ziel{% endif %}</div>
-        <div class="goal-bar"><div class="goal-bar__fill{% if progress.fat.over %} goal-bar__fill--over{% endif %}" style="width: {{ progress.fat.bar_pct }}%"></div></div>
-        {% endif %}
-    </div>
-</div>
-
-<h2 class="sub-h">Mahlzeiten{% if is_today %} heute{% endif %} <span class="count">{{ totals.meal_count }}</span></h2>
+<h2 class="block-h">Positionen{% if is_today %} heute{% endif %} · {{ totals.meal_count }}</h2>
 {% if meals %}
-<div class="row-list">
+<div class="pos-kopf"><span>Pos</span><span>Zeit</span><span></span><span class="r">kcal</span></div>
+<div class="pos-liste">
     {% for meal in meals %}
-    <div class="row-item{% if logged_meal and meal.id == logged_meal.id %} row-item--logged{% endif %}" data-meal-id="{{ meal.id }}">
-        <span class="row-time">{{ meal.timestamp | localtime }}</span>
-        <div class="row-main">
-            <div class="row-title">{{ meal.description }}</div>
-            <div class="row-sub">
-                {{ meal.protein | de_num }}{% if meal.protein is not none %}g P{% endif %} ·
-                {{ meal.carbs | de_num }}{% if meal.carbs is not none %}g KH{% endif %} ·
-                {{ meal.fat | de_num }}{% if meal.fat is not none %}g F{% endif %}
-            </div>
-        </div>
-        <span class="row-cal">{{ meal.calories | de_num(0) }} kcal</span>
-        <div class="row-actions">
-            <button type="button" class="row-btn" data-action="edit">Bearbeiten</button>
-        </div>
-    </div>
-    <form class="row-edit hidden" data-meal-id="{{ meal.id }}">
-        <input type="text" class="row-edit__desc" id="m{{ meal.id }}-desc" aria-label="Beschreibung der Mahlzeit" value="{{ meal.description }}" placeholder="Beschreibung" required>
-        <div class="row-edit__macros">
-            <div class="row-edit__field">
+    <article class="pos{% if logged_meal and meal.id == logged_meal.id %} pos--neu{% endif %}" data-meal-id="{{ meal.id }}">
+        <span class="pos-nr">{{ loop.index }}</span>
+        <span class="pos-zeit">{{ meal.timestamp | localtime }}</span>
+        <span class="pos-bez"><span class="pos-bez__t">{{ meal.description }}</span><span class="pos-bez__lead" aria-hidden="true"></span></span>
+        <span class="pos-kcal">{{ meal.calories | de_num(0) }}</span>
+        <span class="pos-fuss">
+            <span class="pos-mak">
+                <span>{{ meal.protein | de_num }}{% if meal.protein is not none %}&nbsp;g E{% endif %}</span>
+                <span>· {{ meal.carbs | de_num }}{% if meal.carbs is not none %}&nbsp;g KH{% endif %}</span>
+                <span>· {{ meal.fat | de_num }}{% if meal.fat is not none %}&nbsp;g F{% endif %}</span>
+            </span>
+            <button type="button" class="pos-edit-btn" data-action="edit">Korrigieren</button>
+        </span>
+    </article>
+    <form class="pos-form hidden" data-meal-id="{{ meal.id }}">
+        <input type="text" class="pos-form__desc" id="m{{ meal.id }}-desc" aria-label="Beschreibung der Mahlzeit" value="{{ meal.description }}" placeholder="Beschreibung" required>
+        <div class="pos-form__felder">
+            <div class="pos-form__feld">
                 <label for="m{{ meal.id }}-calories">kcal</label>
                 <input type="number" step="any" id="m{{ meal.id }}-calories" name="calories" value="{{ meal.calories if meal.calories is not none else '' }}">
             </div>
-            <div class="row-edit__field">
-                <label for="m{{ meal.id }}-protein">Protein</label>
+            <div class="pos-form__feld">
+                <label for="m{{ meal.id }}-protein">Eiweiß</label>
                 <input type="number" step="any" id="m{{ meal.id }}-protein" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}">
             </div>
-            <div class="row-edit__field">
-                <label for="m{{ meal.id }}-carbs">Kohlenhydrate</label>
+            <div class="pos-form__feld">
+                <label for="m{{ meal.id }}-carbs">KH</label>
                 <input type="number" step="any" id="m{{ meal.id }}-carbs" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
             </div>
-            <div class="row-edit__field">
+            <div class="pos-form__feld">
                 <label for="m{{ meal.id }}-fat">Fett</label>
                 <input type="number" step="any" id="m{{ meal.id }}-fat" name="fat" value="{{ meal.fat if meal.fat is not none else '' }}">
             </div>
         </div>
-        <div class="row-edit__actions">
-            <button type="submit" class="btn sm row-edit__save">Speichern</button>
-            <button type="button" class="btn sm ghost row-edit__cancel" data-action="cancel">Abbrechen</button>
+        <div class="pos-form__aktionen">
+            <button type="submit" class="btn sm pos-form__save">Speichern</button>
+            <button type="button" class="btn sm ghost" data-action="cancel">Abbrechen</button>
             <span class="status"></span>
-            <button type="button" class="row-edit__delete" data-action="delete" aria-label="Eintrag löschen" title="Löschen">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <button type="button" class="pos-loeschen" data-action="delete" aria-label="Position löschen" title="Löschen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
         </div>
     </form>
     {% endfor %}
 </div>
 {% else %}
-<p class="empty">Keine Mahlzeiten{% if is_today %} heute{% else %} an diesem Tag{% endif %} erfasst.</p>
+<p class="empty">Keine Positionen{% if is_today %} heute{% else %} an diesem Tag{% endif %}.</p>
 {% endif %}
 
+<section class="summe" aria-label="Tagesbilanz">
+    <div class="summe-zeile">
+        <span>Gebucht</span><span class="lead" aria-hidden="true"></span>
+        <span class="wert">{{ totals.calories | de_num(0) }} kcal</span>
+    </div>
+    {% if progress.calories %}
+    <div class="summe-zeile">
+        <span>Tagesziel</span><span class="lead" aria-hidden="true"></span>
+        <span class="wert">{{ progress.calories.target | de_num(0) }} kcal</span>
+    </div>
+    <div class="rest{% if progress.calories.over %} rest--ueber{% endif %}">
+        <span class="rest-label">{% if progress.calories.over %}Über Ziel{% else %}Rest{% endif %}</span>
+        <span class="rest-zahl">{{ (progress.calories.remaining if not progress.calories.over else -progress.calories.remaining) | de_num(0) }}</span>
+        <span class="rest-einheit">kcal</span>
+    </div>
+    {% else %}
+    {# Ohne kcal-Ziel gibt es keinen Rest. Statt einer leeren Zeile traegt die
+       Tagessumme selbst die grosse Zahl, und der Weg zum Ziel steht daneben. #}
+    <div class="rest">
+        <span class="rest-label">Summe</span>
+        <span class="rest-zahl">{{ totals.calories | de_num(0) }}</span>
+        <span class="rest-einheit">kcal</span>
+    </div>
+    <p class="summe-hinweis">Kein Tagesziel gesetzt — <a href="/goals">unter Ziele eintragen</a>.</p>
+    {% endif %}
+</section>
+
+<table class="mtab">
+    <caption>Nährwerte{% if is_today %} heute{% endif %}</caption>
+    <thead>
+        <tr>
+            <th scope="col">Nährwert</th>
+            <th scope="col">Ist</th>
+            <th scope="col">Ziel</th>
+            <th scope="col">Offen</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key, name in [('protein','Eiweiß'), ('carbs','Kohlenhydrate'), ('fat','Fett')] %}
+        {% set p = progress.get(key) %}
+        <tr>
+            <th scope="row">{{ name }}</th>
+            <td class="ist">{{ totals[key] | de_num }} g</td>
+            <td>{% if p %}{{ p.target | de_num }} g{% else %}<span class="kein-ziel">—</span>{% endif %}</td>
+            <td class="offen{% if p and p.over %} offen--ueber{% endif %}">
+                {%- if p -%}
+                {% if p.over %}+{{ -p.remaining | de_num }} g{% else %}{{ p.remaining | de_num }} g{% endif %}
+                {%- else -%}
+                <span class="kein-ziel">—</span>
+                {%- endif -%}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block scripts %}
 <script>
     const SELECTED_DATE = "{{ selected }}";
     // Serverseitig gerendert: stimmt beim ersten Paint, refreshCredits() zieht nach.
@@ -298,7 +466,6 @@
     const clarifyForm = document.getElementById('clarify-form');
     const clarifyInput = document.getElementById('clarify-input');
     const clarifyStatus = document.getElementById('clarify-status');
-    const clarifySubmitBtn = document.getElementById('clarify-submit-btn');
 
     function hideClarify() {
         clarifyBox.classList.add('hidden');
@@ -324,10 +491,11 @@
             // Laeuft nach jeder Rueckfrage — genau dort geht die Null ueber die Kante.
             systemBlocked = !u.system_available;
             creditsBlocked = systemBlocked || u.remaining <= 0;
-            line.classList.toggle('credit-line--blocked', creditsBlocked);
+            document.getElementById('credit-zeile')
+                .classList.toggle('credit-line--blocked', creditsBlocked);
             syncControls();
         } catch (err) {
-            /* the line is cosmetic — leave the stale value rather than break logging */
+            /* die Zeile ist Anzeige — lieber ein veralteter Wert als ein kaputtes Log */
         }
     }
 
@@ -344,7 +512,7 @@
         }
         // complete
         hideClarify();
-        // Kein blankes reload(): die frisch geloggte Mahlzeit wird auf der neu
+        // Kein blankes reload(): die frisch gebuchte Position wird auf der neu
         // geladenen Seite als Quittung gezeigt und ihre Zeile hervorgehoben. Die
         // Summen kommen dabei vom Server, sind also garantiert richtig.
         const id = data.meal && data.meal.id;
@@ -362,7 +530,7 @@
         if (!text) return;
 
         setBusy(true);
-        status.textContent = 'Wird geloggt…';
+        status.textContent = 'Wird gebucht…';
         status.className = 'status';
         hideClarify();
         try {
@@ -450,6 +618,7 @@
                 isRecording = true;
                 setRecordLabel('Stoppen', 'Aufnahme beenden und auswerten');
                 recordBtn.setAttribute('aria-pressed', 'true');
+                recordBtn.classList.add('is-recording');
                 indicator.classList.remove('hidden');
                 voiceStatus.textContent = '';
             } catch (err) {
@@ -461,6 +630,7 @@
             isRecording = false;
             setRecordLabel('Sprechen', 'Mahlzeit per Sprache aufnehmen');
             recordBtn.setAttribute('aria-pressed', 'false');
+            recordBtn.classList.remove('is-recording');
             indicator.classList.add('hidden');
         }
     });
@@ -509,30 +679,30 @@
         voiceStatus.appendChild(again);
     }
 
-    // Edit / delete existing meals.
+    // Positionen korrigieren und loeschen.
     function editFormFor(id) {
-        return document.querySelector(`.row-edit[data-meal-id="${id}"]`);
+        return document.querySelector(`.pos-form[data-meal-id="${id}"]`);
     }
-    function rowItemFor(id) {
-        return document.querySelector(`.row-item[data-meal-id="${id}"]`);
+    function posFor(id) {
+        return document.querySelector(`.pos[data-meal-id="${id}"]`);
     }
 
-    // "Korrigieren" auf der Quittung oeffnet denselben Editor wie "Bearbeiten" in
+    // "Korrigieren" auf der Quittung oeffnet denselben Editor wie "Korrigieren" in
     // der Zeile — eine Korrekturoberflaeche, nicht zwei.
     function openEditor(id) {
         const form = editFormFor(id);
-        const item = rowItemFor(id);
+        const item = posFor(id);
         if (!form || !item) return;
         item.classList.add('hidden');
         form.classList.remove('hidden');
         form.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        const desc = form.querySelector('.row-edit__desc');
+        const desc = form.querySelector('.pos-form__desc');
         if (desc) desc.focus();
     }
 
     // Die Quittung ist ein Moment, kein Zustand: ?logged= verschwindet aus der Adresse,
     // damit ein Neuladen oder ein geteilter Link sie nicht konserviert.
-    if (document.querySelector('.logged') && window.history.replaceState) {
+    if (document.querySelector('.gebucht') && window.history.replaceState) {
         window.history.replaceState({}, '', `/dashboard?d=${SELECTED_DATE}`);
     }
 
@@ -541,26 +711,25 @@
         correctBtn.addEventListener('click', () => openEditor(correctBtn.dataset.correctId));
     }
 
-    document.querySelectorAll('.row-item .row-actions').forEach((actions) => {
-        const item = actions.closest('.row-item');
-        const id = item.dataset.mealId;
-        actions.querySelector('[data-action="edit"]').addEventListener('click', () => openEditor(id));
+    document.querySelectorAll('.pos [data-action="edit"]').forEach((btn) => {
+        const id = btn.closest('.pos').dataset.mealId;
+        btn.addEventListener('click', () => openEditor(id));
     });
 
-    document.querySelectorAll('.row-edit').forEach((form) => {
+    document.querySelectorAll('.pos-form').forEach((form) => {
         const id = form.dataset.mealId;
         const status = form.querySelector('.status');
-        const saveBtn = form.querySelector('.row-edit__save');
+        const saveBtn = form.querySelector('.pos-form__save');
 
         form.querySelector('[data-action="cancel"]').addEventListener('click', () => {
             form.classList.add('hidden');
-            rowItemFor(id).classList.remove('hidden');
+            posFor(id).classList.remove('hidden');
             status.textContent = '';
             status.className = 'status';
         });
 
         form.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-            if (!confirm('Diesen Eintrag löschen?')) return;
+            if (!confirm('Diese Position löschen?')) return;
             status.textContent = 'Wird gelöscht…';
             status.className = 'status';
             try {
@@ -583,7 +752,7 @@
                 return v === '' ? null : parseFloat(v);
             };
             const payload = {
-                description: form.querySelector('.row-edit__desc').value.trim(),
+                description: form.querySelector('.pos-form__desc').value.trim(),
                 calories: num('calories'),
                 protein: num('protein'),
                 carbs: num('carbs'),

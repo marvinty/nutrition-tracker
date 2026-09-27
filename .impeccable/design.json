@@ -1,0 +1,597 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-19T20:40:00Z",
+  "title": "Design System: MacroMic",
+  "extensions": {
+    "colorMeta": {
+      "table": {
+        "role": "neutral",
+        "displayName": "Tischfläche",
+        "canonical": "#123028",
+        "tonalRamp": [
+          "#04120e",
+          "#0a201a",
+          "#123028",
+          "#1b4238",
+          "#2c5347",
+          "#4b7a6c",
+          "#7ba496",
+          "#bcd6cc"
+        ]
+      },
+      "table-dark": {
+        "role": "neutral",
+        "displayName": "Tischrand",
+        "canonical": "#0c231d",
+        "tonalRamp": [
+          "#030c09",
+          "#071711",
+          "#0c231d",
+          "#14352c",
+          "#204b3f",
+          "#3a7162",
+          "#6b9c8d",
+          "#b2cec4"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Thermopapier",
+        "canonical": "#efeee6",
+        "tonalRamp": [
+          "#26251f",
+          "#3d3b33",
+          "#565348",
+          "#726e60",
+          "#96917f",
+          "#bab5a3",
+          "#d9d6c9",
+          "#efeee6"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Abgesetzter Druck",
+        "canonical": "#e6e4da",
+        "tonalRamp": [
+          "#232219",
+          "#39372c",
+          "#514e40",
+          "#6c6857",
+          "#8f8a75",
+          "#b3ae99",
+          "#d2cebd",
+          "#e6e4da"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Druckfarbe",
+        "canonical": "#1b1a15",
+        "tonalRamp": [
+          "#0c0b08",
+          "#1b1a15",
+          "#2e2c24",
+          "#464335",
+          "#63604d",
+          "#8a8670",
+          "#b5b19b",
+          "#dedbcd"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Druckfarbe, zweite Ebene",
+        "canonical": "#4a473e",
+        "tonalRamp": [
+          "#141310",
+          "#26241f",
+          "#37352d",
+          "#4a473e",
+          "#666256",
+          "#8e8a7b",
+          "#b7b3a4",
+          "#e0ddd2"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Verblasst (Kontrastboden)",
+        "canonical": "#696558",
+        "tonalRamp": [
+          "#1a1915",
+          "#2e2c26",
+          "#444138",
+          "#5b574b",
+          "#696558",
+          "#948f7e",
+          "#bcb8a8",
+          "#e3e0d5"
+        ]
+      },
+      "red": {
+        "role": "primary",
+        "displayName": "Registrier-Rot",
+        "canonical": "#c4200d",
+        "tonalRamp": [
+          "#2c0703",
+          "#4b0c05",
+          "#6d1208",
+          "#93190b",
+          "#c4200d",
+          "#e5442f",
+          "#f08772",
+          "#f6e3df"
+        ]
+      },
+      "red-soft": {
+        "role": "primary",
+        "displayName": "Rot-Papier",
+        "canonical": "#f6e3df",
+        "tonalRamp": [
+          "#3a1a15",
+          "#54261f",
+          "#71362c",
+          "#924a3e",
+          "#b46a5e",
+          "#d09a90",
+          "#e6c4bd",
+          "#f6e3df"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Linie",
+        "canonical": "#c9c6b8",
+        "tonalRamp": [
+          "#22211b",
+          "#383629",
+          "#4f4c3c",
+          "#6b6754",
+          "#8e8a73",
+          "#aeaa93",
+          "#c9c6b8",
+          "#e9e7dd"
+        ]
+      },
+      "rule-soft": {
+        "role": "neutral",
+        "displayName": "Linie hell",
+        "canonical": "#dedbcd",
+        "tonalRamp": [
+          "#26251e",
+          "#3d3b2e",
+          "#565241",
+          "#726d58",
+          "#969177",
+          "#b8b39b",
+          "#dedbcd",
+          "#f2f0e8"
+        ]
+      },
+      "lead": {
+        "role": "neutral",
+        "displayName": "Führungspunkt",
+        "canonical": "#b3afa0",
+        "tonalRamp": [
+          "#1f1e18",
+          "#343226",
+          "#4a4737",
+          "#64604b",
+          "#868168",
+          "#a5a08b",
+          "#b3afa0",
+          "#dcd9cf"
+        ]
+      },
+      "on-table": {
+        "role": "neutral",
+        "displayName": "Text auf dem Tisch",
+        "canonical": "#cfe0d8",
+        "tonalRamp": [
+          "#17241f",
+          "#233830",
+          "#324e44",
+          "#43685b",
+          "#5e8a7a",
+          "#86ab9d",
+          "#adc8bd",
+          "#cfe0d8"
+        ],
+        "purpose": "Tischebene: Lesewert für alles, was nicht auf Papier liegt (Wortmarke, Überschriften, Leistenlinks). Linien darauf sind Alpha-Abstufungen desselben Wertes."
+      },
+      "on-table-faint": {
+        "role": "neutral",
+        "displayName": "Text auf dem Tisch, gedämpft",
+        "canonical": "#8fa89e",
+        "tonalRamp": [
+          "#14201c",
+          "#1f322c",
+          "#2c473f",
+          "#3c6055",
+          "#527e70",
+          "#6f9689",
+          "#8fa89e",
+          "#c2d4cd"
+        ],
+        "purpose": "Tischebene, zweite Ebene: Lede, Hinweise, Fußzeile, und die Farbe der Punktführung unter einem betonten Wort."
+      }
+    },
+    "typographyMeta": {
+      "label": {
+        "displayName": "Label",
+        "purpose": "11px Versalien-Beschriftung mit Sperrung 0.1–0.22em. Spaltenköpfe, Feld-Labels, Blocküberschriften, Druckmarken. Nur einzelne Wörter, nie Lesetext — der Boden des Systems."
+      },
+      "print": {
+        "displayName": "Zweitdruck",
+        "purpose": "12.5px. Makro-Unterzeile, Meta, Hinweise, Credits, Knopfbeschriftung, Fußzeile."
+      },
+      "line": {
+        "displayName": "Zeile",
+        "purpose": "15px Lesegrad. Zeilentext, Bezeichnungen, Eingaben, Rückfragen, kcal-Werte."
+      },
+      "datum": {
+        "displayName": "Datum",
+        "purpose": "26px Big Shoulders Display 700. Das h1 im Bonkopf. Auf der Tischebene die Wortmarke in der Leiste — der einzige Auftritt der Displayschrift auf der Landing Page."
+      },
+      "kopf": {
+        "displayName": "Bonkopf",
+        "purpose": "44px (unter 430px 36px) Big Shoulders Display 800 Versalien. Nur die Wortmarke. Auf einer Persuade-Fläche trägt derselbe Grad die Abschnittsüberschrift — dort in Sometype Mono 700."
+      },
+      "zahl": {
+        "displayName": "Die eine Zahl",
+        "purpose": "62px (unter 430px 52px) Big Shoulders Display 800. Rest oder Tagessumme. Genau einmal pro Ansicht. Auf einer Persuade-Fläche trägt der Grad den einen Aufmacher-Titel, in Sometype Mono 700."
+      }
+    },
+    "shadows": [
+      {
+        "name": "papier-auf-tisch",
+        "value": "0 22px 48px -16px rgba(0,0,0,.62), 0 2px 5px rgba(0,0,0,.34)",
+        "purpose": "Die einzige Erhebung im System: Papier auf der Tischfläche. Derselbe Wert auf .roll und auf .beleg. Innerhalb des Papiers gibt es keinen Schatten."
+      }
+    ],
+    "textures": [
+      {
+        "name": "grain",
+        "value": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23k)' opacity='.055'/%3E%3C/svg%3E\")",
+        "purpose": "Papierkorn, 140px gekachelt, 5,5% Deckkraft. Liegt unter JEDER Papierfläche — auch unter der Abrisskante und den randlosen Blöcken."
+      }
+    ],
+    "rules-lines": [
+      {
+        "name": "einfach",
+        "value": "1px solid/dotted var(--rule)",
+        "purpose": "Zeilentrennung (gepunktet), Rahmen von Meta-Zeile und kleinen Bedienelementen (durchgezogen)."
+      },
+      {
+        "name": "block",
+        "value": "2px solid var(--ink)",
+        "purpose": "Anfang eines Blocks; in var(--red) die Oberkante der Rückfrage."
+      },
+      {
+        "name": "abschluss",
+        "value": "3px double var(--ink)",
+        "purpose": "Nur über der Summe. Die Abschlusslinie des Bons."
+      }
+    ],
+    "motion": [
+      {
+        "name": "gebucht-ein",
+        "value": "opacity 0→1, translateY(8px)→0 über .38s cubic-bezier(.16,1,.3,1)",
+        "purpose": "Die Quittung fährt einmal ein. Teil des einen gestalteten Moments: der Buchung."
+      },
+      {
+        "name": "pos-lit",
+        "value": "background var(--paper-2)→transparent über 1.8s ease-out",
+        "purpose": "Die frisch gebuchte Position leuchtet einmal auf. Ruhezustand bei reduced-motion: bleibt auf var(--paper-2)."
+      },
+      {
+        "name": "rec-blink",
+        "value": "opacity 1↔.25 über 1.4s steps(1,end) infinite",
+        "purpose": "Der rote Punkt blinkt nur, solange wirklich aufgenommen wird. Ruhezustand bei reduced-motion: opacity 1."
+      },
+      {
+        "name": "stempel",
+        "value": "background .12s ease-out, color .12s ease-out",
+        "purpose": "Die Umkehrung an Knöpfen. Einziger Zustandsübergang im System."
+      },
+      {
+        "name": "beleg-druck",
+        "value": "opacity 0→1, translateY(5px)→0 über .34s cubic-bezier(.16,1,.3,1), zwei Stufen im Abstand 160ms",
+        "purpose": "Der eine gestaltete Moment der Landing Page: der Beleg druckt sich (Position, dann Tabelle). Ruhezustand bei reduced-motion: opacity 1, keine Animation."
+      },
+      {
+        "name": "caret",
+        "value": "opacity 1↔0 über 1.05s steps(1,end) infinite",
+        "purpose": "Der Schreibbalken während des Tippens. Er wird mit dem letzten Zeichen aus dem DOM entfernt — ein endlos blinkender Balken wäre ein zweiter dauernder Moment. Bei reduced-motion gar nicht erst sichtbar."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "schmal",
+        "value": "430px"
+      },
+      {
+        "name": "boden",
+        "value": "375px"
+      },
+      {
+        "name": "coarse",
+        "value": "(pointer: coarse) — jedes kleine Bedienelement auf min. 44px"
+      },
+      {
+        "name": "tisch-zwei",
+        "value": "900px",
+        "purpose": "Nur Tisch-Oberflächen: ab hier zweispaltig (Aufmacher 1.05fr .95fr, Abschnitt mit Beleg .85fr 1.15fr, zwei gleiche Belege 1fr 1fr). Darunter stapelt alles in Quellreihenfolge."
+      }
+    ],
+    "grid": [
+      {
+        "name": "pos-cols",
+        "value": "26px 46px 1fr auto",
+        "purpose": "Nummer, Zeit, Bezeichnung, kcal. Spaltenkopf und Zeilen teilen dieselbe Variable; zwei getrennte Raster bemessen ihre auto-Spalten am eigenen Inhalt."
+      },
+      {
+        "name": "rolle",
+        "value": "max-width 560px, Rinne 26px (unter 430px 17px)",
+        "purpose": "Eine Spalte, zentriert. Randlose Blöcke ziehen mit negativem Außenabstand über die volle Papierbreite und müssen im 430px-Block mitgehen."
+      },
+      {
+        "name": "tisch",
+        "value": "max-width 1180px, Rinne clamp(16px,4vw,40px)",
+        "purpose": "Die Tischfläche einer Oberfläche, die {% block shell %} ersetzt. Ein Beleg bekommt seine Breite aus der Spalte, in der er liegt, nicht aus einer eigenen max-width."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Beleg auf dem Tisch",
+      "kind": "card",
+      "refersTo": "beleg",
+      "description": "Ein einzelnes Blatt auf der Tischfläche — die zweite Anordnung des Materials neben der durchgehenden Rolle. Korn, Abrisskante und Schatten wie die Rolle, aber ohne Schnittkante; der Belegkopf beschriftet das Blatt.",
+      "html": "<div class=\"ds-beleg\"><div class=\"ds-beleg-kopf\"><span>Beleg</span><span>Beispiel</span></div><p class=\"ds-beleg-zeile\">Du sagst</p><p class=\"ds-beleg-satz\">Müsli mit Joghurt und Banane</p><div class=\"ds-beleg-pos\"><span>Müsli mit Joghurt und Banane</span><span class=\"lead\"></span><span class=\"wert\">410</span></div></div>",
+      "css": ".ds-beleg{position:relative;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23k)' opacity='.055'/%3E%3C/svg%3E\") repeat,#efeee6;color:#1b1a15;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;padding:26px 24px 24px;border-radius:0;box-shadow:0 22px 48px -16px rgba(0,0,0,.62),0 2px 5px rgba(0,0,0,.34)}.ds-beleg::before{content:\"\";position:absolute;left:0;right:0;top:-8px;height:8px;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23k)' opacity='.055'/%3E%3C/svg%3E\") repeat,#efeee6;-webkit-mask:conic-gradient(from -45deg at 50% 0,#000 90deg,#0000 0) 0 0/14px 8px repeat-x;mask:conic-gradient(from -45deg at 50% 0,#000 90deg,#0000 0) 0 0/14px 8px repeat-x}.ds-beleg-kopf{display:flex;justify-content:space-between;gap:10px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#696558;padding-bottom:8px;border-bottom:1px solid #c9c6b8}.ds-beleg-zeile{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#696558;margin-top:14px}.ds-beleg-satz{font-size:15px;line-height:1.4;font-weight:700;margin-top:5px}.ds-beleg-pos{display:flex;align-items:baseline;gap:7px;margin-top:16px;padding-top:12px;border-top:1px solid #c9c6b8;font-size:15px;font-weight:500}.ds-beleg-pos .lead{flex:1;min-width:14px;border-bottom:1px dotted #b3afa0;transform:translateY(-4px)}.ds-beleg-pos .wert{font-weight:700}"
+    },
+    {
+      "name": "Stempelknopf (Outline)",
+      "kind": "button",
+      "refersTo": "btn-stempel",
+      "description": "Die Standardaktion. Harte 1,5px-Kontur, Versalien, kein Radius; Hover kehrt Fläche und Schrift um.",
+      "html": "<button class=\"ds-btn\">Loggen</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;min-height:46px;padding:0 20px;background:transparent;color:#1b1a15;border:1.5px solid #1b1a15;border-radius:0;cursor:pointer;transition:background .12s ease-out,color .12s ease-out}.ds-btn:hover:not(:disabled){background:#1b1a15;color:#efeee6}.ds-btn:focus-visible{outline:2px solid #c4200d;outline-offset:3px}.ds-btn:active:not(:disabled){transform:translateY(1px)}.ds-btn:disabled{opacity:.42;cursor:not-allowed}"
+    },
+    {
+      "name": "Stempelknopf (Ink / Hauptaktion)",
+      "kind": "button",
+      "refersTo": "btn-ink",
+      "description": "Die Umkehrung im Ruhezustand — die Sprachaufnahme, Hauptaktion eines Voice-first-Logs. Hover kehrt zurück auf transparent.",
+      "html": "<button class=\"ds-btn-ink\">Sprechen</button>",
+      "css": ".ds-btn-ink{display:inline-flex;align-items:center;justify-content:center;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;min-height:46px;padding:0 20px;background:#1b1a15;color:#efeee6;border:1.5px solid #1b1a15;border-radius:0;cursor:pointer;transition:background .12s ease-out,color .12s ease-out}.ds-btn-ink:hover:not(:disabled){background:transparent;color:#1b1a15}.ds-btn-ink:focus-visible{outline:2px solid #c4200d;outline-offset:3px}.ds-btn-ink.is-recording{background:#c4200d;border-color:#c4200d;color:#efeee6}.ds-btn-ink.is-recording:hover:not(:disabled){background:transparent;color:#c4200d}"
+    },
+    {
+      "name": "Stempelknopf (Ghost)",
+      "kind": "button",
+      "refersTo": "btn-ghost",
+      "description": "Die zweite Wahl neben einer Hauptaktion: Abbrechen, Korrigieren. Leichtere Kontur, Gewicht 400.",
+      "html": "<button class=\"ds-btn-ghost\">Abbrechen</button>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;justify-content:center;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-size:12.5px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;min-height:46px;padding:0 20px;background:transparent;color:#4a473e;border:1.5px solid #c9c6b8;border-radius:0;cursor:pointer;transition:background .12s ease-out,color .12s ease-out}.ds-btn-ghost:hover:not(:disabled){border-color:#1b1a15;color:#1b1a15}.ds-btn-ghost:focus-visible{outline:2px solid #c4200d;outline-offset:3px}"
+    },
+    {
+      "name": "Papier-Stempel (Tischebene)",
+      "kind": "button",
+      "refersTo": "btn-papier",
+      "description": "Der Primär-CTA einer Oberfläche, die direkt auf dem Tisch steht. Auf dem Grün ist Papier die Umkehrung, die auf dem Papier .ink ist — nie rot. Fokus ringt in Papierfarbe, weil Rot gegen den Tisch nur ~2,4:1 erreicht.",
+      "html": "<a class=\"ds-btn-papier gross\" href=\"#\">Jetzt registrieren<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></a>",
+      "css": ".ds-btn-papier{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;min-height:40px;padding:0 15px;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23k)' opacity='.055'/%3E%3C/svg%3E\") repeat,#efeee6;color:#1b1a15;border:1.5px solid #efeee6;border-radius:0;text-decoration:none;cursor:pointer;transition:background .12s ease-out,color .12s ease-out}.ds-btn-papier:hover{background:transparent;color:#efeee6}.ds-btn-papier:focus-visible{outline:2px solid #efeee6;outline-offset:3px}.ds-btn-papier:active{transform:translateY(1px)}.ds-btn-papier.gross{min-height:56px;padding:0 26px;font-size:12.5px;gap:11px}.ds-btn-papier svg{width:17px;height:17px}"
+    },
+    {
+      "name": "Eingabezeile",
+      "kind": "input",
+      "refersTo": "input-zeile",
+      "description": "Keine Box — Papierfläche mit 1,5px-Unterkante in Druckfarbe. Der Fokus wechselt die Fläche auf abgesetzten Druck.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"z.B. gegrilltes Hähnchen mit Reis\">",
+      "css": ".ds-input{font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-size:15px;color:#1b1a15;background:#efeee6;border:0;border-bottom:1.5px solid #1b1a15;border-radius:0;padding:10px 2px;min-height:46px;width:100%}.ds-input::placeholder{color:#696558}.ds-input:focus{outline:none;background:#e6e4da}.ds-input:focus-visible{outline:2px solid #c4200d;outline-offset:2px}.ds-input:disabled{color:#696558;border-color:#c9c6b8;cursor:not-allowed}"
+    },
+    {
+      "name": "Bereichszeile",
+      "kind": "nav",
+      "refersTo": "nav-bereich",
+      "description": "Gedruckte Bereichsliste, umbrechend statt scrollend. Der aktive Bereich ist voll umgekehrt.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Bereiche\"><a class=\"is-active\" href=\"#\" aria-current=\"page\">Heute</a><a href=\"#\">Verlauf</a><a href=\"#\">Gewicht</a><a href=\"#\">Rezepte</a><a href=\"#\">Ziele</a></nav>",
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;gap:3px;padding:13px 0 4px;background:#efeee6}.ds-nav a{white-space:nowrap;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#4a473e;text-decoration:none;padding:5px 7px 4px;border:1px solid transparent}.ds-nav a:hover{border-color:#c9c6b8}.ds-nav a:focus-visible{outline:2px solid #c4200d;outline-offset:3px}.ds-nav a.is-active{background:#1b1a15;color:#efeee6;font-weight:500}"
+    },
+    {
+      "name": "Positionszeile mit Punktführung",
+      "kind": "custom",
+      "refersTo": "rolle",
+      "description": "Die Signaturzeile des Bons: Nummer, Uhrzeit, Bezeichnung mit gepunkteter Führung, kcal rechtsbündig, Makros als Zweitdruck darunter. Die Führung ist ein Geschwisterelement, kein Pseudoelement in einem overflow-Kasten.",
+      "html": "<div class=\"ds-pos-wrap\"><div class=\"ds-pos-kopf\"><span>Pos</span><span>Zeit</span><span></span><span class=\"r\">kcal</span></div><article class=\"ds-pos\"><span class=\"ds-pos-nr\">1</span><span class=\"ds-pos-zeit\">08:20</span><span class=\"ds-pos-bez\"><span class=\"ds-pos-bez-t\">Haferbrei mit Beeren</span><span class=\"ds-pos-lead\" aria-hidden=\"true\"></span></span><span class=\"ds-pos-kcal\">412</span><span class=\"ds-pos-fuss\"><span class=\"ds-pos-mak\"><span>14&nbsp;g E</span> <span>· 62&nbsp;g KH</span> <span>· 9&nbsp;g F</span></span><button type=\"button\" class=\"ds-pos-edit\">Korrigieren</button></span></article></div>",
+      "css": ".ds-pos-wrap{background:#efeee6;color:#1b1a15;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;padding:0 8px}.ds-pos-wrap .ds-pos-kopf,.ds-pos-wrap .ds-pos{--pos-cols:26px 46px 1fr auto}.ds-pos-kopf{display:grid;grid-template-columns:var(--pos-cols);gap:2px 8px;padding:8px 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#696558;border-bottom:1px solid #c9c6b8}.ds-pos-kopf .r{text-align:right}.ds-pos{display:grid;grid-template-columns:var(--pos-cols);grid-template-areas:\"nr zeit bez kcal\" \". . fuss fuss\";align-items:baseline;gap:2px 8px;padding:11px 0;border-bottom:1px dotted #c9c6b8}.ds-pos-nr{grid-area:nr;font-size:12.5px;color:#696558}.ds-pos-zeit{grid-area:zeit;font-size:12.5px;color:#696558;letter-spacing:.04em}.ds-pos-bez{grid-area:bez;display:flex;align-items:baseline;gap:7px;font-size:15px;line-height:1.35;font-weight:500}.ds-pos-bez-t{flex:0 1 auto;min-width:0;overflow-wrap:anywhere}.ds-pos-lead{flex:1 1 12px;min-width:12px;height:1px;border-bottom:1px dotted #b3afa0;transform:translateY(-4px)}.ds-pos-kcal{grid-area:kcal;justify-self:end;font-size:15px;font-weight:700}.ds-pos-fuss{grid-area:fuss;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;margin-top:2px}.ds-pos-mak{font-size:12.5px;color:#696558}.ds-pos-mak span{white-space:nowrap}.ds-pos-edit{white-space:nowrap;font-family:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:none;border:0;border-bottom:1px solid #c9c6b8;color:#4a473e;cursor:pointer;padding:1px 0}.ds-pos-edit:hover{color:#1b1a15;border-color:#1b1a15}"
+    },
+    {
+      "name": "Rückfrage",
+      "kind": "card",
+      "refersTo": "block-abgesetzt",
+      "description": "Der rote Zwischendruck — das Alleinstellungsmerkmal als eigener Druckvorgang. Randlos über die volle Papierbreite, abgesetzte Fläche mit Korn, 2px rote Oberkante.",
+      "html": "<section class=\"ds-clarify\" role=\"status\" aria-live=\"polite\"><p class=\"ds-clarify-marke\">— Rückfrage —</p><p class=\"ds-clarify-frage\">Wie groß war die Portion Reis — eine Tasse oder ein Teller?</p></section>",
+      "css": ".ds-clarify{padding:16px 26px 18px;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23k)' opacity='.055'/%3E%3C/svg%3E\") repeat,#e6e4da;border-top:2px solid #c4200d;border-bottom:1px solid #c9c6b8;color:#1b1a15;font-family:'Sometype Mono',ui-monospace,Menlo,monospace}.ds-clarify-marke{margin:0 0 9px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#c4200d}.ds-clarify-frage{margin:0;font-size:15px;line-height:1.4;font-weight:700;max-width:34ch}"
+    },
+    {
+      "name": "Summe mit der einen Zahl",
+      "kind": "custom",
+      "refersTo": "rolle",
+      "description": "Die Bilanz: doppelte Abschlusslinie, Versalienzeilen mit Punktführung, dann der Rest als einzige große Zahl. Über Ziel färben Label und Zahl rot.",
+      "html": "<section class=\"ds-summe\" aria-label=\"Tagesbilanz\"><div class=\"ds-summe-zeile\"><span>Gebucht</span><span class=\"lead\" aria-hidden=\"true\"></span><span class=\"wert\">1.842 kcal</span></div><div class=\"ds-summe-zeile\"><span>Tagesziel</span><span class=\"lead\" aria-hidden=\"true\"></span><span class=\"wert\">2.400 kcal</span></div><div class=\"ds-rest\"><span class=\"ds-rest-label\">Rest</span><span class=\"ds-rest-zahl\">558</span><span class=\"ds-rest-einheit\">kcal</span></div></section>",
+      "css": ".ds-summe{background:#efeee6;color:#1b1a15;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;border-top:3px double #1b1a15;padding:12px 8px 0}.ds-summe-zeile{display:flex;align-items:baseline;gap:8px;padding:3px 0;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:#4a473e}.ds-summe-zeile .lead{flex:1;min-width:20px;border-bottom:1px dotted #b3afa0;transform:translateY(-3px)}.ds-summe-zeile .wert{font-size:15px;text-transform:none;color:#1b1a15;font-weight:500;letter-spacing:0}.ds-rest{display:flex;align-items:baseline;gap:9px;margin-top:9px;padding-top:10px;border-top:1px solid #c9c6b8}.ds-rest-label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#4a473e}.ds-rest-zahl{margin-left:auto;font-family:'Big Shoulders Display','Sometype Mono',sans-serif;font-weight:800;font-size:62px;line-height:.82;letter-spacing:.005em}.ds-rest-einheit{font-size:12.5px;letter-spacing:.08em;color:#4a473e}.ds-rest.is-ueber .ds-rest-zahl,.ds-rest.is-ueber .ds-rest-label{color:#c4200d}"
+    },
+    {
+      "name": "Nährwerttabelle",
+      "kind": "custom",
+      "refersTo": "rolle",
+      "description": "Ist / Ziel / Offen als gedruckte Tabelle. Tabellen statt Balken — der Bon rechnet, er visualisiert nicht.",
+      "html": "<table class=\"ds-mtab\"><caption>Nährwerte heute</caption><thead><tr><th scope=\"col\">Nährwert</th><th scope=\"col\">Ist</th><th scope=\"col\">Ziel</th><th scope=\"col\">Offen</th></tr></thead><tbody><tr><th scope=\"row\">Eiweiß</th><td class=\"ist\">118 g</td><td>160 g</td><td class=\"offen\">42 g</td></tr><tr><th scope=\"row\">Kohlenhydrate</th><td class=\"ist\">212 g</td><td>180 g</td><td class=\"offen offen-ueber\">+32 g</td></tr><tr><th scope=\"row\">Fett</th><td class=\"ist\">61 g</td><td><span class=\"kein-ziel\">—</span></td><td class=\"offen\"><span class=\"kein-ziel\">—</span></td></tr></tbody></table>",
+      "css": ".ds-mtab{width:100%;border-collapse:collapse;background:#efeee6;color:#1b1a15;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;font-size:12.5px}.ds-mtab caption{text-align:left;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#696558;padding-bottom:6px}.ds-mtab th,.ds-mtab td{padding:7px 0;text-align:right;font-weight:400}.ds-mtab thead th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#696558;border-bottom:1px solid #1b1a15}.ds-mtab tbody th,.ds-mtab thead th:first-child{text-align:left}.ds-mtab tbody th{font-weight:500}.ds-mtab tbody tr{border-bottom:1px dotted #c9c6b8}.ds-mtab .ist{font-weight:700}.ds-mtab .offen{color:#4a473e}.ds-mtab .offen-ueber{color:#c4200d}.ds-mtab .kein-ziel{color:#696558}"
+    },
+    {
+      "name": "Aufnahmeanzeige",
+      "kind": "custom",
+      "refersTo": "btn-ink-recording",
+      "description": "Die einzige Zustandsanimation: der rote Punkt blinkt, solange wirklich aufgenommen wird, und sonst nie. Bei reduced-motion bleibt er sichtbar stehen.",
+      "html": "<span class=\"ds-rec\" role=\"status\">Aufnahme läuft</span>",
+      "css": ".ds-rec{display:inline-flex;align-items:center;gap:8px;font-family:'Sometype Mono',ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#c4200d}.ds-rec::before{content:\"\";width:9px;height:9px;border-radius:50%;background:#c4200d;animation:ds-rec-blink 1.4s steps(1,end) infinite}@keyframes ds-rec-blink{0%,55%{opacity:1}56%,100%{opacity:.25}}@media(prefers-reduced-motion:reduce){.ds-rec::before{opacity:1;animation:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Der Tagesbon",
+    "overview": "Der Tag ist eine laufende Rechnung, kein Feed und kein Karten-Dashboard. Eine Rolle Thermopapier liegt auf einer dunkelgrünen Tischfläche; oben die abgerissene Kante, unten die Schnittkante mit der Schere. Dazwischen wird gedruckt: Bonkopf, Bereichszeile, die Eingabe, die Positionen in Druckreihenfolge, die doppelte Linie, die Summe, der Rest als einzige große Zahl, die Nährwerttabelle. Die Reihenfolge ist Teil der Form — die Arbeit („sag, was du gegessen hast\") steht vor der Bilanz, weil das der Job der Seite ist.\n\nDie Welt kennt zwei Anordnungen desselben Materials. Im System of Record läuft eine durchgehende Rolle (.roll); eine Oberfläche, die keine laufende Rechnung ist, legt stattdessen einzelne Belege (.beleg) auf denselben Tisch — so die Landing Page. Papier bleibt dabei Papier: dieselben Tokens, dasselbe Korn, dieselbe Abrisskante, derselbe Schatten. Was nicht auf Papier steht, steht direkt auf dem Grün. Austauschbar ist nur die Hülle ({% block shell %}), nie das Material.\n\nDas Material trägt die Gestaltung, nicht die Dekoration. Papier ist nie ein glatter Farbwert, sondern eine gekachelte feTurbulence-Körnung bei 5,5 % Deckkraft; Ränge entstehen aus Gewicht, Versalien, Punktführung und Linienstärke, nicht aus einer Größenleiter; Zustände entstehen aus Umkehrung (Ink-Fläche, Papier-Schrift), nicht aus Füllfarben. Registrier-Rot ist die einzige zweite Farbe und wird knapp gehalten.\n\nVerweigert wird beides: die Kategorie-Anordnung (Makro-Ringe, gefüllte Fortschrittsbalken, gleich große Karten mit Icon) und ihr Gegenteil, der frühere Ist-Zustand aus Creme, Serifen-Display und Terracotta.",
+    "keyCharacteristics": [
+      "Thermopapier auf dunkelgrünem Tisch; ein einspaltiger Bon, max. 560px breit.",
+      "Zwei Anordnungen: die durchgehende Rolle (App) und einzelne Belege auf dem Tisch.",
+      "Sechs Textgrade, geschlossen. Rang aus Gewicht, Versalien, Punktführung, Linie.",
+      "Rechtwinklig durchgehend, kein Radius über 0.",
+      "Monospace trägt alles Gedruckte; die Display-Schrift nur Kopf, Datum und die eine Zahl.",
+      "Tabellen und Zeilen statt Balken und Ringe.",
+      "Knöpfe sind Stempelfelder mit harter 1,5px-Kontur, nie gefüllte Pillen.",
+      "Registrier-Rot nur für Offenes, Fehler, Überschreitung und die laufende Aufnahme."
+    ],
+    "rules": [
+      {
+        "name": "Die Rot-Regel",
+        "body": "--red steht für Offenes, Fehler, Überschreitung und die laufende Aufnahme — sonst nirgends. Ein Knopf ist erst rot, wenn er einen offenen Vorgang abbricht oder eine Aufnahme läuft; ein Angebot ist nie rot. Test: kann man den roten Punkt der Seite mit einem Satz erklären, der „noch offen\", „falsch\", „zu viel\" oder „läuft gerade\" enthält? Wenn nein, ist er falsch.",
+        "section": "colors"
+      },
+      {
+        "name": "Die Keine-neuen-Grundfarben-Regel",
+        "body": "Die Farbliste ist abgeschlossen. Eine zusätzliche Fläche wird aus --paper-2 und einer Linie gebaut, nicht aus einem neuen Ton.",
+        "section": "colors"
+      },
+      {
+        "name": "Die Tisch-Ring-Regel",
+        "body": "Der Fokusring des Shells ist für Papier gemacht: --red erreicht gegen die Tischfläche nur ~2,4:1 und verschwindet dort. Eine Oberfläche, die Bedienelemente direkt auf den Tisch stellt, überschreibt den Ring auf 2px --paper mit 3px Versatz; auf Papier bleibt er rot. Zwei Materialien, zwei Ringe — einen dritten gibt es nicht.",
+        "section": "colors"
+      },
+      {
+        "name": "Die Kein-Weiß-Regel",
+        "body": "Es gibt kein #fff im Bon. Die hellste Farbe ist --paper; umgekehrter Text steht in --paper, nicht in Weiß.",
+        "section": "colors"
+      },
+      {
+        "name": "Die Sechs-Grade-Regel",
+        "body": "Ein font-size außerhalb der sechs Tokens gibt es nicht — kein 14px, kein 1.1rem, kein clamp(). Wer einen siebten Grad braucht, braucht in Wahrheit ein anderes Gewicht, Versalien oder eine Linie.",
+        "section": "typography"
+      },
+      {
+        "name": "Die Rang-ohne-Größe-Regel",
+        "body": "Rang entsteht aus Gewicht (400/500/700/800), Versalien mit Sperrung, Punktführung und Linienstärke — nicht aus einer Größenleiter. Eine feine Größentreppe ist genau das, was diese Oberfläche verweigert.",
+        "section": "typography"
+      },
+      {
+        "name": "Die Drei-Auftritte-Regel",
+        "body": "Big Shoulders Display erscheint ausschließlich im Bonkopf, im Datum und in der einen großen Zahl. Alles andere, inklusive jeder Überschrift, ist Sometype Mono. Das gilt auch auf einer Persuade-Fläche: die Landing Page setzt ihre Überschriften auf den Displaygraden (--d-zahl, --d-kopf), aber in Sometype Mono 700. Die Displaygrade sind Größen, keine Schriftschnitte. Die Frage, ob eine Landing-Überschrift die Displayschrift bekommen darf, wurde beim Bau gestellt und verneint — nicht neu aufrollen.",
+        "section": "typography"
+      },
+      {
+        "name": "Die Betonungs-Regel",
+        "body": "Betonung eines Wortes ist die Punktführung: text-decoration: underline dotted, 3px Stärke, 8px Versatz, Farbe eine Stufe unter dem Text (auf dem Tisch --on-table-faint). Nie kursiv — die Displayschrift hat keine Kursive, und die Monospace täuscht sie nur — und nie über Farbe, denn die einzige zweite Farbe ist reserviert.",
+        "section": "typography"
+      },
+      {
+        "name": "Die Hülle-ist-ein-Block-Regel",
+        "body": "base_bon.html rendert seinen Standardaufbau (.sheet um .roll, Bonkopf, Bereichszeile, Inhalt, Fuß, Schnittkante) in {% block shell %}. Eine Oberfläche, die keine durchgehende Rolle ist, ersetzt diesen Block und bezieht Tokens, Knöpfe, Eingaben, Linien und Browser-Flächen unverändert aus dem Shell. Auch die Grad-Schritte im 430px-Block (--d-kopf, --d-zahl) stehen im Shell; ein Template setzt sie nicht noch einmal.",
+        "section": "layout"
+      },
+      {
+        "name": "Die Spurenregel",
+        "body": "Ein Spaltenkopf und seine Zeilen teilen dieselbe Variable für grid-template-columns. Zwei getrennte Raster bemessen ihre auto-Spalten am eigenen Inhalt, und ein Spaltenkopf, der seine Spalte verfehlt, ist in einer gedruckten Tabelle genau der Fehler, den die Form vermeidet.",
+        "section": "layout"
+      },
+      {
+        "name": "Die 375px-Regel",
+        "body": "Sieben Bereiche passen auf 375px nicht in eine Zeile: die Bereichszeile bricht um, sie scrollt nicht. Eine halb abgeschnittene Beschriftung sieht aus wie ein Fehler. Nichts im Bon scrollt horizontal.",
+        "section": "layout"
+      },
+      {
+        "name": "Die Kornregel",
+        "body": "Jede Fläche, die Papier ist, trägt --grain — auch die Abrisskante (.roll::before) und die randlosen Blöcke. Sonst sind genau diese Stellen kornfrei und verraten den Trick.",
+        "section": "elevation"
+      },
+      {
+        "name": "Die Ein-Erhebung-Regel",
+        "body": "Genau ein box-shadow-Wert im System, und er gehört dem Papier auf dem Tisch — der Rolle wie dem einzelnen Beleg. Keine Hover-Anhebung, kein Karten-Schatten, kein harter Versatz-Schatten.",
+        "section": "elevation"
+      },
+      {
+        "name": "Die Rasterkosten-Regel",
+        "body": "Die Abrisskante ist ein eigener 8px-Streifen über dem Papier, keine Maske auf ihm: eine Maske über die volle Bonhöhe ist eine Compositing-Schicht von mehreren tausend Pixeln, die beim Scrollen neu gerastert wird. .roll::before und .beleg::before teilen sich diese Regel, damit die Maskendefinition genau einmal im Projekt steht.",
+        "section": "elevation"
+      },
+      {
+        "name": "Die Rechtwinkel-Regel",
+        "body": "Kein Radius über 0. Ein Element, das rund sein will, ist im Bon das falsche Element. Einzige Ausnahme: der 9px-Punkt der Aufnahmeanzeige, eine Leuchte und kein Kasten.",
+        "section": "shapes"
+      },
+      {
+        "name": "Die Drei-Linien-Regel",
+        "body": "Einfach, gepunktet, doppelt — mehr Linienvokabular gibt es nicht. Eine vierte Stärke erfindet einen Rang, den die Typografie schon vergibt.",
+        "section": "shapes"
+      },
+      {
+        "name": "Die Stempel-Regel",
+        "body": "Knöpfe sind Stempelfelder mit harter 1,5px-Kontur. Es gibt keine gefüllte Pille, keinen Verlauf, keinen Schatten an einem Knopf. Die Füllung ist ein Zustand (Hover, .ink, Aufnahme), nie der Ruhezustand eines Angebots.",
+        "section": "components"
+      },
+      {
+        "name": "Die Ein-Zahl-Regel",
+        "body": "--d-zahl erscheint genau einmal pro Ansicht. Eine zweite große Zahl halbiert die erste.",
+        "section": "components"
+      },
+      {
+        "name": "Die Ein-Moment-Regel",
+        "body": "Pro Ansicht wird ein Ereignis animiert — hier die Buchung. Alles andere ist ein Zustandswechsel unter 150ms oder gar nichts.",
+        "section": "components"
+      },
+      {
+        "name": "Die Punktführung",
+        "body": "Die Punktreihe ist ein Geschwisterelement (flex: 1 1 12px, border-bottom: 1px dotted, translateY(-4px)), kein Pseudoelement in einem overflow: hidden-Kasten: ein Scroll-Container exportiert keine Grundlinie, und die Zeile richtet sich an der Grundlinie aus.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do neue Bon-Oberflächen von base_bon.html erben lassen und ihr CSS inline im eigenen Template halten.",
+      "Do Rang über Gewicht, Versalien, Punktführung und Linienstärke vergeben und dabei bei den sechs Grad-Tokens bleiben.",
+      "Do border-radius: 0 an jedem Knopf und jeder Eingabe explizit setzen.",
+      "Do jede Papierfläche mit var(--grain) repeat unterlegen — auch randlose Blöcke.",
+      "Do Spaltenkopf und Zeilen dieselbe --pos-cols-Variable teilen lassen.",
+      "Do Werte als Tabelle oder Zeile mit Punktführung zeigen.",
+      "Do jedes kleine Bedienelement unter pointer: coarse auf min. 44px bringen.",
+      "Do randlose Blöcke im 430px-Block mit -17px nachziehen.",
+      "Do --faint als Kontrastboden behandeln — darunter gibt es keine Textfarbe.",
+      "Do für jede Animation einen Ruhezustand unter prefers-reduced-motion mitschreiben.",
+      "Do eine Oberfläche, die keine durchgehende Rolle ist, über {% block shell %} bauen und Tokens, Knöpfe, Eingaben und Linien trotzdem aus base_bon.html beziehen.",
+      "Do Text, der direkt auf dem Grün steht, in --on-table/--on-table-faint setzen und dort in --paper ringen.",
+      "Do Betonung als Punktführung setzen (underline dotted, 3px, 8px Versatz)."
+    ],
+    "donts": [
+      "Don't Tokens der alten Welt (--accent, --surface, --bg, --text) in einem Bon-Template verwenden — und umgekehrt keine Bon-Tokens in base.html-Seiten.",
+      "Don't einen siebten Schriftgrad, eine vierte Linienstärke oder eine neue Grundfarbe einführen.",
+      "Don't --red für ein Angebot, einen Primärknopf oder eine Dekoration verwenden.",
+      "Don't Fortschrittsbalken, Makro-Ringe, Donut-Charts oder gleich große Icon-Karten bauen. Der Bon rechnet, er visualisiert nicht.",
+      "Don't einen Schatten innerhalb des Papiers setzen — keine Hover-Anhebung, kein Karten-Schatten, kein harter Versatz-Schatten.",
+      "Don't eine zweite große Zahl auf dieselbe Ansicht drucken.",
+      "Don't eine gesperrte Versalienzeile als Eyebrow/Kicker über eine Überschrift setzen. --t-label beschriftet Spalten, Felder und Blöcke; es kündigt keine Überschrift an.",
+      "Don't Emojis, Icon-Fonts oder Glyphen als Icons verwenden — nur inline-SVG.",
+      "Don't #fff oder einen Systemschriftschnitt als Display-Fallback einsetzen.",
+      "Don't fonts.googleapis.com einbinden (LG München I, 20.01.2022, 3 O 17493/20).",
+      "Don't eine Überschrift auf einer Persuade-Fläche in die Displayschrift setzen — die Displaygrade sind Größen, die Schrift bleibt Sometype Mono.",
+      "Don't Betonung kursiv oder farbig setzen; sie ist die Punktführung.",
+      "Don't den roten Fokusring auf der Tischebene stehen lassen (~2,4:1 gegen --table).",
+      "Don't Papierfarben auf den Tisch tragen (oder --on-table aufs Papier).",
+      "Don't die Bereichszeile horizontal scrollen lassen."
+    ],
+    "scope": {
+      "systemOfRecord": "Bon — app/dashboard/templates/base_bon.html: /dashboard (Rolle) und seit 2026-09-19 die Landing Page / (Belege auf dem Tisch, via {% block shell %}), sowie jede neue Arbeit.",
+      "frozenLegacy": "Alte Welt (Creme #eeece4 / Newsreader / Terracotta #c96442) — app/dashboard/templates/base.html und die übrigen Landing-/Auth-Templates: /faq, /impressum, /datenschutz, Auth, /admin/*, /history, /goals, /recipes, /weight, /ai-log, /feedback. Die Landing Page / steht seit 2026-09-19 nicht mehr in dieser Liste. Eingefroren, wird Seite für Seite umgestellt, nicht mit dem Bon gemischt. Werte stehen im Abschnitt „Nicht migrierte Oberflächen“ in DESIGN.md.",
+      "openDecision": "Wortmarke: steht im Bonkopf als Text in Big Shoulders Display, nicht als SVG aus app/static/brand/. Space Grotesk bleibt selbst gehostet, weil die Wortmarken-SVG sie als inline-<text> braucht. Vor dem Launch klären; festgehalten in .impeccable/surfaces/app-dashboard-templates-dashboard-html.md. Nicht hier auflösen."
+    }
+  }
+}
