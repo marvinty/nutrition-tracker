@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Deploy MacroMic to the Proxmox host — the prod compose sequence and the restart rules that are not obvious
+description: Deploy MacroMic to the Proxmox host — MacroMic's values and the restart rules that are not obvious; the shared procedure is /homelab-deploy
 disable-model-invocation: true
 ---
 
@@ -11,7 +11,9 @@ LXC, the repo cloned on that host and brought up with `docker-compose.prod.yml`.
 
 TLS and DNS are **not** in this repo. Caddy and the three `hetzner-ddns` containers run as
 a separate stack shared by every app on the host — `marvinty/homelab-edge`, cloned to
-`/root/edge`, whose README is the checklist for it. The `api` publishes no port; Caddy
+`/root/edge`. Its skill **`/homelab-deploy`** (symlinked into `~/.claude/skills/`) holds the
+procedure every app shares — reaching the LXC, the update sequence, the failure table, adding
+a new app. This skill only adds what is specific to MacroMic. The `api` publishes no port; Caddy
 reaches it over the external Docker network `edge` as `macromic-api`. The routing for
 `macromic.de` / `app.macromic.de` lives in that repo's `caddy/sites/macromic.caddy`.
 
@@ -63,17 +65,24 @@ deploy. Rolling back does not help — any recreate on any commit hits it.
 
 ```bash
 cd /root/nutrition-tracker
+git status --short && git branch --show-current   # clean, and "master"
 git pull
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
+**Check the branch first.** Until 2026-09-28 the host sat on `hotfix/ddns-token-split`,
+long deleted on GitHub; `git pull` then only prints "no such ref was fetched" and the deploy
+silently ships nothing.
+
 `up -d --build` recreates the `api` container, which is what makes new code and any
 `.env` change take effect.
 
-The first deploy after Caddy moved out of this stack (September 2026) is a one-off with
-its own order — edge first, certificate volume copied, `--remove-orphans` here. It is
-spelled out in the homelab-edge README under "Einmaliger Umzug"; follow that instead of
-this section once.
+**A rebuild resolves the newest allowed dependency versions.** `requirements.txt` uses
+`>=` bounds, so a deploy with no code change can still change libraries. On 2026-09-28
+`SQLAlchemy>=2.0` pulled 2.1, which no longer brings greenlet, and the api crash-looped
+at import (fixed with the `[asyncio]` extra). If the api dies right after a rebuild, read
+the traceback for an `ImportError` before suspecting the code — and note that checking out
+an older commit does not help, it resolves the same new versions.
 
 ## 3. The restart rules — these are the ones that bite
 
@@ -125,7 +134,9 @@ quietly in production.
 
 Then from outside the network: `https://app.macromic.de/login` should answer 200,
 `https://macromic.de/` should serve the landing page, and any other path on the bare
-domain should 302 to `app.`.
+domain should 302 to `app.`. Check with GET —
+`curl -s -o /dev/null -w '%{http_code}\n' https://app.macromic.de/login` — not `curl -I`:
+the routes are GET-only and answer HEAD with 405, which looks like an outage and is not.
 
 ## 5. Prod `.env` values worth re-checking
 
@@ -149,6 +160,9 @@ git log --oneline -5
 git checkout <last-good-sha>
 docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+Afterwards `git checkout master` again, or the next `git pull` has nothing to pull and the
+host stays pinned to the old commit — the same trap as the stale hotfix branch above.
 
 The `macromic_data` volume is untouched by this — but a rollback across a schema
 migration does not undo the migration. Added columns stay. That is usually harmless
