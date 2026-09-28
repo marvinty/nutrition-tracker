@@ -109,7 +109,10 @@ docker compose -f docker-compose.prod.yml up -d
 
 The prod compose file:
 - Omits the source volume mount (no hot-reload)
-- Runs `uvicorn` with `--workers 2`
+- Runs `uvicorn` with a single worker (SQLite)
+- Publishes no port: HTTPS and routing come from the shared Caddy stack
+  ([homelab-edge](https://github.com/marvinty/homelab-edge)), which reaches the api over
+  the external Docker network `edge` as `macromic-api`
 - Uses `restart: unless-stopped`
 
 The `macromic_data` Docker volume persists the SQLite database.
@@ -170,7 +173,7 @@ All settings are read from `.env` (see `.env.example`):
 | `OPENAI_API_KEY` | — | Required for Whisper transcription (always) |
 | `LLM_PROVIDER` | `claude` | Active LLM provider (`claude`, `openai`, `gemini`) |
 | `DATABASE_URL` | `sqlite+aiosqlite:////data/macromic.db` | SQLAlchemy async DB URL |
-| `APP_PORT` | `8000` | Host port exposed by Docker |
+| `APP_PORT` | `8000` | Host port exposed by Docker (dev only) |
 | `TIER_DAILY_CREDITS` | `{"free": 20, "pro": 300}` | Daily AI credit budget per user tier |
 | `CREDIT_COSTS` | `{"text": 1, "clarify": 0, "voice": 3}` | Credits each action spends |
 | `GLOBAL_DAILY_CREDITS` | `500` | App-wide daily ceiling across all users |

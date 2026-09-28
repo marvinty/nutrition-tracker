@@ -1,20 +1,14 @@
-x-hetzner-ddns: &hetzner-ddns
-  image: mbaiti/hetzner-ddns:latest
-  restart: unless-stopped
-  # Deliberately its own file rather than a key in .env. The api service does
-  # `env_file: .env`, which injects *every* key there into the app's process — and
-  # Settings sets no `extra`, so pydantic's default `extra="forbid"` rejects any key
-  # it doesn't declare and the app dies at import. Keeping the ddns token out of .env
-  # means the api never sees a credential it has no use for, and `extra="forbid"`
-  # goes on catching typos in the keys the app *does* own.
-  env_file: .env.ddns
-
+# Caddy (TLS) and the Hetzner DDNS containers live in their own stack now, shared
+# with the other apps on this host: marvinty/homelab-edge, cloned to /root/edge. The
+# api publishes no host port — Caddy reaches it over the external `edge` network as
+# `macromic-api`, and nothing on the LAN can bypass the proxy (which would let a
+# client pick its own X-Forwarded-For and dodge the rate limits).
+#
+# The network is created once per host, outside Compose: `docker network create edge`.
 services:
   api:
     build: .
     env_file: .env
-    ports:
-      - "${APP_PORT:-8000}:8000"
     volumes:
       - macromic_data:/data
     # One worker on purpose. Two processes writing the same SQLite file contend for a
@@ -23,48 +17,14 @@ services:
     # day — a single worker is not the bottleneck. Revisit only alongside a move off
     # SQLite.
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
+    networks:
+      edge:
+        aliases: [macromic-api]
     restart: unless-stopped
 
-  # Keep app/root/www macromic.de A records pointed at this connection's IPv4, which
-  # isn't static. ddns-updater's Hetzner provider targets the legacy DNS API, which
-  # Hetzner retired in the console migration (dns.hetzner.com now redirects, see
-  # qdm12/ddns-updater#1039) — this image speaks the new Hetzner Cloud API instead.
-  # One instance per record name; the tool doesn't support updating several at once.
-  hetzner-ddns-app:
-    <<: *hetzner-ddns
-    environment:
-      HETZNER_DNS_ZONE_NAME: macromic.de
-      HETZNER_DNS_RECORD_NAME: app
-      CHECK_INTERVAL_SECONDS: "300"
-
-  hetzner-ddns-root:
-    <<: *hetzner-ddns
-    environment:
-      HETZNER_DNS_ZONE_NAME: macromic.de
-      HETZNER_DNS_RECORD_NAME: "@"
-      CHECK_INTERVAL_SECONDS: "300"
-
-  hetzner-ddns-www:
-    <<: *hetzner-ddns
-    environment:
-      HETZNER_DNS_ZONE_NAME: macromic.de
-      HETZNER_DNS_RECORD_NAME: www
-      CHECK_INTERVAL_SECONDS: "300"
-
-  caddy:
-    image: caddy:2
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - api
-    restart: unless-stopped
+networks:
+  edge:
+    external: true
 
 volumes:
   macromic_data:
-  caddy_data:
-  caddy_config:

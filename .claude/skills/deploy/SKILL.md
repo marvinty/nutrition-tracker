@@ -7,9 +7,13 @@ disable-model-invocation: true
 # Deploy to production
 
 Production is a Dell Wyse thin client at home: Proxmox VE, Docker inside an unprivileged
-LXC, the repo cloned on that host and brought up with `docker-compose.prod.yml`. Caddy
-terminates TLS, three `hetzner-ddns` containers keep the A records pointed at a dynamic
-home IP.
+LXC, the repo cloned on that host and brought up with `docker-compose.prod.yml`.
+
+TLS and DNS are **not** in this repo. Caddy and the three `hetzner-ddns` containers run as
+a separate stack shared by every app on the host — `marvinty/homelab-edge`, cloned to
+`/root/edge`, whose README is the checklist for it. The `api` publishes no port; Caddy
+reaches it over the external Docker network `edge` as `macromic-api`. The routing for
+`macromic.de` / `app.macromic.de` lives in that repo's `caddy/sites/macromic.caddy`.
 
 **These commands run on the Proxmox host, not here.** Claude has no shell there — this
 skill is the checklist to follow (or to hand to Marvin) once the code is on `master`.
@@ -48,8 +52,8 @@ Push to `master`. Deploys pull from there; there is no CI.
 gives the api `env_file: .env`, so every key there is injected into the app's process, and
 `app/core/config.py` sets no `extra` — pydantic's default `extra="forbid"` then kills the
 app at import. A key belonging to a sibling service (the ddns token was the case on
-2026-08-02) has no business in `.env`; give that service its own file, as
-`.env.ddns` now is.
+2026-08-02) has no business in `.env`; give that service its own file. The ddns token now
+lives in `/root/edge/.env.ddns`, in the edge stack.
 
 The nasty part is the timing: the app only reads `.env` when its container is *created*,
 so a stray key sits harmless for weeks and then takes prod down on the next unrelated
@@ -66,9 +70,14 @@ docker compose -f docker-compose.prod.yml up -d --build
 `up -d --build` recreates the `api` container, which is what makes new code and any
 `.env` change take effect.
 
+The first deploy after Caddy moved out of this stack (September 2026) is a one-off with
+its own order — edge first, certificate volume copied, `--remove-orphans` here. It is
+spelled out in the homelab-edge README under "Einmaliger Umzug"; follow that instead of
+this section once.
+
 ## 3. The restart rules — these are the ones that bite
 
-Three different mechanisms, three different fixes. Getting one wrong looks like a deploy
+Different mechanisms, different fixes. Getting one wrong looks like a deploy
 that silently did nothing.
 
 - **`.env` changed → `up -d`, never `restart`.** A container's environment is frozen at
@@ -87,10 +96,13 @@ that silently did nothing.
 
   which must say *No such file*. This cost an hour on 2026-08-02, because the symptom is
   a deploy that looks applied and behaves as if nothing changed.
-- **`Caddyfile` changed → `docker compose -f docker-compose.prod.yml restart caddy`.**
-  Caddy does not hot-reload its bind-mounted config, and `up -d` will not recreate the
-  `caddy` service when its image, env and ports are unchanged — so nothing happens
-  unless the restart is explicit.
+- **Routing changed → that is a commit in `homelab-edge`, not here.** Edit
+  `caddy/sites/macromic.caddy` there, then on the host
+  `cd /root/edge && git pull && docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`.
+  Nothing in this repo's deploy touches Caddy.
+- **`api` not reachable (502 from Caddy) → check the network.** The container must be on
+  `edge` with the alias `macromic-api`:
+  `docker network inspect edge --format '{{range .Containers}}{{.Name}} {{end}}'`.
 - **Schema change → nothing extra.** `init_db()` runs the migrations at boot, so the
   recreate in step 2 applies them. Watch the logs to confirm (step 4).
 
