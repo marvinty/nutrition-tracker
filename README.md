@@ -100,11 +100,15 @@ curl "http://localhost:8000/meals?filter_date=2026-03-30"
 
 ## Deployment (Linux Server)
 
-```bash
-git clone <your-repo> && cd macromic
-cp .env.example .env && nano .env   # set API keys
+Production runs on a home Proxmox server, in the Docker LXC at `/root/nutrition-tracker`,
+deployed by hand from `master`. The Claude Code skill `/deploy` is the checklist; it builds
+on `/homelab-deploy` from homelab-edge, which covers every app on that server.
 
-docker compose -f docker-compose.prod.yml up -d
+```bash
+git clone https://github.com/marvinty/nutrition-tracker.git && cd nutrition-tracker
+cp .env.example .env && nano .env   # set API keys
+docker network create edge          # once per host, if homelab-edge is not set up yet
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 The prod compose file:
