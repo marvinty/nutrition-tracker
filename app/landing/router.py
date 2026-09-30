@@ -11,7 +11,7 @@ from app.db.session import get_session
 from app.models.user import User
 from app.services.signup_code_service import signup_requires_code
 
-# Search landing templates first, plus the dashboard templates for the shared base.html.
+# Search landing templates first, plus the dashboard templates for the shared base_app.html.
 _dashboard_templates = Path(__file__).parent.parent / "dashboard" / "templates"
 templates = register_csrf_field(
     Jinja2Templates(

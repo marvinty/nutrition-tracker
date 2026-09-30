@@ -1,37 +1,54 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}E-Mail bestätigen — MacroMic{% endblock %}
 
-{% block nav %}
-<nav id="nav">
-    <div class="wrap nav-in">
-        <a class="brand" href="/">{% include "_wordmark.html" %}</a>
-    </div>
-</nav>
+{% block extra_head %}
+<style>
+    /* Formularseite: eine Spalte von 420px, Hauptaktion schwarz in voller Breite,
+       Nebenwege als Textlinks darunter. */
+    .page.auth{max-width:calc(420px + 2 * var(--gut))}
+    .page.auth > * + *{margin-top:20px}
+    .auth-form{display:grid;gap:14px}
+    .auth-form .btn{width:100%;margin-top:6px}
+    .auth-links{font-size:15px;color:var(--ink-2);padding-top:14px;border-top:1px solid var(--hair)}
+    .auth-links p + p{margin-top:6px}
+    .auth-links a{color:var(--ink);text-decoration-color:currentColor}
+    @media(pointer:coarse){.auth-links a{display:inline-block;padding:10px 0}}
+</style>
 {% endblock %}
 
+{#- Wer den Link aus der Mail oeffnet, kann angemeldet sein oder nicht; der Kontext
+    weiss es nicht. Der Kopf bleibt deshalb wie bisher ohne Aktionen. -#}
+{% block topright %}{% endblock %}
+
 {% block content %}
-<div class="auth-wrap">
-    <div class="card auth-card">
-        {% if ok %}
-        <h1 class="auth-title">Alles <em>bestätigt</em>.</h1>
-        <p class="auth-lede">Deine E-Mail-Adresse ist bestätigt. Viel Spaß beim Loggen.</p>
-        <p><a class="btn block" href="/dashboard">Zum Dashboard</a></p>
-        {% else %}
-        <h1 class="auth-title">Link <em>abgelaufen</em>.</h1>
-        <p class="auth-lede">
+<main class="page narrow auth">
+    {% if ok %}
+    <header>
+        <h1 class="page-h">Alles bestätigt.</h1>
+        <p class="page-lede">Deine E-Mail-Adresse ist bestätigt. Viel Spaß beim Loggen.</p>
+    </header>
+    <div class="auth-form">
+        <a class="btn" href="/dashboard">Zum Dashboard</a>
+    </div>
+    {% else %}
+    <header>
+        <h1 class="page-h">Link abgelaufen.</h1>
+        <p class="page-lede">
             Dieser Bestätigungslink ist nicht mehr gültig — er hält 24 Stunden und wird
             durch jede neu angeforderte Mail ersetzt.
         </p>
-        <form method="post" action="/verify-email/resend" class="auth-form">
-            {{ csrf_field() }}
-            <button type="submit" class="btn block">Neue Mail anfordern</button>
-        </form>
-        <p class="auth-footer">
+    </header>
+    <form method="post" action="/verify-email/resend" class="auth-form">
+        {{ csrf_field() }}
+        <button type="submit" class="btn">Neue Mail anfordern</button>
+    </form>
+    <div class="auth-links">
+        <p>
             Nicht angemeldet? <a href="/login">Melde dich an</a>, dann kannst du die
             Bestätigung erneut anfordern.
         </p>
-        {% endif %}
     </div>
-</div>
+    {% endif %}
+</main>
 {% endblock %}

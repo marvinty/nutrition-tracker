@@ -1,49 +1,91 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}Registrieren — MacroMic{% endblock %}
 
+{% block extra_head %}
+<style>
+    /* Formularseite: eine Spalte von 420px, Hauptaktion schwarz in voller Breite,
+       Nebenwege als Textlinks darunter. */
+    .page.auth{max-width:calc(420px + 2 * var(--gut))}
+    .page.auth > * + *{margin-top:20px}
+    .auth-form{display:grid;gap:14px}
+    .auth-form .btn{width:100%;margin-top:6px}
+    .auth-links{font-size:15px;color:var(--ink-2);padding-top:14px;border-top:1px solid var(--hair)}
+    .auth-links p + p{margin-top:6px}
+    .auth-links a{color:var(--ink);text-decoration-color:currentColor}
+    @media(pointer:coarse){.auth-links a{display:inline-block;padding:10px 0}}
+</style>
+{% endblock %}
+
+{#- Ein abgelehntes Formular bekommt den eingegebenen Benutzernamen als `username`
+    zurueck. base_app liest genau diese Variable als "angemeldet" und wuerde dann
+    Bereichsnavigation und "Angemeldet als ..." zeigen. Deshalb stehen Kopf und Fuss
+    hier fest in der oeffentlichen Fassung. -#}
 {% block nav %}
-<nav id="nav">
-    <div class="wrap nav-in">
-        <a class="brand" href="/">{% include "_wordmark.html" %}</a>
-        <div class="nav-actions">
-            <a class="btn sm ghost" href="/login">Anmelden</a>
-        </div>
-    </div>
-</nav>
+<header class="top">
+    <a class="mark" href="/">MacroMic</a>
+    <nav class="top-links" aria-label="Konto">
+        <a href="/faq">FAQ</a>
+        <a href="/login">Anmelden</a>
+    </nav>
+</header>
 {% endblock %}
 
 {% block content %}
-<div class="auth-wrap">
-    <div class="card auth-card">
-        <h1 class="auth-title">Konto <em>erstellen</em>.</h1>
-        <p class="auth-lede">Ab dann reicht ein Satz pro Mahlzeit.</p>
-        {% if error %}
-        <p class="status error">{{ error }}</p>
-        {% endif %}
-        <form method="post" action="/register" class="auth-form">
-            {{ csrf_field() }}
-            <input type="text" name="username" placeholder="Benutzername" autocomplete="username"
+<main class="page narrow auth">
+    <header>
+        <h1 class="page-h">Konto erstellen.</h1>
+        <p class="page-lede">Ab dann reicht ein Satz pro Mahlzeit.</p>
+    </header>
+    {% if error %}
+    <p class="notice error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form method="post" action="/register" class="auth-form">
+        {{ csrf_field() }}
+        <div class="feld">
+            <label for="reg-username">Benutzername</label>
+            <input id="reg-username" type="text" name="username" autocomplete="username"
                    value="{{ username or '' }}" required>
-            <input type="email" name="email" placeholder="E-Mail-Adresse" autocomplete="email"
+        </div>
+        <div class="feld">
+            <label for="reg-email">E-Mail-Adresse</label>
+            <input id="reg-email" type="email" name="email" autocomplete="email"
                    value="{{ email or '' }}" required>
-            <input type="password" name="password" placeholder="Passwort" autocomplete="new-password"
-                   minlength="10" required>
-            <input type="password" name="password_confirm" placeholder="Passwort wiederholen"
+        </div>
+        <div class="feld">
+            <label for="reg-password">Passwort</label>
+            <input id="reg-password" type="password" name="password" autocomplete="new-password"
+                   minlength="10" aria-describedby="reg-password-hint" required>
+            <span class="hint" id="reg-password-hint">Mindestens 10 Zeichen.</span>
+        </div>
+        <div class="feld">
+            <label for="reg-password-confirm">Passwort wiederholen</label>
+            <input id="reg-password-confirm" type="password" name="password_confirm"
                    autocomplete="new-password" minlength="10" required>
-            <p class="field-hint">Mindestens 10 Zeichen.</p>
-            {% if needs_code %}
-            <input type="text" name="signup_code" placeholder="Einladungscode" autocomplete="off"
-                   value="{{ signup_code or '' }}" required>
-            {% endif %}
-            <button type="submit" class="btn block">Registrieren</button>
-        </form>
+        </div>
         {% if needs_code %}
-        <p class="auth-footer">Zugang aktuell nur mit Invite-Code.</p>
+        <div class="feld">
+            <label for="reg-code">Einladungscode</label>
+            <input id="reg-code" type="text" name="signup_code" autocomplete="off"
+                   value="{{ signup_code or '' }}" aria-describedby="reg-code-hint" required>
+            <span class="hint" id="reg-code-hint">Zugang aktuell nur mit Invite-Code.</span>
+        </div>
         {% endif %}
-        <p class="auth-footer">
-            Bereits ein Konto? <a href="/login">Anmelden</a>
-        </p>
+        <button type="submit" class="btn">Registrieren</button>
+    </form>
+    <div class="auth-links">
+        <p>Bereits ein Konto? <a href="/login">Anmelden</a></p>
     </div>
+</main>
+{% endblock %}
+
+{% block footer %}
+<div class="site-foot">
+<footer class="foot">
+    <span class="who">MacroMic</span>
+    <a href="/faq">FAQ</a>
+    <a href="/impressum">Impressum</a>
+    <a href="/datenschutz">Datenschutz</a>
+</footer>
 </div>
 {% endblock %}

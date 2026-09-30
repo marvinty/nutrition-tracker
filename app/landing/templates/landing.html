@@ -1,4 +1,4 @@
-{% extends "base_bon.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}MacroMic — Sag einfach, was du gegessen hast.{% endblock %}
 
@@ -17,439 +17,299 @@
 <meta property="og:description" content="Voice-first Ernährungslog: Mahlzeit einsprechen oder tippen, Kalorien und Makros landen im Tagesprotokoll.">
 <meta name="twitter:card" content="summary">
 <style>
-    /* ---------- Tisch ---------- */
-    .tisch{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px) 0}
-    .auf-tisch{color:var(--on-table)}
+    /* ---------- Kopf: Registrieren neben FAQ/Anmelden ---------- */
+    .top-links .btn.sm{min-height:40px}
 
-    /* ---------- Leiste ---------- */
-    .leiste{
-        display:flex;align-items:center;justify-content:space-between;gap:14px;
-        flex-wrap:wrap;padding:20px 0 6px;
-    }
-    .leiste-marke{
-        font-family:var(--display);font-weight:800;font-size:var(--d-datum);
-        line-height:1;letter-spacing:.015em;text-transform:uppercase;
-        color:var(--on-table);text-decoration:none;
-    }
-    .leiste-marke:hover{color:var(--paper);text-decoration:none}
-    .leiste-rechts{display:flex;align-items:center;gap:6px 16px;flex-wrap:wrap}
-    .tisch-link{
-        font-size:var(--t-label);letter-spacing:.14em;text-transform:uppercase;
-        color:var(--on-table-faint);text-decoration:none;padding:9px 2px;
-    }
-    .tisch-link:hover{color:var(--on-table);text-decoration:none}
-    .btn-papier{
-        display:inline-flex;align-items:center;justify-content:center;gap:9px;
-        font-size:var(--t-label);font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-        min-height:40px;padding:0 15px;
-        background:var(--grain) repeat,var(--paper);color:var(--ink);
-        border:1.5px solid var(--paper);border-radius:0;text-decoration:none;
-        transition:background .12s ease-out,color .12s ease-out;
-    }
-    .btn-papier:hover{background:transparent;color:var(--paper);text-decoration:none}
-    .btn-papier.gross{min-height:56px;padding:0 26px;font-size:var(--t-print);gap:11px}
-    .btn-papier svg{width:17px;height:17px}
+    /* ---------- Seitenrahmen ---------- */
+    .lp{max-width:var(--wide);margin:0 auto;padding:0 var(--gut)}
+    .lp > section{padding:40px 0 48px}
+    .lp > section + section{border-top:8px solid var(--ink)}
 
     /* ---------- Aufmacher ---------- */
-    .aufmacher{
-        display:grid;grid-template-columns:1fr;gap:38px;
-        padding:clamp(28px,6vw,58px) 0 clamp(34px,7vw,64px);
+    .hero{display:grid;gap:36px}
+    .lp > .hero{padding-top:28px}
+    .hero > *{min-width:0}
+    /* Die Ueberschrift in derselben Lage wie "Naehrwerte" auf dem Dashboard, nur
+       groesser: schmal, schwer, eng gesetzt. */
+    .hero-h{
+        font-size:clamp(50px,14vw,92px);font-weight:900;font-stretch:70%;
+        line-height:.9;letter-spacing:-.015em;text-wrap:balance;max-width:11ch;
     }
-    /* Ueberschriften stehen in Sometype Mono, nicht in der Displayschrift: die
-       Drei-Auftritte-Regel behaelt Big Shoulders dem Bonkopf, dem Datum und der
-       einen grossen Zahl vor. Die Groessen bleiben die Grad-Tokens. */
-    .auf-h{
-        font-weight:700;
-        font-size:var(--d-zahl);
-        line-height:1.04;letter-spacing:-.035em;
-        color:var(--on-table);max-width:15ch;text-wrap:balance;
-    }
-    /* Betonung im Bon: Punktfuehrung unter dem Wort. Keine Kursive (die Displayschrift
-       hat keine), keine Farbe (Rot ist reserviert). */
-    .auf-h .gesagt,.schluss-h .gesagt{
-        text-decoration:underline dotted;
-        text-decoration-thickness:3px;
-        text-underline-offset:8px;
-        text-decoration-color:var(--on-table-faint);
-    }
-    .auf-sub{
-        margin-top:18px;max-width:46ch;
-        font-size:var(--t-line);line-height:1.6;color:var(--on-table-faint);
-    }
-    .auf-cta{margin-top:26px}
-    .auf-note{
-        margin-top:14px;font-size:var(--t-line);color:var(--on-table-faint);
-    }
-    .auf-note a{color:var(--on-table);text-decoration-color:rgba(207,224,216,.45)}
-    .auf-note a:hover{text-decoration-color:var(--on-table)}
+    .hero-sub{margin-top:18px;max-width:46ch;font-size:var(--t-m);line-height:1.45;color:var(--ink-2)}
+    .hero-cta{margin-top:26px}
+    /* Hauptaktion der Seite, schwarz wie jede Hauptaktion; Kobalt gehoert der Sprachtaste im Demo. */
+    .btn.cta{min-height:56px;padding:0 24px;font-size:var(--t-m)}
+    .btn.cta svg.i{width:20px;height:20px;stroke-width:2.2}
+    .hero-note{margin-top:14px;font-size:15px;color:var(--faint)}
+    .hero-note a{color:var(--ink);font-weight:600}
 
-    /* ---------- Beleg im Aufmacher ---------- */
-    .demo-zeile{
-        font-size:var(--t-label);letter-spacing:.16em;text-transform:uppercase;
-        color:var(--faint);margin-top:14px;
+    /* ---------- Beispiel im Aufmacher: Satz, Rueckfrage, Naehrwerte ---------- */
+    /* Dieselben Formen wie im Dashboard: das Eingabefeld mit schwarzer Kante, die
+       Rueckfrage als fette Zeile darueber, darunter der Kasten. */
+    .demo{display:flex;flex-direction:column;gap:18px}
+    .demo-k{font-size:var(--t-s);color:var(--faint)}
+    .demo-say{display:flex;gap:8px;align-items:stretch;margin-top:6px}
+    .demo-field{
+        flex:1;min-width:0;display:flex;align-items:center;min-height:56px;
+        padding:8px 12px;border:1.5px solid var(--ink);font-weight:500;line-height:1.3;
     }
-    .demo-satz{
-        font-size:var(--t-line);line-height:1.4;font-weight:700;margin-top:5px;
-        min-height:2.8em;
+    /* Wie im Dashboard: die Sprachtaste ist die einzige Kobaltflaeche. */
+    .demo-mic{width:56px;min-height:56px;flex:none;display:grid;place-items:center;background:var(--blue);color:#fff}
+    .demo-mic svg.i{width:24px;height:24px}
+    .demo-ask{padding-top:12px;border-top:2px solid var(--ink)}
+    .demo-ask-n{font-size:var(--t-s);color:var(--ink-2);margin-top:4px}
+    .demo-ask-q{font-size:var(--t-m);font-weight:700;line-height:1.3;max-width:34ch;text-wrap:balance}
+    .demo-ask-a{display:inline-block;margin-top:10px;padding:8px 12px;border:1.5px solid var(--ink);font-weight:600}
+
+    /* Der Kasten: Linienstaerken wie auf der Verpackung. */
+    .demo .kasten-h{font-size:40px;line-height:.95;border-bottom:0;padding-bottom:0}
+    .demo .kasten-sub{font-size:15px;color:var(--ink-2);margin-top:6px;padding-bottom:10px;border-bottom:12px solid var(--ink)}
+    .demo-energie{
+        display:flex;align-items:flex-end;justify-content:space-between;gap:10px;
+        padding:12px 0;border-bottom:5px solid var(--ink);
     }
-    .caret{
-        display:inline-block;width:8px;height:1em;margin-left:2px;
-        background:var(--ink);vertical-align:-.12em;
-        animation:blinken 1.05s steps(1,end) infinite;
-    }
-    @keyframes blinken{0%,52%{opacity:1}53%,100%{opacity:0}}
-    .demo-pos{
-        display:flex;align-items:baseline;gap:7px;
-        margin-top:16px;padding-top:12px;border-top:1px solid var(--rule);
-        font-size:var(--t-line);font-weight:500;
-    }
-    .demo-pos .lead{flex:1;min-width:14px;border-bottom:1px dotted var(--lead);transform:translateY(-4px)}
-    .demo-pos .wert{font-weight:700}
-    .demo-tab{width:100%;border-collapse:collapse;margin-top:12px;font-size:var(--t-print)}
-    .demo-tab th,.demo-tab td{padding:6px 0;text-align:right;font-weight:400}
-    .demo-tab tbody th{text-align:left;font-weight:500}
-    .demo-tab thead th{
-        font-size:var(--t-label);letter-spacing:.12em;text-transform:uppercase;
-        color:var(--faint);border-bottom:1px solid var(--ink);text-align:right;
-    }
-    .demo-tab thead th:first-child{text-align:left}
-    .demo-tab tbody tr{border-bottom:1px dotted var(--rule)}
-    /* Der eine gestaltete Moment: die Zeile wird gedruckt, die Werte laufen nach. */
-    .gedruckt{opacity:0}
-    .gedruckt.da{animation:druck .34s cubic-bezier(.16,1,.3,1) both}
-    @keyframes druck{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+    .demo-energie p:first-child{font-weight:800;font-size:var(--t-m)}
+    .demo-tab{width:100%;border-collapse:collapse}
+    .demo-tab th,.demo-tab td{padding:9px 0}
+    .demo-tab tbody th{text-align:left;font-weight:700}
+    .demo-tab td{text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .demo-tab tr + tr > *{border-top:1px solid var(--hair)}
+    .demo-note{font-size:var(--t-s);color:var(--faint);padding-top:10px;border-top:1px solid var(--ink)}
+
+    /* Der eine Moment der Seite: Frage, Antwort und Kasten folgen dem Satz. Der
+       Endzustand ist der Ruhezustand — ohne Animation (reduced motion schaltet sie
+       in base_app global ab) steht alles sofort da. */
+    .folgt{animation:folgt .45s cubic-bezier(.16,1,.3,1) both}
+    .folgt-1{animation-delay:.5s}
+    .folgt-2{animation-delay:1.3s}
+    .folgt-3{animation-delay:2s}
+    @keyframes folgt{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
     /* ---------- Abschnitte ---------- */
-    .abschnitt{padding:0 0 clamp(34px,7vw,64px)}
-    .abschnitt-h{
-        font-weight:700;
-        font-size:var(--d-kopf);line-height:1.08;letter-spacing:-.03em;
-        color:var(--on-table);margin-bottom:14px;max-width:18ch;text-wrap:balance;
+    .lp-h{
+        font-size:clamp(36px,9vw,56px);font-weight:900;font-stretch:72%;
+        line-height:.95;letter-spacing:-.01em;text-wrap:balance;max-width:14ch;
     }
-    .abschnitt-lede{
-        max-width:54ch;margin-bottom:26px;
-        font-size:var(--t-line);line-height:1.6;color:var(--on-table-faint);
-    }
+    .lp-lede{margin-top:14px;max-width:52ch;font-size:var(--t-m);line-height:1.45;color:var(--ink-2)}
+    .zwei-sp{display:grid;gap:28px}
+    .zwei-sp > *{min-width:0}
 
-    /* ---------- Schritte ---------- */
-    .schritt{
-        display:grid;grid-template-columns:28px 1fr;gap:4px 12px;
-        padding:16px 0;border-bottom:1px dotted var(--rule);
-    }
-    .schritt:last-child{border-bottom:0;padding-bottom:4px}
-    .schritt-nr{
-        grid-row:span 2;font-size:var(--t-print);color:var(--faint);
-        padding-top:2px;
-    }
-    .schritt h3{font-size:var(--t-line);font-weight:700}
-    .schritt p{font-size:var(--t-line);line-height:1.6;color:var(--ink-2);max-width:52ch}
+    /* Ablauf: Zeilen mit Haarlinien, oben 2px Schwarz wie "Mahlzeiten". */
+    .schritte{list-style:none;border-top:2px solid var(--ink)}
+    .schritte li{padding:16px 0;border-bottom:1px solid var(--hair)}
+    .schritte p,.fn p{margin-top:4px;color:var(--ink-2);max-width:56ch}
 
-    /* ---------- Rueckfrage-Beleg ---------- */
-    .rf-pos{
-        display:flex;align-items:baseline;gap:7px;padding:11px 0;
-        border-bottom:1px dotted var(--rule);font-size:var(--t-line);
-    }
-    .rf-pos .lead{flex:1;min-width:14px;border-bottom:1px dotted var(--lead);transform:translateY(-4px)}
-    .rf-offen{color:var(--red);font-weight:700}
-    .rf-pos--gebucht{border-bottom:0;padding-top:14px}
-    .rf-wert{font-weight:700}
-    .rf-block{
-        margin:0 -24px;padding:16px 24px 18px;
-        background:var(--grain) repeat,var(--paper-2);
-        border-top:2px solid var(--red);border-bottom:1px solid var(--rule);
-    }
-    .rf-marke{
-        text-align:center;font-size:var(--t-label);font-weight:700;
-        letter-spacing:.2em;text-transform:uppercase;color:var(--red);margin-bottom:10px;
-    }
-    .rf-frage{font-size:var(--t-line);line-height:1.4;font-weight:700;max-width:34ch}
-    .rf-antwort{
-        margin-top:13px;padding:9px 13px;border:1.5px solid var(--ink);
-        font-size:var(--t-print);display:inline-block;
-    }
-    .rf-antwort b{font-weight:700}
-    .rf-punkte{margin-top:18px;display:grid;gap:9px}
-    .rf-punkt{
-        display:flex;gap:9px;align-items:flex-start;
-        font-size:var(--t-print);line-height:1.55;color:var(--ink-2);
-    }
-    .rf-punkt svg{width:16px;height:16px;flex:none;margin-top:2px;color:var(--ink)}
+    /* Rueckfrage-Beispiel: Verlauf als Tabelle, nicht als Kasten — der Kasten
+       gehoert dem Aufmacher. */
+    .rf{border-top:2px solid var(--ink)}
+    .rf-row{padding:14px 0;border-bottom:1px solid var(--hair)}
+    .rf-k{font-size:var(--t-s);color:var(--faint)}
+    .rf-v{font-weight:600;margin-top:2px}
+    .rf-row.frage .rf-v{margin-top:0}
+    .rf-n{margin-top:4px;color:var(--ink-2)}
+    .rf-row.frage .rf-v{font-size:var(--t-m);font-weight:700;line-height:1.3;max-width:36ch}
+    .rf .tab{margin-top:4px}
+    .rf .tab caption,.fn .tab caption{caption-side:top;text-align:left;font-size:var(--t-s);color:var(--faint);padding:14px 0 4px}
+    .rf .tab tr.energie > *{border-bottom:3px solid var(--ink);font-weight:800}
+    .punkte{list-style:none;margin-top:18px;display:grid;gap:10px}
+    .punkte li{display:flex;gap:10px;align-items:flex-start}
+    .punkte svg.i{width:20px;height:20px;stroke-width:2.2;margin-top:1px}
 
-    /* ---------- Funktionen ---------- */
-    .fn{padding:16px 0;border-bottom:1px dotted var(--rule)}
-    .fn:last-of-type{border-bottom:0}
-    .fn h3{font-size:var(--t-line);font-weight:700}
-    .fn p{font-size:var(--t-line);line-height:1.6;color:var(--ink-2);max-width:56ch;margin-top:3px}
-    .fn-tab{width:100%;border-collapse:collapse;margin-top:12px;font-size:var(--t-print);max-width:420px}
-    .fn-tab th,.fn-tab td{padding:5px 0;text-align:right;font-weight:400}
-    .fn-tab tbody th{text-align:left;font-weight:400;color:var(--ink-2)}
-    .fn-tab tbody tr{border-bottom:1px dotted var(--rule)}
-    .fn-tab tbody tr:last-child{border-bottom:0;border-top:1px solid var(--ink)}
-    .fn-tab tbody tr:last-child th,.fn-tab tbody tr:last-child td{font-weight:700;color:var(--ink)}
+    /* Funktionen: Zeilen mit Haarlinien, ab 900px zwei Spalten. Kein Karten-Raster. */
+    .fns{border-top:2px solid var(--ink);display:grid;margin-top:24px}
+    .fn{padding:16px 0;border-bottom:1px solid var(--hair);min-width:0}
+    .fn .tab{max-width:420px;margin-top:6px}
+    .fn .tab tr.summe > *{border-top:1px solid var(--ink);border-bottom:0;font-weight:700}
 
     /* ---------- Schluss ---------- */
-    .schluss{text-align:center;padding:clamp(30px,6vw,56px) 0 clamp(36px,7vw,68px)}
-    .schluss-h{
-        font-weight:700;
-        font-size:var(--d-kopf);
-        line-height:1.08;letter-spacing:-.03em;
-        color:var(--on-table);margin:0 0 26px;text-wrap:balance;
-    }
-    .schluss-note{margin-top:16px;font-size:var(--t-line);color:var(--on-table-faint)}
-    .schluss-note a{color:var(--on-table);text-decoration-color:rgba(207,224,216,.45)}
-
-    /* Der Fokusring des Shells ist fuer Papier gemacht; gegen die Tischflaeche
-       erreicht --red nur ~2,4:1. Auf dem Tisch ringt Papierfarbe. */
-    .tisch a:focus-visible,.tisch button:focus-visible{
-        outline:2px solid var(--paper);outline-offset:3px;
-    }
-
-    /* ---------- Fuss ---------- */
-    .tisch-fuss{
-        display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 18px;
-        padding:20px 0 30px;border-top:1px solid rgba(207,224,216,.18);
-        font-size:var(--t-print);color:var(--on-table-faint);
-    }
-    .tisch-fuss a{color:var(--on-table-faint);text-decoration-color:rgba(143,168,158,.5)}
-    .tisch-fuss a:hover{color:var(--on-table)}
+    .schluss .lp-h{max-width:none}
+    .schluss .hero-cta{margin-top:24px}
 
     @media(min-width:900px){
-        .aufmacher{grid-template-columns:1.05fr .95fr;gap:52px;align-items:start}
-        /* Ein Beleg ueber die volle Breite waere kein Beleg mehr. Die Ueberschrift
-           nimmt die linke Spur, das Papier bleibt schmal. */
-        .abschnitt--zwei{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px;align-items:start}
-        .abschnitt--zwei .abschnitt-lede{margin-bottom:0}
-        .aufmacher .beleg{margin-top:8px}
-        .zwei{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+        .lp > section{padding:56px 0 64px}
+        .lp > .hero{padding-top:40px}
+        .hero{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);column-gap:56px;align-items:start}
+        .hero-h{font-size:clamp(76px,8.4vw,96px)}
+        .demo{margin-top:6px}
+        .zwei-sp{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:56px;align-items:start}
+        .fns{grid-template-columns:1fr 1fr;column-gap:40px}
     }
-    @media(pointer:coarse){
-        .tisch-link{min-height:44px;display:inline-flex;align-items:center}
-        .btn-papier{min-height:44px}
+    @media(max-width:420px){
+        /* Wortmarke, zwei Links und der Knopf muessen auf 375px in eine Zeile. */
+        .top-links{column-gap:12px}
+        .top-links .btn.sm{padding:0 10px}
     }
-    @media(prefers-reduced-motion:reduce){
-        .caret{display:none}
-        .gedruckt{opacity:1;animation:none}
+    @media(max-width:380px){
+        .demo .kasten-h{font-size:34px}
+        .btn.cta{width:100%}
     }
 </style>
 {% endblock %}
 
-{% block shell %}
-<div class="tisch auf-tisch">
-
-    <header class="leiste">
-        <a class="leiste-marke" href="/">MacroMic</a>
-        <div class="leiste-rechts">
-            <a class="tisch-link" href="/faq">FAQ</a>
-            <a class="tisch-link" href="/login">Anmelden</a>
-            <a class="btn-papier" href="/register">Registrieren</a>
-        </div>
-    </header>
-
-    <section class="aufmacher">
-        <div>
-            <h1 class="auf-h">Sag einfach, was du <span class="gesagt">gegessen</span> hast.</h1>
-            <p class="auf-sub">Kein Klicken durch Lebensmitteldatenbanken, keine Portionsgrößen. Sprich einen Satz ein oder tipp ihn — Kalorien und Makros landen automatisch im Tagesprotokoll.</p>
-            <div class="auf-cta">
-                <a class="btn-papier gross" href="/register">Jetzt registrieren
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                </a>
-            </div>
-            <p class="auf-note">{% if needs_code %}Zugang aktuell nur mit Invite-Code. &nbsp;·&nbsp; {% endif %}Schon dabei? <a href="/login">Anmelden</a></p>
-        </div>
-
-        <p class="sr-only">Beispiel: Aus dem Satz „Müsli mit Joghurt und Banane“ wird eine
-        gebuchte Position mit 410 kcal, 13 g Eiweiß, 66 g Kohlenhydrate und 9 g Fett.</p>
-        <div class="beleg" aria-hidden="true">
-            <div class="beleg-kopf"><span>Beleg</span><span>Beispiel</span></div>
-            <p class="demo-zeile">Du sagst</p>
-            <p class="demo-satz"><span id="getippt"></span><span class="caret"></span></p>
-            <div class="demo-pos gedruckt" id="demo-pos">
-                <span>Müsli mit Joghurt und Banane</span>
-                <span class="lead"></span>
-                <span class="wert">410</span>
-            </div>
-            <table class="demo-tab gedruckt" id="demo-tab">
-                <thead><tr><th>Nährwert</th><th>Menge</th></tr></thead>
-                <tbody>
-                    <tr><th>Eiweiß</th><td>13 g</td></tr>
-                    <tr><th>Kohlenhydrate</th><td>66 g</td></tr>
-                    <tr><th>Fett</th><td>9 g</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <section class="abschnitt abschnitt--zwei" id="ablauf">
-        <div class="abschnitt-kopf">
-            <h2 class="abschnitt-h">Ein Satz rein.<br>Makros raus.</h2>
-            <p class="abschnitt-lede">Kein Suchen, kein Scrollen durch Treffer, kein Abwiegen. Du beschreibst deine Mahlzeit so, wie du sie einem Menschen beschreiben würdest.</p>
-        </div>
-        <div class="beleg">
-            <div class="beleg-kopf"><span>Ablauf</span><span>3 Schritte</span></div>
-            <div class="schritt">
-                <span class="schritt-nr">1</span>
-                <h3>Einsprechen oder tippen</h3>
-                <p>Aufnahme starten und die Mahlzeit sagen, oder „Müsli mit Joghurt und Banane“ tippen. Beides führt zum selben Ziel.</p>
-            </div>
-            <div class="schritt">
-                <span class="schritt-nr">2</span>
-                <h3>Wird ausgewertet</h3>
-                <p>Sprache wird transkribiert, der Satz interpretiert und in Kalorien, Eiweiß, Kohlenhydrate und Fett übersetzt.</p>
-            </div>
-            <div class="schritt">
-                <span class="schritt-nr">3</span>
-                <h3>Steht im Log</h3>
-                <p>Die Mahlzeit landet mit allen Makros im Tagesprotokoll. Später falsch? In zwei Klicks nachbearbeitet.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="abschnitt abschnitt--zwei" id="rueckfrage">
-        <div class="abschnitt-kopf">
-            <h2 class="abschnitt-h">Fragt nach, statt eine Zahl zu erfinden.</h2>
-            <p class="abschnitt-lede">Fehlt eine Angabe, die das Ergebnis deutlich verändert, fragt die App kurz nach — statt die Lücke mit einer Zahl zu füllen. Nur dann, und höchstens zweimal.</p>
-        </div>
-        <div class="beleg">
-            <div class="beleg-kopf"><span>Beleg</span><span>Rückfrage</span></div>
-
-            <div class="rf-pos">
-                <span>Nudeln mit Pesto</span>
-                <span class="lead"></span>
-                <span class="rf-offen">?</span>
-            </div>
-
-            <div class="rf-block">
-                <p class="rf-marke">— Rückfrage 1 von 2 —</p>
-                <p class="rf-frage">Wie viel Nudeln ungefähr — ein kleiner oder ein großer Teller?</p>
-                <p class="rf-antwort"><b>Großer Teller</b></p>
-            </div>
-
-            <div class="rf-pos rf-pos--gebucht">
-                <span>Nudeln mit Pesto, großer Teller</span>
-                <span class="lead"></span>
-                <span class="rf-wert">610</span>
-            </div>
-            <table class="demo-tab">
-                <thead><tr><th>Nährwert</th><th>Menge</th></tr></thead>
-                <tbody>
-                    <tr><th>Eiweiß</th><td>18 g</td></tr>
-                    <tr><th>Kohlenhydrate</th><td>82 g</td></tr>
-                    <tr><th>Fett</th><td>22 g</td></tr>
-                </tbody>
-            </table>
-
-            <div class="rf-punkte">
-                <p class="rf-punkt">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-                    <span>Eine gezielte Frage, keine Formularschlacht.</span>
-                </p>
-                <p class="rf-punkt">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-                    <span>Keine erfundenen Werte in deinem Protokoll.</span>
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <section class="abschnitt" id="funktionen">
-        <h2 class="abschnitt-h">Was du sonst noch brauchst.</h2>
-        <div class="zwei">
-            <div class="beleg">
-                <div class="fn">
-                    <h3>Ziele mit Tagesfortschritt</h3>
-                    <p>Setz dir Makroziele und sieh jederzeit, wie weit du heute bist — plus Auswertung über Woche und Monat.</p>
-                    <table class="fn-tab">
-                        <thead><tr><th>Tag</th><th>kcal</th><th>Ziel</th></tr></thead>
-                        <tbody>
-                            <tr><th>Mo</th><td>2.310</td><td>2.480</td></tr>
-                            <tr><th>Di</th><td>2.465</td><td>2.480</td></tr>
-                            <tr><th>Mi</th><td>1.947</td><td>2.480</td></tr>
-                            <tr><th>Schnitt</th><td>2.241</td><td>2.480</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="fn">
-                    <h3>Verlauf, Woche &amp; Monat</h3>
-                    <p>Wochen- und Monatsansicht. Ältere Mahlzeiten jederzeit nachträglich bearbeitbar.</p>
-                </div>
-            </div>
-
-            <div class="beleg">
-                <div class="fn">
-                    <h3>Rezepte pro Portion</h3>
-                    <p>Zutaten auch per Sprache erfassen — Makros werden pro Portion berechnet.</p>
-                    <table class="fn-tab">
-                        <tbody>
-                            <tr><th>Pasta, 200 g</th><td>262 kcal</td></tr>
-                            <tr><th>Olivenöl, 20 g</th><td>177 kcal</td></tr>
-                            <tr><th>pro Portion</th><td>220 kcal</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="fn">
-                    <h3>Sprache im Browser</h3>
-                    <p>Die Aufnahme läuft direkt im Browser, wird transkribiert und sofort in Makros übersetzt. Kein Gerät, keine App-Installation nötig.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="schluss">
-        <h2 class="schluss-h">Weniger tippen.<br><span class="gesagt">Mehr</span> im Log.</h2>
-        <a class="btn-papier gross" href="/register">Jetzt registrieren
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
-        <p class="schluss-note">{% if needs_code %}Zugang aktuell nur mit Invite-Code. &nbsp;·&nbsp; {% endif %}Schon dabei? <a href="/login">Anmelden</a></p>
-    </section>
-
-    <footer class="tisch-fuss">
-        <span>MacroMic · Sag einfach, was du gegessen hast.</span>
-        <span><a href="/faq">FAQ</a> · <a href="/impressum">Impressum</a> · <a href="/datenschutz">Datenschutz</a></span>
-    </footer>
-
-</div>
+{% block topright %}
+<nav class="top-links" aria-label="Konto">
+    <a href="/faq">FAQ</a>
+    <a href="/login">Anmelden</a>
+    <a class="btn sm" href="/register">Registrieren</a>
+</nav>
 {% endblock %}
 
-{% block scripts %}
-<script>
-(function(){
-    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var satz = 'Müsli mit Joghurt und Banane';
-    var ziel = document.getElementById('getippt');
-    var nach = [document.getElementById('demo-pos'), document.getElementById('demo-tab')];
+{% block content %}
+<main class="lp">
 
-    // Der einzige gestaltete Moment der Seite: der Beleg druckt sich. Bei
-    // prefers-reduced-motion steht er sofort fertig da — der Inhalt ist derselbe.
-    function drucken(){
-        nach.forEach(function(el, i){
-            setTimeout(function(){ el.classList.add('da'); }, i * 160);
-        });
-    }
+    <section class="hero" aria-labelledby="hero-h">
+        <div>
+            <h1 class="hero-h" id="hero-h">Sag einfach, was du gegessen hast.</h1>
+            <p class="hero-sub">Kein Klicken durch Lebensmitteldatenbanken, keine Portionsgrößen. Sprich einen Satz ein oder tipp ihn — Kalorien und Makros landen automatisch im Tagesprotokoll.</p>
+            <div class="hero-cta">
+                <a class="btn cta" href="/register">Jetzt registrieren
+                    <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5 18.5 12 13 17.5"/></svg>
+                </a>
+            </div>
+            <p class="hero-note">{% if needs_code %}Zugang aktuell nur mit Invite-Code. &nbsp;·&nbsp; {% endif %}Schon dabei? <a href="/login">Anmelden</a></p>
+        </div>
 
-    var cursor = document.querySelector('.caret');
-    function cursorWeg(){ if(cursor && cursor.parentNode) cursor.parentNode.removeChild(cursor); }
+        <figure class="demo" aria-label="Beispiel: vom gesprochenen Satz über eine Rückfrage zu den Nährwerten">
+            <div>
+                <p class="demo-k">Du sagst</p>
+                <div class="demo-say">
+                    <p class="demo-field">„Zwei Brötchen mit Käse und ein Kaffee mit Milch“</p>
+                    <span class="demo-mic" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></span>
+                </div>
+            </div>
 
-    if(reduce){
-        ziel.textContent = satz;
-        cursorWeg();
-        nach.forEach(function(el){ el.classList.add('da'); });
-        return;
-    }
+            <div class="demo-ask folgt folgt-1">
+                <p class="demo-ask-q">Wie viel Käse ungefähr — eine Scheibe oder zwei?</p>
+                <p class="demo-ask-n">Rückfrage 1 von höchstens 2</p>
+                <p class="demo-ask-a folgt folgt-2">Zwei Scheiben</p>
+            </div>
 
-    var i = 0;
-    (function tippen(){
-        if(i <= satz.length){
-            ziel.textContent = satz.slice(0, i);
-            i++;
-            setTimeout(tippen, 55 + Math.random() * 40);
-        } else {
-            // Der Cursor verschwindet mit dem letzten Zeichen: ein endlos blinkender
-            // Balken waere ein zweiter dauernder Moment auf einer Seite, die genau
-            // einen haben darf.
-            cursorWeg();
-            setTimeout(drucken, 320);
-        }
-    })();
-})();
-</script>
+            <div class="kasten folgt folgt-3">
+                <p class="kasten-h">Nährwerte</p>
+                <p class="kasten-sub">Beispiel · 1 Mahlzeit</p>
+                <div class="demo-energie">
+                    <p>Energie</p>
+                    <p class="big">490<small>kcal</small></p>
+                </div>
+                <table class="demo-tab">
+                    <caption class="sr-only">Geschätzte Nährwerte im Beispiel</caption>
+                    <tbody>
+                        <tr><th scope="row">Eiweiß</th><td>22 g</td></tr>
+                        <tr><th scope="row">Kohlenhydrate</th><td>60 g</td></tr>
+                        <tr><th scope="row">Fett</th><td>17 g</td></tr>
+                    </tbody>
+                </table>
+                <p class="demo-note">Geschätzt aus der Beschreibung. Jede Mahlzeit lässt sich korrigieren.</p>
+            </div>
+        </figure>
+    </section>
+
+    <section class="zwei-sp" id="ablauf" aria-labelledby="ablauf-h">
+        <div>
+            <h2 class="lp-h" id="ablauf-h">Ein Satz rein.<br>Makros raus.</h2>
+            <p class="lp-lede">Kein Suchen, kein Scrollen durch Treffer, kein Abwiegen. Du beschreibst deine Mahlzeit so, wie du sie einem Menschen beschreiben würdest.</p>
+        </div>
+        <ol class="schritte">
+            <li>
+                <h3 class="sub-h">Einsprechen oder tippen</h3>
+                <p>Aufnahme starten und die Mahlzeit sagen, oder „Müsli mit Joghurt und Banane“ tippen. Beides führt zum selben Ziel.</p>
+            </li>
+            <li>
+                <h3 class="sub-h">Wird ausgewertet</h3>
+                <p>Sprache wird transkribiert, der Satz interpretiert und in Kalorien, Eiweiß, Kohlenhydrate und Fett übersetzt.</p>
+            </li>
+            <li>
+                <h3 class="sub-h">Steht im Log</h3>
+                <p>Die Mahlzeit landet mit allen Makros im Tagesprotokoll. Später falsch? In zwei Klicks nachbearbeitet.</p>
+            </li>
+        </ol>
+    </section>
+
+    <section class="zwei-sp" id="rueckfrage" aria-labelledby="rf-h">
+        <div>
+            <h2 class="lp-h" id="rf-h">Fragt nach, statt eine Zahl zu erfinden.</h2>
+            <p class="lp-lede">Fehlt eine Angabe, die das Ergebnis deutlich verändert, fragt die App kurz nach — statt die Lücke mit einer Zahl zu füllen. Nur dann, und höchstens zweimal.</p>
+        </div>
+        <div>
+            <div class="rf">
+                <div class="rf-row">
+                    <p class="rf-k">Du</p>
+                    <p class="rf-v">Nudeln mit Pesto</p>
+                </div>
+                <div class="rf-row frage">
+                    <p class="rf-v">Wie viel Nudeln ungefähr — ein kleiner oder ein großer Teller?</p>
+                    <p class="rf-k rf-n">Rückfrage 1 von höchstens 2</p>
+                </div>
+                <div class="rf-row">
+                    <p class="rf-k">Du</p>
+                    <p class="rf-v">Großer Teller</p>
+                </div>
+                <table class="tab">
+                    <caption>Beispiel: Nudeln mit Pesto, großer Teller</caption>
+                    <tbody>
+                        <tr class="energie"><th scope="row">Energie</th><td class="r">610 kcal</td></tr>
+                        <tr><th scope="row">Eiweiß</th><td class="r">18 g</td></tr>
+                        <tr><th scope="row">Kohlenhydrate</th><td class="r">82 g</td></tr>
+                        <tr><th scope="row">Fett</th><td class="r">22 g</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <ul class="punkte">
+                <li><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Eine gezielte Frage, keine Formularschlacht.</span></li>
+                <li><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Keine erfundenen Werte in deinem Protokoll.</span></li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="funktionen" aria-labelledby="fn-h">
+        <h2 class="lp-h" id="fn-h">Was du sonst noch brauchst.</h2>
+        <div class="fns">
+            <div class="fn">
+                <h3 class="sub-h">Ziele mit Tagesfortschritt</h3>
+                <p>Setz dir Makroziele und sieh jederzeit, wie weit du heute bist — plus Auswertung über Woche und Monat.</p>
+                <table class="tab">
+                    <caption>Beispielwoche</caption>
+                    <thead><tr><th scope="col">Tag</th><th scope="col" class="r">kcal</th><th scope="col" class="r">Ziel</th></tr></thead>
+                    <tbody>
+                        <tr><th scope="row">Mo</th><td class="r">2.310</td><td class="r">2.480</td></tr>
+                        <tr><th scope="row">Di</th><td class="r">2.465</td><td class="r">2.480</td></tr>
+                        <tr><th scope="row">Mi</th><td class="r">1.947</td><td class="r">2.480</td></tr>
+                        <tr class="summe"><th scope="row">Schnitt</th><td class="r">2.241</td><td class="r">2.480</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="fn">
+                <h3 class="sub-h">Rezepte pro Portion</h3>
+                <p>Zutaten auch per Sprache erfassen — Makros werden pro Portion berechnet.</p>
+                <table class="tab">
+                    <caption>Beispielrezept</caption>
+                    <tbody>
+                        <tr><th scope="row">Pasta, 200 g</th><td class="r">262 kcal</td></tr>
+                        <tr><th scope="row">Olivenöl, 20 g</th><td class="r">177 kcal</td></tr>
+                        <tr class="summe"><th scope="row">pro Portion</th><td class="r">220 kcal</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="fn">
+                <h3 class="sub-h">Verlauf, Woche &amp; Monat</h3>
+                <p>Wochen- und Monatsansicht. Ältere Mahlzeiten jederzeit nachträglich bearbeitbar.</p>
+            </div>
+            <div class="fn">
+                <h3 class="sub-h">Sprache im Browser</h3>
+                <p>Die Aufnahme läuft direkt im Browser, wird transkribiert und sofort in Makros übersetzt. Kein Gerät, keine App-Installation nötig.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="schluss" aria-labelledby="schluss-h">
+        <h2 class="lp-h" id="schluss-h">Weniger tippen.<br>Mehr im Log.</h2>
+        <div class="hero-cta">
+            <a class="btn cta" href="/register">Jetzt registrieren
+                <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5 18.5 12 13 17.5"/></svg>
+            </a>
+        </div>
+        <p class="hero-note">{% if needs_code %}Zugang aktuell nur mit Invite-Code. &nbsp;·&nbsp; {% endif %}Schon dabei? <a href="/login">Anmelden</a></p>
+    </section>
+
+</main>
 {% endblock %}

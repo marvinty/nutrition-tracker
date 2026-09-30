@@ -1,24 +1,38 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}Zu viele Versuche — MacroMic{% endblock %}
 
-{% block nav %}
-<nav id="nav">
-    <div class="wrap nav-in">
-        <a class="brand" href="/">{% include "_wordmark.html" %}</a>
-    </div>
-</nav>
+{% block extra_head %}
+<style>
+    /* Formularseite: eine Spalte von 420px, Hauptaktion schwarz in voller Breite,
+       Nebenwege als Textlinks darunter. */
+    .page.auth{max-width:calc(420px + 2 * var(--gut))}
+    .page.auth > * + *{margin-top:20px}
+    .auth-form{display:grid;gap:14px}
+    .auth-form .btn{width:100%;margin-top:6px}
+    .auth-links{font-size:15px;color:var(--ink-2);padding-top:14px;border-top:1px solid var(--hair)}
+    .auth-links p + p{margin-top:6px}
+    .auth-links a{color:var(--ink);text-decoration-color:currentColor}
+    @media(pointer:coarse){.auth-links a{display:inline-block;padding:10px 0}}
+</style>
 {% endblock %}
 
+{#- Diese Seite rendert auch fuer angemeldete Nutzer (Tageslimit der KI-Aufrufe),
+    aber ohne `username` im Kontext. Anmelden-Links waeren dort falsch, also bleibt
+    der Kopf wie bisher leer. -#}
+{% block topright %}{% endblock %}
+
 {% block content %}
-<div class="auth-wrap">
-    <div class="card auth-card">
-        <h1 class="auth-title">Kurz <em>durchatmen</em>.</h1>
-        <p class="auth-lede">{{ detail }}</p>
-        <p class="auth-footer">
+<main class="page narrow auth">
+    <header>
+        <h1 class="page-h">Kurz durchatmen.</h1>
+        <p class="page-lede">{{ detail }}</p>
+    </header>
+    <div class="auth-links">
+        <p>
             Passwort vergessen? <a href="/forgot-password">Setz es zurück</a> — das geht
             auch, während die Sperre läuft.
         </p>
     </div>
-</div>
+</main>
 {% endblock %}

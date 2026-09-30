@@ -1,67 +1,47 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}Datenschutz — MacroMic{% endblock %}
 
 {% block extra_head %}
 <style>
-    .legal{max-width:680px}
-    .legal p{color:var(--text-muted)}
-    .legal p + p{margin-top:14px}
-    .legal address{font-style:normal;color:var(--text);line-height:1.7}
-    .legal h2{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-.02em;
-        margin:42px 0 12px;color:var(--text)}
-    .legal h2:first-of-type{margin-top:0}
-    .legal h3{font-size:16px;font-weight:600;color:var(--text);margin:22px 0 6px}
-    .legal a{font-weight:500}
-    .legal ul{margin:12px 0 0 20px;color:var(--text-muted)}
+    /* Rechtstexte im Lesen-Modus. Muss zwischen impressum.html und
+       datenschutz.html uebereinstimmen — die beiden Seiten verlinken einander und
+       werden direkt hintereinander gelesen. */
+    .legal{max-width:65ch}
+    .legal > * + *{margin-top:14px}
+    .legal p,.legal ul{color:var(--ink-2)}
+    .legal address{font-style:normal;color:var(--ink);line-height:1.7}
+    .legal h2.sec-h{margin-top:40px}
+    .legal h2.sec-h:first-child{margin-top:0}
+    .legal a{color:var(--ink);font-weight:600}
+
+    /* Sichtbar statt still: eine leere Umgebungsvariable darf nicht als fertiges
+       Impressum durchgehen. Rot, weil unvollstaendig = rechtlich angreifbar. */
+    .legal p.legal-missing{color:var(--ink)}
+    .legal p.legal-missing code{font-size:.92em}
+    .legal h3.sub-h{color:var(--ink);margin-top:24px}
+    .legal ul{margin-left:20px}
     .legal li + li{margin-top:7px}
-    .legal li strong{color:var(--text);font-weight:600}
+    .legal li strong{color:var(--ink);font-weight:700}
 
-    /* Empfängertabelle als Liste, nicht als <table>: sie muss auf 375px umbrechen
-       können, ohne einen horizontalen Scroller zu erzeugen. */
-    .recv{list-style:none;margin:14px 0 0;border:1px solid var(--border);
-        border-radius:var(--r-btn);overflow:hidden;background:var(--surface)}
-    .recv li{padding:13px 16px;margin:0}
-    .recv li + li{border-top:1px solid var(--border)}
-    .recv .who{display:block;color:var(--text);font-weight:600;font-size:15px}
-    .recv .what{display:block;color:var(--text-muted);font-size:15px;margin-top:2px}
-
-    /* p.legal-missing, nicht nur .legal-missing: `.legal p` oben ist spezifischer
-       und würde die Warnfarbe sonst überschreiben. */
-    .legal p.legal-missing{color:var(--danger);background:var(--danger-soft);
-        border-radius:var(--r-btn);padding:12px 16px;font-size:15px}
-    .legal-foot{margin-top:40px;color:var(--text-subtle);font-size:14px}
-
-    @media(max-width:640px){
-        .legal h2{font-size:21px;margin-top:34px}
-    }
+    /* Empfaengertabelle als Liste, nicht als <table>: sie muss auf 375px umbrechen
+       koennen, ohne einen horizontalen Scroller zu erzeugen. 1px Schwarz oben,
+       Haarlinien zwischen den Empfaengern. */
+    .legal ul.recv{list-style:none;margin-left:0;border-top:1px solid var(--ink)}
+    .recv li{padding:12px 0;border-bottom:1px solid var(--hair)}
+    .legal .recv li + li{margin-top:0}
+    .recv .who{display:block;color:var(--ink);font-weight:700}
+    .recv .what{display:block;color:var(--ink-2);margin-top:2px}
+    .legal .legal-foot{margin-top:40px;color:var(--faint);font-size:15px}
 </style>
 {% endblock %}
 
-{% block nav %}
-{% if username %}{{ super() }}{% else %}
-<nav id="nav">
-    <div class="wrap nav-in">
-        <a class="brand" href="/">{% include "_wordmark.html" %}</a>
-        <div class="nav-actions">
-            <a class="nav-link" href="/login">Anmelden</a>
-            <a class="btn sm" href="/register">Registrieren</a>
-        </div>
-    </div>
-</nav>
-{% endif %}
-{% endblock %}
-
 {% block content %}
-<div class="page-head">
-    <div>
-        <span class="sec-tag">Datenschutz</span>
-        <h1 class="page-h">Was mit deinen <em>Daten</em> passiert</h1>
-    </div>
-</div>
+<main class="page narrow">
+<h1 class="page-h">Was mit deinen Daten passiert</h1>
 
 <div class="legal">
-    <h2>Verantwortlicher</h2>
+    <h2 class="sec-h">Verantwortlicher</h2>
     {% if imprint.name and imprint.street and imprint.city %}
     <address>
         {{ imprint.name }}<br>
@@ -70,11 +50,11 @@
         <a href="mailto:{{ imprint.email }}">{{ imprint.email }}</a>{% endif %}
     </address>
     {% else %}
-    <p class="legal-missing">Auf diesem Server sind keine Verantwortlichen-Daten
+    <p class="notice error legal-missing">Auf diesem Server sind keine Verantwortlichen-Daten
         hinterlegt. Siehe <a href="/impressum">Impressum</a>.</p>
     {% endif %}
 
-    <h2>Welche Daten die App speichert</h2>
+    <h2 class="sec-h">Welche Daten die App speichert</h2>
     <ul>
         <li><strong>Konto:</strong> Benutzername, E-Mail-Adresse, Passwort (nur als
             Hash, nie im Klartext), Tarif und Registrierungszeitpunkt.</li>
@@ -93,13 +73,13 @@
             Begrenzung von Rateversuchen.</li>
     </ul>
 
-    <h3>Bitte keine Gesundheitsangaben eintragen</h3>
+    <h3 class="sub-h">Bitte keine Gesundheitsangaben eintragen</h3>
     <p>Beschreib deine Mahlzeiten, nicht deinen Gesundheitszustand. Angaben zu
         Krankheiten, Diagnosen oder Medikamenten sind besondere Kategorien
         personenbezogener Daten nach Art. 9 DSGVO — die App ist dafür nicht ausgelegt,
         und sie werden für die Nährwertschätzung auch nicht gebraucht.</p>
 
-    <h2>Wozu, und auf welcher Grundlage</h2>
+    <h2 class="sec-h">Wozu, und auf welcher Grundlage</h2>
     <p>Konto, Mahlzeiten, Rezepte und Ziele verarbeite ich, um dir die App
         bereitzustellen — Art. 6 Abs. 1 lit. b DSGVO (Vertrag bzw. vorvertragliche
         Maßnahmen). Das KI-Protokoll, die Verbrauchszähler und die gespeicherten
@@ -108,7 +88,7 @@
         (berechtigtes Interesse). Die Bestätigungs- und Passwort-Mails sind für den
         Betrieb des Kontos erforderlich, ebenfalls lit. b.</p>
 
-    <h2>Wer die Daten außerdem zu sehen bekommt</h2>
+    <h2 class="sec-h">Wer die Daten außerdem zu sehen bekommt</h2>
     <p>Die App läuft auf eigener Hardware, nicht bei einem Cloud-Anbieter. An diesen
         Stellen gehen Daten trotzdem nach außen:</p>
     <ul class="recv">
@@ -145,7 +125,7 @@
         von einem fremden CDN geladen — deine IP-Adresse geht damit an niemanden, den
         du hier nicht ohnehin schon beauftragt hast.</p>
 
-    <h2>Cookies</h2>
+    <h2 class="sec-h">Cookies</h2>
     <p>Die App setzt nur technisch notwendige Cookies, kein Tracking, keine Analyse,
         keine Werbung:</p>
     <ul>
@@ -158,7 +138,7 @@
         sie nach §25 Abs. 2 TDDDG keine Einwilligung — deshalb gibt es hier auch kein
         Cookie-Banner.</p>
 
-    <h2>Wie lange gespeichert wird</h2>
+    <h2 class="sec-h">Wie lange gespeichert wird</h2>
     <ul>
         <li>Konto, Mahlzeiten, Rezepte und Ziele: bis du sie löschst oder das Konto
             aufgibst.</li>
@@ -168,7 +148,7 @@
             automatisch.</li>
     </ul>
 
-    <h2>Deine Rechte</h2>
+    <h2 class="sec-h">Deine Rechte</h2>
     <p>Du hast das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung
         (Art. 17), Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20) und
         Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen
@@ -182,11 +162,12 @@
         Art. 77 DSGVO. Zuständig ist die Behörde deines Wohnsitzes oder die am Sitz des
         Verantwortlichen.</p>
 
-    <h2>Keine automatisierte Entscheidung</h2>
+    <h2 class="sec-h">Keine automatisierte Entscheidung</h2>
     <p>Die Nährwerte schätzt ein Sprachmodell, aber daran hängt keine Entscheidung mit
         rechtlicher Wirkung für dich im Sinne von Art. 22 DSGVO. Die Werte sind
         Schätzungen und keine medizinische Beratung — siehe <a href="/faq">FAQ</a>.</p>
 
     <p class="legal-foot">Zurück zum <a href="/impressum">Impressum</a>.</p>
 </div>
+</main>
 {% endblock %}

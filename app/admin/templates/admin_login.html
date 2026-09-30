@@ -2,30 +2,34 @@
 
 {% block title %}Admin-Anmeldung — MacroMic{% endblock %}
 
+{% block admin_head %}
+<style>
+    .page.login{max-width:480px}
+    .login form{display:flex;flex-direction:column;gap:14px}
+    .login .btn{width:100%;margin-top:6px}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="admin-bar">
-    <div class="wrap admin-in">
-        <div class="brand">
-            {% with variant = "dark" %}{% include "_wordmark.html" %}{% endwith %}
-            <span class="tag">Admin</span>
-        </div>
+<main class="page narrow login">
+    <div>
+        <h1 class="page-h">Admin-Bereich</h1>
+        <p class="page-lede">Anmeldung nur für Administratoren.</p>
     </div>
-</div>
-<main>
-    <div class="wrap auth-wrap">
-        <div class="card auth-card">
-            <h1 class="auth-title">Admin-Bereich</h1>
-            <p class="auth-sub">Anmeldung nur für Administratoren.</p>
-            {% if error %}
-            <p class="status error">{{ error }}</p>
-            {% endif %}
-            <form method="post" action="/admin/login" class="auth-form">
-                {{ csrf_field() }}
-                <input type="text" name="username" placeholder="Benutzername" autocomplete="username" required>
-                <input type="password" name="password" placeholder="Passwort" autocomplete="current-password" required>
-                <button type="submit" class="btn">Anmelden</button>
-            </form>
+    {% if error %}
+    <p class="notice error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form method="post" action="/admin/login">
+        {{ csrf_field() }}
+        <div class="feld">
+            <label for="admin-username">Benutzername</label>
+            <input type="text" id="admin-username" name="username" autocomplete="username" required>
         </div>
-    </div>
+        <div class="feld">
+            <label for="admin-password">Passwort</label>
+            <input type="password" id="admin-password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn">Anmelden</button>
+    </form>
 </main>
 {% endblock %}

@@ -1,429 +1,442 @@
-{% extends "base_bon.html" %}
+{% extends "base_app.html" %}
 
-{% block title %}Tagesbon — {{ selected_label }}{% endblock %}
+{% block title %}{% if is_today %}Heute{% else %}Rückblick{% endif %} — {{ selected_label }} · MacroMic{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* ---------- Bonkopf: Datum und Tageswechsel ---------- */
-    .day-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px}
-    .day-line .tag{font-size:var(--t-print);color:var(--faint);letter-spacing:.04em}
-    .day-nav{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
-    .nav-btn{
-        display:inline-grid;place-items:center;min-width:32px;min-height:32px;
-        font:inherit;font-size:var(--t-label);line-height:1;color:var(--ink-2);
-        border:1px solid var(--rule);background:transparent;text-decoration:none;
+    /* ---------- Tageswechsel im Kopf ---------- */
+    .day{display:flex;align-items:center;gap:2px}
+    .day-btn{width:40px;height:40px;display:grid;place-items:center;color:var(--ink);text-decoration:none}
+    .day-btn:hover{background:var(--tint)}
+    .day-btn.is-disabled{color:var(--hair);pointer-events:none}
+    .day input[type=date]{
+        font-size:15px;font-weight:600;
+        border:0;background:transparent;color:var(--ink);padding:6px 2px;min-height:40px;
+        width:8.2em;text-align:center;
     }
-    .nav-btn:hover{border-color:var(--ink);color:var(--ink);text-decoration:none}
-    .nav-btn svg{width:15px;height:15px}
-    .nav-btn.is-disabled{color:var(--rule);border-color:var(--rule-soft);pointer-events:none}
-    .nav-btn.nav-today{min-width:auto;padding:0 9px;font-size:var(--t-label);letter-spacing:.12em;text-transform:uppercase}
-    .day-nav input[type=date]{
-        width:auto;min-height:32px;padding:2px 4px;font-size:var(--t-print);
-        border:0;border-bottom:1px solid var(--rule);background:transparent;color:var(--ink-2);
-    }
-    .day-nav input[type=date]:focus{background:transparent}
-    .bon-datum{
-        font-family:var(--display);font-weight:700;font-size:var(--d-datum);line-height:1.05;
-        letter-spacing:.01em;margin-top:10px;text-align:center;
-    }
+    .day input[type=date]:hover{background:var(--tint)}
+    .day input[type=date]::-webkit-calendar-picker-indicator{display:none}
 
-    /* ---------- Eingabe: die Arbeit steht vor der Bilanz ---------- */
-    .erfassen{padding:18px 0 4px;border-top:2px solid var(--ink);margin-top:14px}
-    .erfassen h2{font:inherit;font-size:var(--t-line);font-weight:700;margin-bottom:3px;letter-spacing:0;
-        text-transform:none;color:var(--ink);padding:0}
-    .erfassen .hint{font-size:var(--t-print);color:var(--faint);margin-bottom:14px;max-width:40ch}
-    .log-form{display:flex;flex-wrap:wrap;gap:9px;align-items:stretch}
-    .log-form input[type=text]{flex:1 1 100%}
-    .log-form .btn{flex:1 1 auto}
-    /* Die Sprachtaste ist die Hauptaktion eines Voice-first-Logs und traegt
-       deshalb den invertierten Druck. Rot kommt erst, wenn wirklich aufgenommen
-       wird — dann ist es ein offener Vorgang, kein Angebot. */
-    .btn.ink{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-    .btn.ink:hover:not(:disabled){background:transparent;color:var(--ink)}
-    .btn.ink.is-recording{background:var(--red);border-color:var(--red);color:var(--paper)}
-    .btn.ink.is-recording:hover:not(:disabled){background:transparent;color:var(--red)}
-    .rec-indicator{
-        display:inline-flex;align-items:center;gap:8px;margin-top:11px;
-        font-size:var(--t-label);letter-spacing:.14em;text-transform:uppercase;color:var(--red);
-    }
-    .rec-indicator::before{
-        content:"";width:9px;height:9px;border-radius:50%;background:var(--red);
-        animation:rec-blink 1.4s steps(1,end) infinite;
-    }
-    @keyframes rec-blink{0%,55%{opacity:1}56%,100%{opacity:.25}}
-    @media(prefers-reduced-motion:reduce){.rec-indicator::before{opacity:1}}
+    /* ---------- Raster ---------- */
+    /* Mobil: Quittung, Kasten, Mahlzeiten untereinander, die Eingabe unten am
+       Daumen. Ab 960px steht der Kasten rechts und bleibt beim Scrollen stehen. */
+    .wrap{max-width:var(--wide);margin:0 auto;padding:22px var(--gut) 200px}
+    .cols{display:grid;gap:32px;grid-template-areas:"side" "main"}
+    .cols.has-geb{grid-template-areas:"geb" "side" "main"}
+    .cols > *{min-width:0}
+    .gebucht{grid-area:geb}
+    .side{grid-area:side}
+    .main{grid-area:main}
 
-    .credit-zeile{
-        display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;
-        margin-top:14px;padding-top:9px;border-top:1px dotted var(--rule);
-        font-size:var(--t-print);color:var(--faint);
+    /* ---------- Der Kasten: Naehrwerte ---------- */
+    /* Rang kommt aus der Linie, nicht aus einer Farbe: 12px-Balken unter dem Kopf,
+       5px unter der offenen Energie, 3px unter der Energiezeile, 1px unter dem
+       Tabellenkopf, Haarlinien zwischen den Makros — die Grammatik der
+       Naehrwertkennzeichnung, die jeder von der Verpackung kennt. */
+    .label{border:2px solid var(--ink);padding:12px 14px 14px}
+    .label h1{font-size:var(--t-xl);font-weight:900;font-stretch:72%;line-height:.95;letter-spacing:-.01em}
+    .label .sub{
+        font-size:15px;color:var(--ink-2);margin-top:6px;padding-bottom:10px;
+        border-bottom:12px solid var(--ink);
     }
-    .credit-zeile.credit-line--blocked #credit-line{color:var(--red);font-weight:500}
-    .credit-zeile a{color:var(--faint)}
+    .label .sub a{color:var(--ink);font-weight:600}
+    .rest{
+        display:flex;align-items:flex-end;justify-content:space-between;gap:10px;
+        padding:12px 0 12px;border-bottom:5px solid var(--ink);
+    }
+    .rest-k{font-weight:800;font-size:var(--t-m);line-height:1.2}
+    .rest-k small{display:block;font-weight:400;font-size:var(--t-s);color:var(--faint);margin-top:2px}
+    .rest-v{
+        font-weight:800;font-stretch:70%;font-size:var(--t-xxl);line-height:.82;letter-spacing:-.02em;
+        white-space:nowrap;font-variant-numeric:tabular-nums;
+    }
+    .rest-v span{font-size:var(--t-l);font-stretch:85%;font-weight:700;letter-spacing:0;margin-left:4px}
+    .rest--over .rest-v{background:var(--hatch);padding:6px 6px 2px}
 
-    /* ---------- Rueckfrage: der rote Zwischendruck ---------- */
-    .clarify{
-        margin:18px -26px 0;padding:16px 26px 18px;
-        background:var(--grain) repeat,var(--paper-2);border-top:2px solid var(--red);border-bottom:1px solid var(--rule);
-    }
-    .clarify-marke{
-        margin-bottom:9px;text-align:center;font-size:var(--t-label);font-weight:700;
-        letter-spacing:.2em;text-transform:uppercase;color:var(--red);
-    }
-    .clarify-question{font-size:var(--t-line);line-height:1.4;font-weight:700;max-width:34ch;margin-bottom:12px}
-    .clarify input[type=text]{background:var(--paper-2)}
-
-    /* ---------- Quittung nach einer fertigen Schaetzung ---------- */
-    .gebucht{
-        margin:18px -26px 0;padding:16px 26px 18px;
-        background:var(--grain) repeat,var(--paper-2);border-top:2px solid var(--ink);border-bottom:1px solid var(--rule);
-        animation:gebucht-ein .38s cubic-bezier(.16,1,.3,1) both;
-    }
-    @keyframes gebucht-ein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-    .gebucht-marke{
-        display:flex;align-items:center;gap:8px;margin-bottom:8px;
-        font-size:var(--t-label);font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);
-    }
-    .gebucht-marke svg{width:15px;height:15px}
-    .gebucht-desc{font-size:var(--t-line);line-height:1.35;font-weight:700;overflow-wrap:anywhere}
-    .gebucht-werte{
-        display:flex;flex-wrap:wrap;gap:3px 16px;margin-top:10px;
-        font-size:var(--t-print);color:var(--faint);
-    }
-    .gebucht-werte b{font-weight:700;color:var(--ink);margin-right:3px}
-    .gebucht .btn{margin-top:13px}
-    /* Die frisch gebuchte Zeile leuchtet einmal auf — ein einziger Moment auf der Seite. */
-    .pos--neu{animation:pos-lit 1.8s ease-out both}
-    @keyframes pos-lit{0%{background:var(--paper-2)}100%{background:transparent}}
-    @media(prefers-reduced-motion:reduce){.pos--neu{background:var(--paper-2)}}
-
-    /* ---------- Positionen ---------- */
-    /* Derselbe Raster wie .pos, damit jede Beschriftung ueber ihrer Spalte steht.
-       Ein Flex-Kopf mit margin-left:auto kann einem auto-auto-1fr-auto-Raster nicht
-       folgen — und ein Spaltenkopf, der seine Spalte verfehlt, ist in einer
-       gedruckten Tabelle genau der Fehler, den die Form vermeiden soll. */
-    /* Feste Spuren statt auto: zwei getrennte Raster bemessen ihre auto-Spalten
-       an ihrem eigenen Inhalt, und dann steht ZEIT nicht mehr ueber der Uhrzeit. */
-    .pos-liste,.pos-kopf{--pos-cols:26px 46px 1fr auto}
-    .pos-kopf{
-        display:grid;grid-template-columns:var(--pos-cols);gap:2px 8px;
-        margin-top:4px;padding:8px 0;
-        font-size:var(--t-label);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
-        border-bottom:1px solid var(--rule);
-    }
-    .pos-kopf .r{text-align:right}
-    .pos{
-        display:grid;
-        grid-template-columns:var(--pos-cols);
-        grid-template-areas:"nr zeit bez kcal" ". . fuss fuss";
-        align-items:baseline;gap:2px 8px;
-        padding:11px 0;border-bottom:1px dotted var(--rule);
-    }
-    .pos-nr{grid-area:nr;font-size:var(--t-print);color:var(--faint)}
-    .pos-zeit{grid-area:zeit;font-size:var(--t-print);color:var(--faint);letter-spacing:.04em}
-        /* Punktfuehrung wie auf jedem Bon: das Pseudoelement ist 100% breit und
-       zieht sich denselben Betrag als negativen Aussenabstand wieder ab, steht
-       also in der letzten Zeile der Bezeichnung und verbraucht keinen Platz.
-       overflow:hidden schneidet den Ueberhang an der Spaltenkante ab. */
-    /* Punktfuehrung als Geschwister, nicht als Pseudoelement in einem
-       overflow:hidden-Kasten: ein Scroll-Container exportiert keine Grundlinie,
-       und die Zeile richtet sich an der Grundlinie aus. */
-    .pos-bez{grid-area:bez;display:flex;align-items:baseline;gap:7px;
-        font-size:var(--t-line);line-height:1.35;font-weight:500}
-    .pos-bez__t{flex:0 1 auto;min-width:0;overflow-wrap:anywhere}
-    .pos-bez__lead{flex:1 1 12px;min-width:12px;height:1px;
-        border-bottom:1px dotted var(--lead);transform:translateY(-4px)}
-    .pos-kcal{grid-area:kcal;justify-self:end;font-size:var(--t-line);font-weight:700}
-        /* Die Werte selbst brechen nie: der Umbruch faellt zwischen zwei Makros,
-       nicht zwischen Zahl und Einheit. */
-    .pos-mak{min-width:0;font-size:var(--t-print);color:var(--faint)}
-    .pos-mak span{white-space:nowrap}
-    /* Makrozeile und "Korrigieren" teilen eine Zeile ueber beide rechten Spuren.
-       Der Knopf in einer eigenen Spur wuerde die Spur so breit wie sein Wort
-       machen und der Bezeichnung 60px wegnehmen. */
-    .pos-fuss{grid-area:fuss;display:flex;flex-wrap:wrap;align-items:baseline;
-        justify-content:space-between;gap:2px 12px;margin-top:2px}
-    .pos-edit-btn{
-        white-space:nowrap;
-        font:inherit;font-size:var(--t-label);letter-spacing:.1em;text-transform:uppercase;
-        background:none;border:0;border-bottom:1px solid var(--rule);color:var(--ink-2);
-        cursor:pointer;padding:1px 0;
-    }
-    .pos-edit-btn:hover{color:var(--ink);border-color:var(--ink)}
-
-    /* ---------- Korrektur ---------- */
-    .pos-form{
-        padding:15px 0 17px;border-bottom:1px dotted var(--rule);
-    }
-    .pos-form__felder{
-        display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:13px;
-    }
-    .pos-form__feld{display:flex;flex-direction:column;gap:3px}
-    .pos-form__feld input{font-size:var(--t-line);min-height:40px;padding:6px 2px}
-    .pos-form__aktionen{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:15px}
-    .pos-form__aktionen .status{margin-top:0}
-    .pos-loeschen{
-        margin-left:auto;display:grid;place-items:center;width:38px;height:38px;
-        background:none;border:1px solid var(--rule);color:var(--faint);cursor:pointer;
-    }
-    .pos-loeschen:hover{border-color:var(--red);color:var(--red)}
-    .pos-loeschen svg{width:16px;height:16px}
-    @media(max-width:430px){
-        .pos-form__felder{grid-template-columns:repeat(2,1fr)}
-        /* .roll geht bei 430px auf 17px Polsterung herunter; die randlosen Bloecke
-           muessen mitgehen, sonst haengen sie neun Pixel ueber das Papier hinaus
-           und die Seite schiebt sich ueber den Viewport. */
-        .clarify,.gebucht{margin-left:-17px;margin-right:-17px;padding-left:17px;padding-right:17px}
-    }
-    @media(pointer:coarse){
-        .pos-edit-btn{min-height:44px}
-        .pos-loeschen{width:44px;height:44px}
-    }
-
-    /* ---------- Summe ---------- */
-    .summe{margin-top:18px;border-top:3px double var(--ink);padding-top:12px}
-    .summe-zeile{
-        display:flex;align-items:baseline;gap:8px;padding:3px 0;
-        font-size:var(--t-print);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);
-    }
-    .summe-zeile .lead{flex:1;min-width:20px;border-bottom:1px dotted var(--lead);transform:translateY(-3px)}
-    .summe-zeile .wert{font-size:var(--t-line);text-transform:none;color:var(--ink);font-weight:500;letter-spacing:0}
-    .rest{display:flex;align-items:baseline;gap:9px;margin-top:9px;padding-top:10px;
-        border-top:1px solid var(--rule)}
-    .rest-label{font-size:var(--t-label);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
-    .rest-zahl{
-        margin-left:auto;font-family:var(--display);font-weight:800;
-        font-size:var(--d-zahl);line-height:.82;letter-spacing:.005em;
-    }
-    .rest-einheit{font-size:var(--t-print);letter-spacing:.08em;color:var(--ink-2)}
-    .summe-hinweis{margin-top:10px;font-size:var(--t-print);color:var(--faint)}
-    .rest--ueber .rest-zahl,.rest--ueber .rest-label{color:var(--red)}
-
-    /* ---------- Naehrwerte ---------- */
-    .mtab{width:100%;border-collapse:collapse;margin-top:22px;font-size:var(--t-print)}
-    .mtab caption{
-        text-align:left;font-size:var(--t-label);letter-spacing:.18em;text-transform:uppercase;
-        color:var(--faint);padding-bottom:6px;
-    }
-    .mtab th,.mtab td{padding:7px 0;text-align:right;font-weight:400}
-    .mtab thead th{
-        font-size:var(--t-label);letter-spacing:.12em;text-transform:uppercase;color:var(--faint);
+    .ntab{width:100%;border-collapse:collapse}
+    .ntab thead th{
+        font-size:var(--t-s);font-weight:700;text-align:right;padding:8px 0 6px 8px;
         border-bottom:1px solid var(--ink);
     }
-    .mtab tbody th,.mtab thead th:first-child{text-align:left}
-    .mtab tbody th{font-weight:500}
-    .mtab tbody tr{border-bottom:1px dotted var(--rule)}
-    .mtab .ist{font-weight:700}
-    .mtab .offen{color:var(--ink-2)}
-    .mtab .offen--ueber{color:var(--red)}
-    .mtab .kein-ziel{color:var(--faint)}
+    .ntab thead th:first-child{text-align:left;padding-left:0}
+    .ntab tbody th{text-align:left;font-weight:700;padding:9px 0}
+    .ntab tbody th small{font-weight:400;font-size:var(--t-s);color:var(--faint);margin-left:4px}
+    .ntab td{
+        text-align:right;padding:9px 0 9px 10px;white-space:nowrap;
+        color:var(--ink-2);font-variant-numeric:tabular-nums;
+    }
+    .ntab tbody tr + tr > *{border-top:1px solid var(--hair)}
+    .ntab tr.energie > *{border-bottom:3px solid var(--ink);font-size:var(--t-m)}
+    .ntab tr.energie + tr > *{border-top:0}
+    .ntab td.off{color:var(--ink);font-weight:800}
+    .ntab td.off--over{background:var(--hatch)}
+    .ntab td .flag{display:block;font-weight:600;font-size:var(--t-s);line-height:1.1}
+    .ntab .kein-ziel{color:var(--faint);font-weight:400}
+    .label .note{font-size:var(--t-s);color:var(--faint);padding-top:10px;border-top:1px solid var(--ink)}
+    .label .note a{color:var(--ink);font-weight:600}
+
+    /* ---------- Eingabe: unten am Daumen ---------- */
+    .dock{
+        position:fixed;left:0;right:0;bottom:0;z-index:5;
+        background:var(--bg);border-top:2px solid var(--ink);
+        padding:10px var(--gut) calc(10px + env(safe-area-inset-bottom));
+    }
+    .dock-in{max-width:var(--wide);margin:0 auto}
+    .row{display:flex;gap:8px;align-items:stretch}
+    .field{
+        flex:1;min-width:0;display:flex;align-items:center;height:56px;
+        border:1.5px solid var(--ink);background:var(--bg);
+    }
+    .field:focus-within{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+    .field input{
+        flex:1;min-width:0;height:100%;border:0;background:none;outline:none;
+        padding:0 12px;font-size:var(--t-b);
+    }
+    .field input::placeholder{color:var(--faint);opacity:1}
+    .field input:disabled{cursor:not-allowed}
+    .field:has(input:disabled){border-color:var(--hair)}
+    .send{width:48px;height:100%;display:grid;place-items:center;color:var(--ink)}
+    .send:hover:not(:disabled){background:var(--tint)}
+    .send:disabled{color:var(--hair);cursor:not-allowed}
+    /* Die Sprachtaste ist die Hauptaktion eines Voice-first-Logs: die einzige
+       Kobaltflaeche der Seite. Waehrend der Aufnahme wird sie zur schwarzen
+       Stopptaste, und das Feld daneben meldet die laufende Aufnahme. */
+    .mic{
+        width:56px;height:56px;flex:none;display:grid;place-items:center;
+        background:var(--blue);color:#fff;transition:background .15s ease-out;
+    }
+    .mic:hover:not(:disabled){background:var(--blue-2)}
+    .mic:disabled{background:var(--hair);cursor:not-allowed}
+    .mic svg.i{width:26px;height:26px}
+    .mic .stop{display:none}
+    .mic.is-recording{background:var(--ink)}
+    .mic.is-recording .go{display:none}
+    .mic.is-recording .stop{display:block}
+    .rec{
+        flex:1;min-width:0;height:56px;display:flex;align-items:center;gap:10px;
+        padding:0 12px;border:1.5px solid var(--ink);font-weight:600;
+    }
+    .rec i{width:10px;height:10px;border-radius:50%;background:var(--red);flex:none;
+        animation:rec-blink 1.2s steps(1,end) infinite}
+    .rec .t{margin-left:auto;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums}
+    @keyframes rec-blink{50%{opacity:.25}}
+    .meta{
+        display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;
+        margin-top:8px;font-size:var(--t-s);color:var(--faint);
+    }
+    .meta a{color:var(--ink-2)}
+    .credit-line--blocked #credit-line{color:var(--red);font-weight:600}
+    .status .btn{margin-left:8px}
+
+    /* Rueckfrage: steht direkt ueber dem Feld, in dem sie beantwortet wird. Solange
+       sie offen ist, ersetzt ihr Feld das Eingabefeld — zwei Felder uebereinander
+       waeren zwei Fragen. */
+    .ask{padding:4px 0 10px}
+    .ask-you{font-size:var(--t-s);color:var(--faint);overflow-wrap:anywhere}
+    .ask-q{font-size:var(--t-m);font-weight:700;line-height:1.3;margin-top:4px;text-wrap:balance;max-width:40ch}
+    .ask-n{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;font-size:var(--t-s);color:var(--ink-2);margin:6px 0 10px}
+    .dock.is-asking #text-meal-form,
+    .dock.is-asking #text-status,
+    .dock.is-asking #voice-status{display:none}
+
+    /* ---------- Quittung nach einer fertigen Schaetzung ---------- */
+    .gebucht{background:var(--blue-soft);padding:14px 16px 16px;animation:land .5s cubic-bezier(.16,1,.3,1) both}
+    @keyframes land{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .gebucht-k{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--blue);font-size:15px}
+    .gebucht-k svg.i{width:18px;height:18px;stroke-width:2.4}
+    .gebucht-d{font-size:var(--t-m);font-weight:700;line-height:1.3;margin-top:4px;overflow-wrap:anywhere}
+    .gebucht-w{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:6px;font-size:var(--t-s);color:var(--ink-2)}
+    .gebucht-w b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+    .gebucht .btn{margin-top:12px;background:var(--bg)}
+
+    /* ---------- Mahlzeiten ---------- */
+    .meals h2{
+        font-size:var(--t-l);font-weight:800;font-stretch:85%;
+        display:flex;justify-content:space-between;align-items:baseline;
+        padding-bottom:8px;border-bottom:2px solid var(--ink);
+    }
+    .meals h2 span{font-size:15px;font-weight:500;font-stretch:100%;color:var(--faint)}
+    .pos{
+        display:grid;grid-template-columns:48px 1fr auto;column-gap:10px;
+        padding:14px 0;border-bottom:1px solid var(--hair);
+    }
+    .pos time{font-size:15px;color:var(--faint);padding-top:1px;font-variant-numeric:tabular-nums}
+    .pos-d{font-weight:500;line-height:1.35;overflow-wrap:anywhere}
+    .pos-kc{font-weight:800;font-size:var(--t-m);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .pos-kc small{font-weight:500;font-size:var(--t-s);color:var(--faint);margin-left:2px}
+    .pos-mx{
+        grid-column:2/4;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;
+        gap:2px 12px;margin-top:5px;font-size:var(--t-s);color:var(--faint);
+    }
+    .pos-mx b{font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+    .pos-mx span span{white-space:nowrap}
+    .pos-mx .link-btn{padding:6px 0;margin:-6px 0}
+    /* Die frisch gebuchte Zeile: ein einziger Moment auf der Seite. */
+    .pos--neu{background:var(--blue-soft);margin:0 -10px;padding-left:10px;padding-right:10px;border-bottom-color:transparent}
+    .pos--neu time{color:var(--blue);font-weight:700}
+    .empty{padding:22px 0;color:var(--faint);border-bottom:1px solid var(--hair)}
+
+    /* ---------- Korrektur ---------- */
+    .pos-form{padding:14px 0 16px;border-bottom:1px solid var(--hair)}
+    .pos-form input{
+        width:100%;min-height:44px;padding:8px 10px;font-size:var(--t-b);
+        border:1.5px solid var(--ink);background:var(--bg);border-radius:0;
+    }
+    .pos-form input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+    .pos-form__felder{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+    .pos-form__feld{display:flex;flex-direction:column;gap:3px}
+    .pos-form__feld label{font-size:var(--t-s);font-weight:600;color:var(--ink-2)}
+    .pos-form__feld input{font-variant-numeric:tabular-nums}
+    .pos-form__aktionen{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+    .pos-form__aktionen .status{margin-top:0}
+    .pos-loeschen{
+        margin-left:auto;width:40px;height:40px;display:grid;place-items:center;
+        color:var(--faint);border:1px solid var(--hair);
+    }
+    .pos-loeschen:hover{color:var(--red);border-color:var(--red)}
+    .pos-loeschen svg.i{width:18px;height:18px}
+
+    @media(min-width:960px){
+        .wrap{padding-top:36px;padding-bottom:60px}
+        .cols{grid-template-columns:1fr 400px;column-gap:56px;row-gap:28px;grid-template-areas:"main side"}
+        .cols.has-geb{grid-template-areas:"geb side" "main side";grid-template-rows:auto 1fr}
+        .side{position:sticky;top:24px;align-self:start}
+        .label h1{font-size:56px}
+        .dock{position:static;border:0;padding:0;margin-bottom:40px;background:none}
+    }
+    @media(max-width:430px){
+        .pos-form__felder{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(pointer:coarse){
+        .pos-loeschen{width:44px;height:44px}
+    }
+    @media(prefers-reduced-motion:reduce){
+        .rec i{opacity:1}
+    }
 </style>
 {% endblock %}
 
-{% block bonmeta %}
-<div class="bon-meta">
-    <div class="day-line" style="flex:1">
-        <span class="tag">{% if is_today %}Heute{% else %}Rückblick{% endif %}</span>
-        <div class="day-nav">
-            <a href="/dashboard?d={{ prev_date }}" class="nav-btn" aria-label="Vorheriger Tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 5 7.5 12 14.5 19"/></svg></a>
-            {% if next_date %}
-            <a href="/dashboard?d={{ next_date }}" class="nav-btn" aria-label="Nächster Tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9.5 5 16.5 12 9.5 19"/></svg></a>
-            {% else %}
-            <span class="nav-btn is-disabled" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9.5 5 16.5 12 9.5 19"/></svg></span>
-            {% endif %}
-            <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}" aria-label="Datum wählen">
-            {% if not is_today %}
-            <a href="/dashboard" class="nav-btn nav-today">Heute</a>
-            {% endif %}
-        </div>
-    </div>
+{% block topright %}
+<div class="day">
+    <a href="/dashboard?d={{ prev_date }}" class="day-btn" aria-label="Vorheriger Tag"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></a>
+    <input type="date" id="date-picker" value="{{ selected }}" max="{{ today }}" aria-label="Datum wählen">
+    {% if next_date %}
+    <a href="/dashboard?d={{ next_date }}" class="day-btn" aria-label="Nächster Tag"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></a>
+    {% else %}
+    <span class="day-btn is-disabled" aria-hidden="true"><svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span>
+    {% endif %}
 </div>
-<h1 class="bon-datum">{{ selected_label }}</h1>
 {% endblock %}
 
+{% block footer %}{% endblock %}
+
 {% block content %}
-
-<section class="erfassen">
-    <h2 id="log-card-title">Sag einfach, was du gegessen hast.</h2>
-    <p class="hint">Sprich einen Satz ein oder tipp ihn — die Makros landen als Position auf dem Bon.</p>
-
-    <form id="text-meal-form" class="log-form">
-        {# Die Ueberschrift des Blocks ist das Label des Feldes — ein zweites darueber
-           wuerde dasselbe zweimal sagen. Platzhalter sind Beispiele, keine Labels. #}
-        <input type="text" id="meal-text-input" aria-labelledby="log-card-title"
-               placeholder="z.B. gegrilltes Hähnchen mit Reis" enterkeyhint="send"
-               autocapitalize="sentences" required{% if credits_blocked %} disabled{% endif %}>
-        <button type="submit" id="text-submit-btn" class="btn"{% if credits_blocked %} disabled{% endif %}>Loggen</button>
-        <button type="button" id="record-btn" class="btn ink" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen"{% if credits_blocked %} disabled{% endif %}>Sprechen</button>
-    </form>
-    {# Ausserhalb des Formulars: innerhalb veraendert das Einblenden die intrinsische
-       Breite der Flex-Zeile und loest mitten in der Aufnahme einen Reflow aus. #}
-    <span id="record-indicator" class="rec-indicator hidden" role="status">Aufnahme läuft</span>
-    <p id="text-status" class="status" role="status" aria-live="polite"></p>
-    <p id="voice-status" class="status" role="status" aria-live="polite"></p>
-
-    {# Zwei Arten von "aus": das Systemlimit trifft alle, das eigene Limit nur dich.
-       Vorher wurde nur das erste angezeigt — ein eigenes Limit von 0 sah aus wie
-       jeder andere Wert, und der Nutzer erfuhr davon erst durch den 429. #}
-    <p class="credit-zeile{% if credits_blocked %} credit-line--blocked{% endif %}" id="credit-zeile">
-        <span id="credit-line">
-            {%- if not credits.system_available -%}
-            Systemlimit erreicht — heute keine KI-Analysen
-            {%- elif credits.remaining <= 0 -%}
-            Dein Tageslimit ist erreicht — morgen wieder {{ credits.limit }} Credits
-            {%- else -%}
-            noch {{ credits.remaining }} von {{ credits.limit }} Credits heute
-            {%- endif -%}
-        </span>
-        {# Ein Geschwister, kein Kind von #credit-line: refreshCredits() ersetzt den
-           textContent dieses Elements und wuerde einen Link darin loeschen. #}
-        <a href="/ai-log">Was habe ich gefragt?</a>
-    </p>
-</section>
-
-{# aria-live am Kasten: die Rueckfrage ist der Kern des Produkts und wurde vorher
-   niemandem angesagt. Das Eingabefeld wird von der Frage selbst benannt, damit
-   wer hineinspringt auch hoert, worauf er antwortet. #}
-<section id="clarify-box" class="clarify hidden" role="status" aria-live="polite">
-    <p class="clarify-marke">— Rückfrage —</p>
-    <p id="clarify-question" class="clarify-question"></p>
-    <form id="clarify-form" class="log-form">
-        <input type="text" id="clarify-input" aria-labelledby="clarify-question"
-               placeholder="Deine Antwort" autocomplete="off" enterkeyhint="send" required>
-        <button type="submit" id="clarify-submit-btn" class="btn">Antworten</button>
-    </form>
-    <p id="clarify-status" class="status" role="status" aria-live="polite"></p>
-</section>
+{% set pc = progress.get('calories') %}
+<div class="wrap">
+<div class="cols{% if logged_meal %} has-geb{% endif %}">
 
 {% if logged_meal %}
 {# Der Moment nach der Schaetzung. Vorher war er ein window.location.reload() —
    der Nutzer sprach, wartete und landete wieder im leeren Formular. #}
-<section class="gebucht">
-    <p class="gebucht-marke">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-        Gebucht
+<section class="gebucht" aria-label="Gerade gebucht">
+    <p class="gebucht-k"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Gebucht</p>
+    <p class="gebucht-d">{{ logged_meal.description }}</p>
+    <p class="gebucht-w">
+        <span><b>{{ logged_meal.calories | de_num(0) }}</b> kcal</span>
+        <span><b>{{ logged_meal.protein | de_num }}</b> g Eiweiß</span>
+        <span><b>{{ logged_meal.carbs | de_num }}</b> g Kohlenhydrate</span>
+        <span><b>{{ logged_meal.fat | de_num }}</b> g Fett</span>
     </p>
-    <p class="gebucht-desc">{{ logged_meal.description }}</p>
-    <p class="gebucht-werte">
-        <span><b>{{ logged_meal.calories | de_num(0) }}</b>kcal</span>
-        <span><b>{{ logged_meal.protein | de_num }}</b>g Eiweiß</span>
-        <span><b>{{ logged_meal.carbs | de_num }}</b>g Kohlenhydrate</span>
-        <span><b>{{ logged_meal.fat | de_num }}</b>g Fett</span>
-    </p>
-    <button type="button" class="btn sm ghost" data-correct-id="{{ logged_meal.id }}">Korrigieren</button>
+    <button type="button" class="btn line sm" data-correct-id="{{ logged_meal.id }}">Korrigieren</button>
 </section>
 {% endif %}
 
-<h2 class="block-h">Positionen{% if is_today %} heute{% endif %} · {{ totals.meal_count }}</h2>
-{% if meals %}
-<div class="pos-kopf"><span>Pos</span><span>Zeit</span><span></span><span class="r">kcal</span></div>
-<div class="pos-liste">
-    {% for meal in meals %}
-    <article class="pos{% if logged_meal and meal.id == logged_meal.id %} pos--neu{% endif %}" data-meal-id="{{ meal.id }}">
-        <span class="pos-nr">{{ loop.index }}</span>
-        <span class="pos-zeit">{{ meal.timestamp | localtime }}</span>
-        <span class="pos-bez"><span class="pos-bez__t">{{ meal.description }}</span><span class="pos-bez__lead" aria-hidden="true"></span></span>
-        <span class="pos-kcal">{{ meal.calories | de_num(0) }}</span>
-        <span class="pos-fuss">
-            <span class="pos-mak">
-                <span>{{ meal.protein | de_num }}{% if meal.protein is not none %}&nbsp;g E{% endif %}</span>
-                <span>· {{ meal.carbs | de_num }}{% if meal.carbs is not none %}&nbsp;g KH{% endif %}</span>
-                <span>· {{ meal.fat | de_num }}{% if meal.fat is not none %}&nbsp;g F{% endif %}</span>
-            </span>
-            <button type="button" class="pos-edit-btn" data-action="edit">Korrigieren</button>
-        </span>
-    </article>
-    <form class="pos-form hidden" data-meal-id="{{ meal.id }}">
-        <input type="text" class="pos-form__desc" id="m{{ meal.id }}-desc" aria-label="Beschreibung der Mahlzeit" value="{{ meal.description }}" placeholder="Beschreibung" required>
-        <div class="pos-form__felder">
-            <div class="pos-form__feld">
-                <label for="m{{ meal.id }}-calories">kcal</label>
-                <input type="number" step="any" id="m{{ meal.id }}-calories" name="calories" value="{{ meal.calories if meal.calories is not none else '' }}">
-            </div>
-            <div class="pos-form__feld">
-                <label for="m{{ meal.id }}-protein">Eiweiß</label>
-                <input type="number" step="any" id="m{{ meal.id }}-protein" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}">
-            </div>
-            <div class="pos-form__feld">
-                <label for="m{{ meal.id }}-carbs">KH</label>
-                <input type="number" step="any" id="m{{ meal.id }}-carbs" name="carbs" value="{{ meal.carbs if meal.carbs is not none else '' }}">
-            </div>
-            <div class="pos-form__feld">
-                <label for="m{{ meal.id }}-fat">Fett</label>
-                <input type="number" step="any" id="m{{ meal.id }}-fat" name="fat" value="{{ meal.fat if meal.fat is not none else '' }}">
-            </div>
-        </div>
-        <div class="pos-form__aktionen">
-            <button type="submit" class="btn sm pos-form__save">Speichern</button>
-            <button type="button" class="btn sm ghost" data-action="cancel">Abbrechen</button>
-            <span class="status"></span>
-            <button type="button" class="pos-loeschen" data-action="delete" aria-label="Position löschen" title="Löschen">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            </button>
-        </div>
-    </form>
-    {% endfor %}
-</div>
-{% else %}
-<p class="empty">Keine Positionen{% if is_today %} heute{% else %} an diesem Tag{% endif %}.</p>
-{% endif %}
+<aside class="side">
+    <section class="label" aria-labelledby="nw-h">
+        <h1 id="nw-h">Nährwerte</h1>
+        <p class="sub">
+            {% if not is_today %}Rückblick · {% endif %}{{ selected_label }} · {{ totals.meal_count }} {% if totals.meal_count == 1 %}Mahlzeit{% else %}Mahlzeiten{% endif %}
+            {% if not is_today %}· <a href="/dashboard">zu heute</a>{% endif %}
+        </p>
 
-<section class="summe" aria-label="Tagesbilanz">
-    <div class="summe-zeile">
-        <span>Gebucht</span><span class="lead" aria-hidden="true"></span>
-        <span class="wert">{{ totals.calories | de_num(0) }} kcal</span>
-    </div>
-    {% if progress.calories %}
-    <div class="summe-zeile">
-        <span>Tagesziel</span><span class="lead" aria-hidden="true"></span>
-        <span class="wert">{{ progress.calories.target | de_num(0) }} kcal</span>
-    </div>
-    <div class="rest{% if progress.calories.over %} rest--ueber{% endif %}">
-        <span class="rest-label">{% if progress.calories.over %}Über Ziel{% else %}Rest{% endif %}</span>
-        <span class="rest-zahl">{{ (progress.calories.remaining if not progress.calories.over else -progress.calories.remaining) | de_num(0) }}</span>
-        <span class="rest-einheit">kcal</span>
-    </div>
-    {% else %}
-    {# Ohne kcal-Ziel gibt es keinen Rest. Statt einer leeren Zeile traegt die
-       Tagessumme selbst die grosse Zahl, und der Weg zum Ziel steht daneben. #}
-    <div class="rest">
-        <span class="rest-label">Summe</span>
-        <span class="rest-zahl">{{ totals.calories | de_num(0) }}</span>
-        <span class="rest-einheit">kcal</span>
-    </div>
-    <p class="summe-hinweis">Kein Tagesziel gesetzt — <a href="/goals">unter Ziele eintragen</a>.</p>
-    {% endif %}
-</section>
+        {% if pc %}
+        <div class="rest{% if pc.over %} rest--over{% endif %}">
+            <p class="rest-k">{% if pc.over %}Über Ziel{% else %}Noch offen{% endif %}
+                <small>Energie {% if pc.over %}über dem{% else %}bis zum{% endif %} Tagesziel</small></p>
+            <p class="rest-v">{% if pc.over %}+{{ (-pc.remaining) | de_num(0) }}{% else %}{{ pc.remaining | de_num(0) }}{% endif %}<span>kcal</span></p>
+        </div>
+        {% else %}
+        {# Ohne kcal-Ziel gibt es keinen Rest. Statt einer leeren Zeile traegt die
+           Tagessumme die grosse Zahl. #}
+        <div class="rest">
+            <p class="rest-k">Gegessen<small>Energie, kein Tagesziel gesetzt</small></p>
+            <p class="rest-v">{{ totals.calories | de_num(0) }}<span>kcal</span></p>
+        </div>
+        {% endif %}
 
-<table class="mtab">
-    <caption>Nährwerte{% if is_today %} heute{% endif %}</caption>
-    <thead>
-        <tr>
-            <th scope="col">Nährwert</th>
-            <th scope="col">Ist</th>
-            <th scope="col">Ziel</th>
-            <th scope="col">Offen</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for key, name in [('protein','Eiweiß'), ('carbs','Kohlenhydrate'), ('fat','Fett')] %}
-        {% set p = progress.get(key) %}
-        <tr>
-            <th scope="row">{{ name }}</th>
-            <td class="ist">{{ totals[key] | de_num }} g</td>
-            <td>{% if p %}{{ p.target | de_num }} g{% else %}<span class="kein-ziel">—</span>{% endif %}</td>
-            <td class="offen{% if p and p.over %} offen--ueber{% endif %}">
-                {%- if p -%}
-                {% if p.over %}+{{ -p.remaining | de_num }} g{% else %}{{ p.remaining | de_num }} g{% endif %}
-                {%- else -%}
-                <span class="kein-ziel">—</span>
-                {%- endif -%}
-            </td>
-        </tr>
+        <table class="ntab">
+            <thead>
+                <tr>
+                    <th scope="col"><span class="sr-only">Nährwert</span></th>
+                    <th scope="col">Gegessen</th>
+                    <th scope="col">Ziel</th>
+                    <th scope="col">Offen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, name, unit in [('calories','Energie','kcal'), ('protein','Eiweiß','g'), ('carbs','Kohlenhydrate','g'), ('fat','Fett','g')] %}
+                {% set p = progress.get(key) %}
+                {% set digits = 0 if key == 'calories' else 1 %}
+                <tr{% if key == 'calories' %} class="energie"{% endif %}>
+                    <th scope="row">{{ name }}<small>{{ unit }}</small></th>
+                    <td>{{ totals[key] | de_num(digits) }}</td>
+                    <td>{% if p %}{{ p.target | de_num(digits) }}{% else %}<span class="kein-ziel">—</span>{% endif %}</td>
+                    <td class="off{% if p and p.over %} off--over{% endif %}">
+                        {%- if p -%}
+                            {%- if p.over -%}+{{ (-p.remaining) | de_num(digits) }}<span class="flag">über Ziel</span>
+                            {%- else -%}{{ p.remaining | de_num(digits) }}{%- endif -%}
+                        {%- else -%}<span class="kein-ziel">—</span>{%- endif -%}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if progress %}
+        <p class="note">Geschätzt aus deinen Beschreibungen. Jede Mahlzeit lässt sich korrigieren.</p>
+        {% else %}
+        <p class="note">Noch keine Tagesziele. <a href="/goals">Ziele eintragen</a>, dann steht hier, was offen ist.</p>
+        {% endif %}
+    </section>
+</aside>
+
+<main class="main">
+    <div class="dock" id="dock">
+        <div class="dock-in">
+            {# aria-live am Kasten: die Rueckfrage ist der Kern des Produkts. Das
+               Eingabefeld wird von der Frage selbst benannt, damit wer hineinspringt
+               auch hoert, worauf er antwortet. #}
+            <section id="clarify-box" class="ask hidden" role="status" aria-live="polite">
+                <p class="ask-you" id="clarify-you"></p>
+                <p id="clarify-question" class="ask-q"></p>
+                <p class="ask-n"><span id="clarify-count"></span><button type="button" class="link-btn" id="clarify-dismiss">Verwerfen</button></p>
+                <form id="clarify-form" class="row">
+                    <label class="field">
+                        <input type="text" id="clarify-input" aria-labelledby="clarify-question"
+                               placeholder="Deine Antwort" autocomplete="off" enterkeyhint="send" required>
+                        <button type="submit" id="clarify-submit-btn" class="send" aria-label="Antworten"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5 18.5 12 13 17.5"/></svg></button>
+                    </label>
+                </form>
+                <p id="clarify-status" class="status" role="status" aria-live="polite"></p>
+            </section>
+
+            <form id="text-meal-form" class="row">
+                <label class="field" id="meal-field">
+                    <span class="sr-only" id="log-label">Was hast du gegessen?</span>
+                    <input type="text" id="meal-text-input" aria-labelledby="log-label"
+                           placeholder="Was hast du gegessen?" enterkeyhint="send" autocomplete="off"
+                           autocapitalize="sentences" required{% if credits_blocked %} disabled{% endif %}>
+                    <button type="submit" id="text-submit-btn" class="send" aria-label="Loggen"{% if credits_blocked %} disabled{% endif %}><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5 18.5 12 13 17.5"/></svg></button>
+                </label>
+                {# Nimmt waehrend der Aufnahme genau den Platz des Feldes ein: gleiche
+                   Hoehe, gleiche Spur — das Einblenden verschiebt nichts. #}
+                <div id="record-indicator" class="rec hidden" role="status"><i aria-hidden="true"></i>Aufnahme läuft<span class="t" id="rec-time">0:00</span></div>
+                <button type="button" id="record-btn" class="mic" aria-pressed="false" aria-label="Mahlzeit per Sprache aufnehmen"{% if credits_blocked %} disabled{% endif %}>
+                    <svg class="i go" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+                    <svg class="i stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" fill="currentColor" stroke="none"/></svg>
+                </button>
+            </form>
+            <p id="text-status" class="status" role="status" aria-live="polite"></p>
+            <p id="voice-status" class="status" role="status" aria-live="polite"></p>
+
+            {# Zwei Arten von "aus": das Systemlimit trifft alle, das eigene Limit nur dich. #}
+            <p class="meta{% if credits_blocked %} credit-line--blocked{% endif %}" id="credit-zeile">
+                <span id="credit-line">
+                    {%- if not credits.system_available -%}
+                    Systemlimit erreicht — heute keine KI-Analysen
+                    {%- elif credits.remaining <= 0 -%}
+                    Dein Tageslimit ist erreicht — morgen wieder {{ credits.limit }} Credits
+                    {%- else -%}
+                    Noch {{ credits.remaining }} von {{ credits.limit }} Credits heute
+                    {%- endif -%}
+                </span>
+                {# Ein Geschwister, kein Kind von #credit-line: refreshCredits() ersetzt den
+                   textContent dieses Elements und wuerde einen Link darin loeschen. #}
+                <a href="/ai-log">Was habe ich gefragt?</a>
+            </p>
+        </div>
+    </div>
+
+    <section class="meals" aria-labelledby="mh">
+        <h2 id="mh">Mahlzeiten <span>{{ totals.meal_count }}</span></h2>
+        {% if meals %}
+        {% for meal in meals %}
+        <article class="pos{% if logged_meal and meal.id == logged_meal.id %} pos--neu{% endif %}" data-meal-id="{{ meal.id }}">
+            <time>{{ meal.timestamp | localtime }}</time>
+            <p class="pos-d">{{ meal.description }}</p>
+            <p class="pos-kc">{{ meal.calories | de_num(0) }}<small>kcal</small></p>
+            <div class="pos-mx">
+                {# Die Werte selbst brechen nie: der Umbruch faellt zwischen zwei Makros,
+                   nicht zwischen Zahl und Einheit. #}
+                <span>
+                    <span><b>{{ meal.protein | de_num }}</b>{% if meal.protein is not none %}&nbsp;g Eiweiß{% endif %}</span> ·
+                    <span><b>{{ meal.carbs | de_num }}</b>{% if meal.carbs is not none %}&nbsp;g KH{% endif %}</span> ·
+                    <span><b>{{ meal.fat | de_num }}</b>{% if meal.fat is not none %}&nbsp;g Fett{% endif %}</span>
+                </span>
+                <button type="button" class="link-btn" data-action="edit">Korrigieren</button>
+            </div>
+        </article>
+        <form class="pos-form hidden" data-meal-id="{{ meal.id }}">
+            <input type="text" class="pos-form__desc" id="m{{ meal.id }}-desc" aria-label="Beschreibung der Mahlzeit" value="{{ meal.description }}" placeholder="Beschreibung" required>
+            <div class="pos-form__felder">
+                <div class="pos-form__feld">
+                    <label for="m{{ meal.id }}-calories">kcal</label>
+                    <input type="number" step="any" inputmode="decimal" id="m{{ meal.id }}-calories" name="calories" value="{{ '%g' | format(meal.calories) if meal.calories is not none else '' }}">
+                </div>
+                <div class="pos-form__feld">
+                    <label for="m{{ meal.id }}-protein">Eiweiß (g)</label>
+                    <input type="number" step="any" inputmode="decimal" id="m{{ meal.id }}-protein" name="protein" value="{{ '%g' | format(meal.protein) if meal.protein is not none else '' }}">
+                </div>
+                <div class="pos-form__feld">
+                    <label for="m{{ meal.id }}-carbs">KH (g)</label>
+                    <input type="number" step="any" inputmode="decimal" id="m{{ meal.id }}-carbs" name="carbs" value="{{ '%g' | format(meal.carbs) if meal.carbs is not none else '' }}">
+                </div>
+                <div class="pos-form__feld">
+                    <label for="m{{ meal.id }}-fat">Fett (g)</label>
+                    <input type="number" step="any" inputmode="decimal" id="m{{ meal.id }}-fat" name="fat" value="{{ '%g' | format(meal.fat) if meal.fat is not none else '' }}">
+                </div>
+            </div>
+            <div class="pos-form__aktionen">
+                <button type="submit" class="btn sm pos-form__save">Speichern</button>
+                <button type="button" class="btn line sm" data-action="cancel">Abbrechen</button>
+                <span class="status"></span>
+                <button type="button" class="pos-loeschen" data-action="delete" aria-label="Mahlzeit löschen" title="Löschen">
+                    <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16M9.5 6.5V4h5v2.5M6.5 6.5l1 13.5h9l1-13.5M10 10.5v6M14 10.5v6"/></svg>
+                </button>
+            </div>
+        </form>
         {% endfor %}
-    </tbody>
-</table>
+        {% else %}
+        <p class="empty">{% if is_today %}Heute ist noch nichts eingetragen. Sag oder tipp unten, was du gegessen hast.{% else %}An diesem Tag ist nichts eingetragen.{% endif %}</p>
+        {% endif %}
+    </section>
 
+    <footer class="foot">
+        <span class="who">
+            <span>Angemeldet als <strong>{{ username }}</strong></span>
+            <form method="post" action="/logout">
+                {{ csrf_field() }}
+                <button type="submit" class="link-btn">Abmelden</button>
+            </form>
+        </span>
+        <a href="/faq">FAQ</a>
+        <a href="/feedback">Feedback geben</a>
+        <a href="/impressum">Impressum</a>
+        <a href="/datenschutz">Datenschutz</a>
+    </footer>
+</main>
+
+</div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -436,6 +449,7 @@
     // eigene Limit sperrt sie nicht, das Systemlimit schon.
     let systemBlocked = {{ 'true' if not credits.system_available else 'false' }};
     let busy = false;
+    const MAX_QUESTIONS = 2;
 
     // Eine Anfrage nach der anderen. Vorher waren "Loggen" und "Sprechen" unabhaengig
     // voneinander gesperrt, also liefen zwei KI-Aufrufe nebeneinander — zwei Credits,
@@ -448,7 +462,8 @@
         const off = busy || creditsBlocked;
         for (const id of ['meal-text-input', 'text-submit-btn', 'record-btn']) {
             const el = document.getElementById(id);
-            if (el) el.disabled = off;
+            // Die laufende Aufnahme muss sich immer stoppen lassen.
+            if (el && !(id === 'record-btn' && isRecording)) el.disabled = off;
         }
         const cs = document.getElementById('clarify-submit-btn');
         if (cs) cs.disabled = busy || systemBlocked;
@@ -461,17 +476,28 @@
 
     // Conversation state for the clarification flow (held client-side).
     let convo = [];
+    const dock = document.getElementById('dock');
     const clarifyBox = document.getElementById('clarify-box');
     const clarifyQuestion = document.getElementById('clarify-question');
+    const clarifyYou = document.getElementById('clarify-you');
+    const clarifyCount = document.getElementById('clarify-count');
     const clarifyForm = document.getElementById('clarify-form');
     const clarifyInput = document.getElementById('clarify-input');
     const clarifyStatus = document.getElementById('clarify-status');
 
     function hideClarify() {
         clarifyBox.classList.add('hidden');
+        dock.classList.remove('is-asking');
         clarifyStatus.textContent = '';
         clarifyStatus.className = 'status';
     }
+    // Verwerfen ist rein clientseitig: das Gespraech liegt nur hier, auf dem Server
+    // ist noch nichts gebucht.
+    document.getElementById('clarify-dismiss').addEventListener('click', () => {
+        convo = [];
+        hideClarify();
+        document.getElementById('meal-text-input').focus();
+    });
 
     // A completed log reloads the page, which re-renders the credit line server-side.
     // A clarification round doesn't, so refresh it here — those cost credits too.
@@ -486,7 +512,7 @@
             } else if (u.remaining <= 0) {
                 line.textContent = `Dein Tageslimit ist erreicht — morgen wieder ${u.limit} Credits`;
             } else {
-                line.textContent = `noch ${u.remaining} von ${u.limit} Credits heute`;
+                line.textContent = `Noch ${u.remaining} von ${u.limit} Credits heute`;
             }
             // Laeuft nach jeder Rueckfrage — genau dort geht die Null ueber die Kante.
             systemBlocked = !u.system_available;
@@ -504,15 +530,22 @@
         if (data.status === 'needs_clarification') {
             refreshCredits();
             convo = data.messages || [];
+            const first = convo.find((m) => m.role === 'user');
+            clarifyYou.textContent = first ? `Du: „${first.content}"` : '';
+            const asked = convo.filter((m) => m.role === 'assistant').length || 1;
+            clarifyCount.textContent = asked >= MAX_QUESTIONS
+                ? `Rückfrage ${asked} von höchstens ${MAX_QUESTIONS}. Danach schätze ich.`
+                : `Rückfrage ${asked} von höchstens ${MAX_QUESTIONS}.`;
             clarifyQuestion.textContent = data.question || 'Kannst du etwas mehr Detail hinzufügen?';
             clarifyBox.classList.remove('hidden');
+            dock.classList.add('is-asking');
             clarifyInput.value = '';
             clarifyInput.focus();
             return;
         }
         // complete
         hideClarify();
-        // Kein blankes reload(): die frisch gebuchte Position wird auf der neu
+        // Kein blankes reload(): die frisch gebuchte Mahlzeit wird auf der neu
         // geladenen Seite als Quittung gezeigt und ihre Zeile hervorgehoben. Die
         // Summen kommen dabei vom Server, sind also garantiert richtig.
         const id = data.meal && data.meal.id;
@@ -544,6 +577,7 @@
                 throw new Error(err.detail || `Anfrage fehlgeschlagen (${res.status})`);
             }
             status.textContent = '';
+            input.value = '';
             handleLogResponse(await res.json());
         } catch (err) {
             status.textContent = err.message;
@@ -575,6 +609,9 @@
             clarifyStatus.textContent = '';
             handleLogResponse(await res.json());
         } catch (err) {
+            // Die Antwort bleibt nicht im Gespraech haengen, sonst stuende sie beim
+            // naechsten Versuch doppelt darin.
+            convo.pop();
             clarifyStatus.textContent = err.message;
             clarifyStatus.className = 'status error';
         } finally {
@@ -584,21 +621,37 @@
 
     const recordBtn = document.getElementById('record-btn');
     const indicator = document.getElementById('record-indicator');
+    const mealField = document.getElementById('meal-field');
+    const recTime = document.getElementById('rec-time');
     const voiceStatus = document.getElementById('voice-status');
     let mediaRecorder = null;
     let chunks = [];
     let isRecording = false;
+    let recTimer = null;
     // Die letzte Aufnahme bleibt liegen, bis sie durchgegangen ist. Vorher war sie
     // nach einem fehlgeschlagenen Upload weg — der Credit war trotzdem gebucht
     // (core/deps.require_credits bucht vor dem Provider-Aufruf, ohne Rueckerstattung),
     // und der Satz musste neu gesprochen werden.
     let lastBlob = null;
 
-    // aria-label und sichtbarer Text muessen denselben Zustand melden; vorher blieb
-    // das Label statisch, der Screenreader hoerte den Wechsel nie.
-    function setRecordLabel(text, label) {
-        recordBtn.textContent = text;
-        recordBtn.setAttribute('aria-label', label);
+    // Die Taste zeigt nur ein Symbol; der Zustand steht deshalb im aria-label und in
+    // aria-pressed, sichtbar im Aufnahmefeld daneben.
+    function setRecording(on) {
+        isRecording = on;
+        recordBtn.setAttribute('aria-label', on ? 'Aufnahme beenden und auswerten' : 'Mahlzeit per Sprache aufnehmen');
+        recordBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        recordBtn.classList.toggle('is-recording', on);
+        indicator.classList.toggle('hidden', !on);
+        mealField.classList.toggle('hidden', on);
+        clearInterval(recTimer);
+        if (on) {
+            const start = Date.now();
+            recTime.textContent = '0:00';
+            recTimer = setInterval(() => {
+                const s = Math.floor((Date.now() - start) / 1000);
+                recTime.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+            }, 500);
+        }
     }
 
     recordBtn.addEventListener('click', async () => {
@@ -615,11 +668,7 @@
                 mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
                 mediaRecorder.onstop = () => uploadRecording(new Blob(chunks, { type: 'audio/webm' }), stream);
                 mediaRecorder.start();
-                isRecording = true;
-                setRecordLabel('Stoppen', 'Aufnahme beenden und auswerten');
-                recordBtn.setAttribute('aria-pressed', 'true');
-                recordBtn.classList.add('is-recording');
-                indicator.classList.remove('hidden');
+                setRecording(true);
                 voiceStatus.textContent = '';
             } catch (err) {
                 voiceStatus.textContent = 'Mikrofon-Zugriff verweigert oder nicht verfügbar.';
@@ -627,11 +676,7 @@
             }
         } else {
             mediaRecorder.stop();
-            isRecording = false;
-            setRecordLabel('Sprechen', 'Mahlzeit per Sprache aufnehmen');
-            recordBtn.setAttribute('aria-pressed', 'false');
-            recordBtn.classList.remove('is-recording');
-            indicator.classList.add('hidden');
+            setRecording(false);
         }
     });
 
@@ -673,13 +718,13 @@
         if (!lastBlob) return;
         const again = document.createElement('button');
         again.type = 'button';
-        again.className = 'btn sm ghost';
+        again.className = 'btn line sm';
         again.textContent = 'Nochmal senden';
         again.addEventListener('click', () => uploadRecording(lastBlob, null));
         voiceStatus.appendChild(again);
     }
 
-    // Positionen korrigieren und loeschen.
+    // Mahlzeiten korrigieren und loeschen.
     function editFormFor(id) {
         return document.querySelector(`.pos-form[data-meal-id="${id}"]`);
     }
@@ -697,7 +742,7 @@
         form.classList.remove('hidden');
         form.scrollIntoView({ block: 'center', behavior: 'smooth' });
         const desc = form.querySelector('.pos-form__desc');
-        if (desc) desc.focus();
+        if (desc) desc.focus({ preventScroll: true });
     }
 
     // Die Quittung ist ein Moment, kein Zustand: ?logged= verschwindet aus der Adresse,
@@ -729,7 +774,7 @@
         });
 
         form.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-            if (!confirm('Diese Position löschen?')) return;
+            if (!confirm('Diese Mahlzeit löschen?')) return;
             status.textContent = 'Wird gelöscht…';
             status.className = 'status';
             try {

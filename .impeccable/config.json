@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "app/dashboard/templates/dashboard.html"
+        ],
+        "createdAt": "2026-09-28T20:12:00.271Z",
+        "reason": "Claude: gemeldet werden die horizontalen 12px/5px-Balken der Naehrwerttabelle ueber volle Breite (Direction contract), kein Seitenakzent"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "app/dashboard/templates/history.html"
+        ],
+        "createdAt": "2026-09-28T20:15:54.637Z",
+        "reason": "Claude: gemeldet werden nur horizontale Balken ueber volle Breite (Naehrwerttabellen-Grammatik), kein Seitenakzent"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "app/dashboard/templates/weight.html"
+        ],
+        "createdAt": "2026-09-28T20:15:54.658Z",
+        "reason": "Claude: gemeldet werden nur horizontale Balken ueber volle Breite (Naehrwerttabellen-Grammatik), kein Seitenakzent"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "app/landing/templates/landing.html"
+        ],
+        "createdAt": "2026-09-28T20:15:54.675Z",
+        "reason": "Claude: gemeldet werden nur horizontale Balken ueber volle Breite (Naehrwerttabellen-Grammatik), kein Seitenakzent"
+      }
+    ]
+  }
+}

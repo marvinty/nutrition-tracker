@@ -2,80 +2,115 @@
 
 {% block title %}Kosten — Admin{% endblock %}
 
+{% block admin_head %}
+<style>
+    /* Die Kennzahlen als Naehrwerttabelle im einen Kasten: Zeitraum links,
+       Aufrufe und Betrag rechts in Tabellenziffern. Die Hochrechnung ist keine
+       Messung und steht deshalb unter einer 3px-Linie abgesetzt. */
+    .kosten{max-width:560px}
+    .ktab{width:100%;border-collapse:collapse}
+    .ktab thead th{
+        font-size:var(--t-s);font-weight:700;text-align:right;padding:8px 0 6px 12px;
+        border-bottom:1px solid var(--ink);white-space:nowrap;
+    }
+    .ktab thead th:first-child{text-align:left;padding-left:0}
+    .ktab tbody th{text-align:left;font-weight:700;padding:9px 0}
+    .ktab tbody th small{display:block;font-weight:400;font-size:var(--t-s);color:var(--faint)}
+    .ktab td{
+        text-align:right;padding:9px 0 9px 12px;white-space:nowrap;vertical-align:top;
+        color:var(--ink-2);font-variant-numeric:tabular-nums;
+    }
+    .ktab td.eur{color:var(--ink);font-weight:800;font-size:var(--t-m)}
+    .ktab tbody tr + tr > *{border-top:1px solid var(--hair)}
+    .ktab tr.hoch > *{border-top:3px solid var(--ink)!important}
+</style>
+{% endblock %}
+
 {% block content %}
-{% include "_admin_bar.html" %}
-<main>
-    <div class="wrap">
-        <span class="sec-tag">Übersicht</span>
-        <h1 class="page-h">Kosten</h1>
+<main class="page">
+    <h1 class="page-h">Kosten</h1>
 
-        <div class="card">
-            <div class="stats">
-                <div>
-                    <div class="stat-k">Heute</div>
-                    <div class="stat-v">{{ report.today | eur_headline }}</div>
-                    <div class="stat-note">{{ report.today.calls }} Aufrufe</div>
-                </div>
-                <div>
-                    <div class="stat-k">Letzte 7 Tage</div>
-                    <div class="stat-v">{{ report.last_7_days | eur_headline }}</div>
-                    <div class="stat-note">{{ report.last_7_days.calls }} Aufrufe</div>
-                </div>
-                <div>
-                    <div class="stat-k">Letzte {{ report.window_days }} Tage</div>
-                    <div class="stat-v">{{ report.total | eur_headline }}</div>
-                    <div class="stat-note">{{ report.total.calls }} Aufrufe</div>
-                </div>
-                <div>
-                    <div class="stat-k">Hochgerechnet / Monat</div>
-                    <div class="stat-v">{{ report.projected_30_days | eur_auto }}</div>
-                    <div class="stat-note">
-                        {% if report.projected_30_days is none %}
-                        noch keine Daten
-                        {% else %}
-                        Fenster auf 30 Tage skaliert
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
+    <section class="kasten kosten" aria-labelledby="kosten-h">
+        <h2 class="kasten-h" id="kosten-h">Übersicht</h2>
+        <table class="ktab">
+            <thead>
+                <tr>
+                    <th>Zeitraum</th>
+                    <th>Aufrufe</th>
+                    <th>Kosten</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Heute</th>
+                    <td>{{ report.today.calls }}</td>
+                    <td class="eur">{{ report.today | eur_headline }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Letzte 7 Tage</th>
+                    <td>{{ report.last_7_days.calls }}</td>
+                    <td class="eur">{{ report.last_7_days | eur_headline }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Letzte {{ report.window_days }} Tage</th>
+                    <td>{{ report.total.calls }}</td>
+                    <td class="eur">{{ report.total | eur_headline }}</td>
+                </tr>
+                <tr class="hoch">
+                    <th scope="row">
+                        Hochgerechnet / Monat
+                        <small>
+                            {% if report.projected_30_days is none %}
+                            noch keine Daten
+                            {% else %}
+                            Fenster auf 30 Tage skaliert
+                            {% endif %}
+                        </small>
+                    </th>
+                    <td></td>
+                    <td class="eur">{{ report.projected_30_days | eur_auto }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 
-        {% if report.unpriced %}
-        {# A missing price must never look like a free call: name the models instead
-           of letting them silently drag the total down. #}
-        <p class="notice">
-            Für {{ report.unpriced.values() | sum }} Aufrufe fehlt ein Preis — die Beträge
-            oben sind Untergrenzen. Betroffen:
-            {% for model, count in report.unpriced.items() %}
-            <strong>{{ model }}</strong> ({{ count }}){% if not loop.last %}, {% endif %}
-            {%- endfor %}.
-            Entweder in <code class="code">MODEL_PRICES_USD</code> bzw.
-            <code class="code">AUDIO_PRICES_USD_PER_MINUTE</code> ergänzen, oder es sind
-            Transkriptionen von vor der Dauer-Erfassung, bei denen die Minutenzahl fehlt.
-        </p>
-        {% endif %}
+    {% if report.unpriced %}
+    {# A missing price must never look like a free call: name the models instead
+       of letting them silently drag the total down. #}
+    <p class="notice error">
+        Für {{ report.unpriced.values() | sum }} Aufrufe fehlt ein Preis — die Beträge
+        oben sind Untergrenzen. Betroffen:
+        {% for model, count in report.unpriced.items() %}
+        <strong>{{ model }}</strong> ({{ count }}){% if not loop.last %}, {% endif %}
+        {%- endfor %}.
+        Entweder in <code class="code">MODEL_PRICES_USD</code> bzw.
+        <code class="code">AUDIO_PRICES_USD_PER_MINUTE</code> ergänzen, oder es sind
+        Transkriptionen von vor der Dauer-Erfassung, bei denen die Minutenzahl fehlt.
+    </p>
+    {% endif %}
 
-        <h3>Pro Tag</h3>
+    <section>
+        <h2 class="sec-h">Pro Tag</h2>
         {% if report.by_day %}
-        <div class="table-wrap">
-            <table class="data">
+        <div class="tab-scroll">
+            <table class="tab">
                 <thead>
                     <tr>
                         <th>Tag</th>
-                        <th class="num">Aufrufe</th>
-                        <th class="num">Tokens</th>
-                        <th class="num">Audio</th>
-                        <th class="num">Kosten</th>
+                        <th class="r">Aufrufe</th>
+                        <th class="r">Tokens</th>
+                        <th class="r">Audio</th>
+                        <th class="r">Kosten</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for d in report.by_day %}
                     <tr>
-                        <td class="name">{{ d.day | de_date }}</td>
-                        <td class="num">{{ d.calls }}</td>
-                        <td class="num">{{ d.prompt_tokens + d.completion_tokens }}</td>
-                        <td class="num">{{ "%.0f" | format(d.audio_seconds) }} s</td>
-                        <td class="num">{{ d | eur_bucket }}</td>
+                        <td class="name num">{{ d.day | de_date }}</td>
+                        <td class="r">{{ d.calls }}</td>
+                        <td class="r">{{ d.prompt_tokens + d.completion_tokens }}</td>
+                        <td class="r">{{ "%.0f" | format(d.audio_seconds) }} s</td>
+                        <td class="r">{{ d | eur_bucket }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -84,28 +119,30 @@
         {% else %}
         <p class="empty">Noch keine KI-Aufrufe im Zeitraum.</p>
         {% endif %}
+    </section>
 
-        <h3>Pro Nutzer</h3>
+    <section>
+        <h2 class="sec-h">Pro Nutzer</h2>
         {% if report.by_user %}
-        <div class="table-wrap">
-            <table class="data">
+        <div class="tab-scroll">
+            <table class="tab">
                 <thead>
                     <tr>
                         <th>Benutzername</th>
-                        <th class="num">Aufrufe</th>
-                        <th class="num">Tokens</th>
-                        <th class="num">Kosten</th>
-                        <th class="num">Pro Aufruf</th>
+                        <th class="r">Aufrufe</th>
+                        <th class="r">Tokens</th>
+                        <th class="r">Kosten</th>
+                        <th class="r">Pro Aufruf</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for u in report.by_user %}
                     <tr>
                         <td class="name"><a href="/admin/users/{{ u.username }}">{{ u.username }}</a></td>
-                        <td class="num">{{ u.calls }}</td>
-                        <td class="num">{{ u.prompt_tokens + u.completion_tokens }}</td>
-                        <td class="num">{{ u | eur_bucket }}</td>
-                        <td class="num">{{ u.eur_per_priced_call | eur }}</td>
+                        <td class="r">{{ u.calls }}</td>
+                        <td class="r">{{ u.prompt_tokens + u.completion_tokens }}</td>
+                        <td class="r">{{ u | eur_bucket }}</td>
+                        <td class="r">{{ u.eur_per_priced_call | eur }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -114,19 +151,21 @@
         {% else %}
         <p class="empty">Noch keine KI-Aufrufe im Zeitraum.</p>
         {% endif %}
+    </section>
 
-        <h3>Pro Modell</h3>
+    <section>
+        <h2 class="sec-h">Pro Modell</h2>
         {% if report.by_model %}
-        <div class="table-wrap">
-            <table class="data">
+        <div class="tab-scroll">
+            <table class="tab">
                 <thead>
                     <tr>
                         <th>Modell</th>
                         <th>Anbieter</th>
-                        <th class="num">Aufrufe</th>
-                        <th class="num">Tokens</th>
-                        <th class="num">Audio</th>
-                        <th class="num">Kosten</th>
+                        <th class="r">Aufrufe</th>
+                        <th class="r">Tokens</th>
+                        <th class="r">Audio</th>
+                        <th class="r">Kosten</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -134,10 +173,10 @@
                     <tr>
                         <td class="name">{{ m.model or "—" }}</td>
                         <td>{{ m.provider }}</td>
-                        <td class="num">{{ m.calls }}</td>
-                        <td class="num">{{ m.prompt_tokens + m.completion_tokens }}</td>
-                        <td class="num">{{ "%.0f" | format(m.audio_seconds) }} s</td>
-                        <td class="num">{{ m | eur_bucket }}</td>
+                        <td class="r">{{ m.calls }}</td>
+                        <td class="r">{{ m.prompt_tokens + m.completion_tokens }}</td>
+                        <td class="r">{{ "%.0f" | format(m.audio_seconds) }} s</td>
+                        <td class="r">{{ m | eur_bucket }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -146,13 +185,13 @@
         {% else %}
         <p class="empty">Noch keine KI-Aufrufe im Zeitraum.</p>
         {% endif %}
+    </section>
 
-        <p class="count-note">
-            Alle Beträge in Euro, brutto (inkl. {{ vat_percent }} % USt),
-            umgerechnet mit {{ usd_to_eur | replace('.', ',') }} USD/EUR. Zeitraum: die letzten
-            {{ report.window_days }} Tage — das KI-Log wird nach {{ retention_days }} Tagen
-            gelöscht, ältere Aufrufe lassen sich deshalb nicht mehr auswerten.
-        </p>
-    </div>
+    <p class="count-note">
+        Alle Beträge in Euro, brutto (inkl. {{ vat_percent }} % USt),
+        umgerechnet mit {{ usd_to_eur | replace('.', ',') }} USD/EUR. Zeitraum: die letzten
+        {{ report.window_days }} Tage — das KI-Log wird nach {{ retention_days }} Tagen
+        gelöscht, ältere Aufrufe lassen sich deshalb nicht mehr auswerten.
+    </p>
 </main>
 {% endblock %}

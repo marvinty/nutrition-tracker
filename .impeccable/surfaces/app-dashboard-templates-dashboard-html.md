@@ -8,49 +8,46 @@ related_targets: []
 ## Scope
 
 Dashboard `/dashboard` (Heute-Ansicht und Rueckblick auf einen einzelnen Tag).
-Modus: Operate. Gewaehlt vom Nutzer am 2026-09-19 aus zwei gebauten Mockups.
-Die uebrigen Oberflaechen (Verlauf, Ziele, Rezepte, Gewicht, Auth, Landing) laufen
-vorerst weiter auf `base.html` und der alten DESIGN.md-Welt; sie folgen spaeter.
+Modus: Operate. Gewaehlt vom Nutzer am 2026-09-28 aus zwei gebauten Mockups
+(Vorschlag A "Naehrwerte" gegen B "Instrument"). Ersetzt den Tagesbon, den der Nutzer
+als zu metaphorisch, zu dunkel, schwer lesbar und "nicht wie ein Produkt" verworfen hat.
+Alle Oberflaechen (Landing, FAQ, Rechtliches, Auth, Admin, Verlauf, Ziele, Rezepte,
+Gewicht, KI-Log, Feedback) wurden am selben Tag auf `base_app.html` umgestellt;
+`base.html`, `base_bon.html` und `_wordmark.html` sind geloescht.
 
 ## Direction contract
 
-THESIS: Der Tag ist eine **laufende Rechnung**, kein Feed und kein Karten-Dashboard.
-Verweigert wird die Kategorie-Anordnung (Makro-Ringe, gefuellte Fortschrittsbalken,
-gleich grosse Karten mit Icon) und ihr Gegenteil, der Ist-Zustand aus Creme, Serifen-
-Display und Terracotta — der Cluster, in dem generierte Oberflaechen landen.
+THESIS: Der Tag ist eine Naehrwerttabelle, wie sie auf jeder Verpackung steht — eine
+Form, die jeder lesen kann, ohne dass sie ein Kostuem ist. Verweigert: Makro-Ringe,
+gefuellte Balken, Kartenraster mit Icons, und jede Materialmetapher (Papier, Tisch, Bon).
 
-OWN-WORLD: Thermopapier (#efeee6, abgesetzt #e6e4da) auf dunkelgruener Tischflaeche
-(#123028 auf #0c231d), Ink #1b1a15, Registrier-Rot #c4200d als einzige zweite Farbe
-und nur fuer Offenes, Fehler und Ueberschreitung. Sometype Mono traegt alles Gedruckte;
-Big Shoulders Display nur fuer den Bonkopf und die eine grosse Zahl. Rang kommt aus
-Gewicht, Versalien, Punkt-Fuehrung und Linie (einfach, gepunktet, doppelt), nicht aus
-einer Groessenleiter. Tabellen statt Balken. Knoepfe sind Stempelfelder mit harter
-1,5px-Kontur, nie gefuellte Pillen. Ecken sind rechtwinklig; kein Radius ueber 0.
+OWN-WORLD: Weisser Grund, Schwarz #0f0f0d, zwei Grauebenen, Haarlinie #dcdcd6. Kobalt
+#1f3fd1 nur fuer die Sprachtaste, Fokus und die frisch gebuchte Zeile. Rot #b3261e nur
+fuer Fehler und laufende Aufnahme. Archivo: normale Breite fuer Text, schmal (70–72 %)
+und 800–900 fuer Ueberschrift und die eine grosse Zahl. Rang aus Linienstaerke der
+Tabelle (12px-Balken, 5px, 3px, 1px schwarz, Haarlinie) und Gewicht. Rechte Winkel.
+Ueberschreitung = Schraffur plus Wort "über Ziel", nie nur Farbe.
 
-STORY: Ich sehe die Positionen des Tages in Druckreihenfolge, die Summe, das Tagesziel
-und den Rest. Was noch offen ist, steht rot. Ich spreche oder tippe eine Zeile dazu;
-wenn eine Angabe fehlt, druckt der Bon eine Rueckfrage dazwischen, bevor er bucht.
+STORY: Ich sehe sofort, wie viel heute noch offen ist, und darunter Energie und Makros
+als Gegessen / Ziel / Offen. Ich tippe oder spreche unten am Daumen; fehlt eine Angabe,
+steht die Rueckfrage direkt ueber dem Feld, hoechstens zwei.
 
-FIRST VIEWPORT: Bonkopf mit Wortmarke, Datum und Tagesnavigation; darunter die
-gedruckte Bereichszeile mit invertiertem aktiven Feld. Dann das Eingabefeld mit
-Stempelknopf "Loggen" und "Sprechen" direkt unter dem Kopf — der Job der Seite steht
-vor der Bilanz. Dann die Positionsliste mit Nummer, Uhrzeit, Bezeichnung, Punkt-
-fuehrung und kcal rechtsbuendig; Makros als graue Unterzeile. Darunter doppelte Linie,
-Summe, Tagesziel und der Rest als einzige grosse Zahl, dann die Naehrwert-Tabelle
-Ist/Ziel/Offen. Fuss mit Schnittkante.
+FIRST VIEWPORT: Mobil: Kopfzeile (Wortmarke links, Tageswechsel rechts), 5 Bereiche als
+Unterstreich-Tabs, darunter der schwarz gerahmte Kasten "Nährwerte" mit Datum, dickem
+Balken, "Noch offen" und der grossen Zahl rechts, dann die Tabelle. Eingabefeld und
+quadratische Kobalt-Sprachtaste fest unten. Desktop: links Eingabe + Mahlzeiten, rechts
+der Kasten sticky.
 
-FORM: Kassenbon / Tagesbon, Kandidat 1 der eigenen Liste (IMPECCABLE'S PICK, vom
-Nutzer gegen die gewuerfelte Richtung 5 "Tonband" gewaehlt); Seed-Key 7e3ccb77,
-Scope direction, Mode operate. Erhebungen aus den geschlagenen Richtungen:
-ein Schriftgrad-Regime statt Groessenleiter (Kursbuch-Rack), Farbe nur an der Kante
-statt in Flaechen (Wolkensaum), Zeilen als lebende Objekte in festen Spalten
-(Fallblattanzeige), der Tag als einzige Achse (Abreisskalender).
+FORM: Naehrwertkennzeichnung auf Verpackungen, Kandidat 1 der eigenen Liste
+(IMPECCABLE'S PICK gegen die gewuerfelte Richtung 3 "Instrument"); Seed-Key 7a6acee1,
+Scope direction, Mode operate. Erhebung aus dem Camcorder-Sucher (abgelehnt):
+Ueberschreitung traegt eine Textur, nicht nur eine Farbe.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
 
 ## Offene Entscheidungen
 
-- Wortmarke: im Bonkopf steht der Name derzeit in Big Shoulders gesetzt, nicht als
-  SVG aus `app/static/brand/`. Vor dem Launch klaeren, ob die Wortmarke umgezeichnet
-  wird oder das SVG in den Kopf wandert.
-- DESIGN.md wird erst nach dem Finish-Review aus dem gebauten Ergebnis geschrieben.
+- Wortmarke: im Kopf als Text in Archivo 800 gesetzt; die SVG-Wortmarke traegt noch die
+  Farben der alten Welt. Umzeichnen oder neue Farbvariante — vor dem Launch klaeren.
+- Favicon `static/brand/macromic-mark.svg` traegt noch Terrakotta auf Creme (alte Welt) —
+  Markenentscheidung, mit der Wortmarke zusammen klaeren.

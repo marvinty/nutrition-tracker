@@ -161,30 +161,31 @@ real mail flows are exercised in tests and local dev without a mock.
 
 [DESIGN.md](DESIGN.md) is binding for anything user-facing, and says so: "nichts dazuerfinden".
 
-**There are two worlds right now, and DESIGN.md says which is which.** `/dashboard` runs the
-new one — a printed Tagesbon: Thermopapier on a dark green table, Sometype Mono and Big
-Shoulders Display, right angles, Registrier-Rot reserved for what is open, wrong or over
-target. It extends `dashboard/templates/base_bon.html` and is the system of record for all
-new work. Everything else — landing, FAQ, auth, admin, and the dashboard's sibling pages —
-still extends `base.html` in the old cream/Newsreader/terracotta world, which is frozen in
-the last section of DESIGN.md and gets converted page by page. **Never mix them**: check
-which base your template extends before you pick a token.
+**One world: "Nährwerte".** Every page extends `dashboard/templates/base_app.html` (admin via
+`admin_base.html`, which extends it too): white ground, black ink, the rule weights of a
+nutrition label (12px bar, 5px, 3px, 1px black, hairline) carrying rank, Archivo as the only
+face (condensed and heavy for the page heading and the one big number), right angles.
+Cobalt is reserved for the voice key, focus and "just saved"; red for errors and the running
+recording; over-target is hatching plus the words "über Ziel", never colour alone. Shared
+building blocks (`.page`, `.page-h`, `.sec-h`, `.kasten`, `.feld`, `.tab`, `.notice`, `.btn`)
+live in `base_app.html` — reuse them before writing template CSS. The Bon and the old
+cream/Newsreader world are gone; don't bring their tokens back.
 
 The rules that get violated most often:
 
 - **Everything is German** — UI copy, error messages, `detail` strings on `HTTPException`. Several
   of these strings are rendered to the user as-is.
-- Only the color tokens of the world you are in. No new base colors, no emojis, no dark mode.
+- Only the tokens in `base_app.html`. No new base colors, no emojis, no dark mode.
 - Du-Ansprache, no marketing voice.
 - Responsive down to 375px, no horizontal scroll. CSS-only animation, always respecting
   `prefers-reduced-motion`.
 - CSS is inlined per template. The exceptions under `/static` are the brand assets
-  ([BRAND.md](BRAND.md)) and the self-hosted fonts (`static/fonts.css` for the old world,
-  `static/fonts-bon.css` for the Bon, both served from `static/fonts/`).
+  ([BRAND.md](BRAND.md)) and the self-hosted font (`static/fonts-app.css`, Archivo, served
+  from `static/fonts/`).
 - **Never link `fonts.googleapis.com`.** The CDN hands every visitor's IP to Google before
   anyone consented — the fonts were moved in-house for exactly that reason, and the
   Datenschutzerklärung now states that no third party sees an IP. A new template that
-  reaches for the CDN silently makes that page a lie. Copy the three tags from DESIGN.md.
+  reaches for the CDN silently makes that page a lie. Extend `base_app.html`; it loads the font.
 
 ## Tooling in `.claude/`
 

@@ -1,85 +1,175 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}Verlauf — {{ period_label }}{% endblock %}
 
 {% block extra_head %}
 <style>
-    .hist-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-    .adherence{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-    .adherence .big{font-family:var(--serif);font-size:30px;line-height:1;letter-spacing:-.02em}
-    .adherence-target{color:#f6d9cc;font-size:14px}
-    .accent-block--slim{padding:20px 26px;border-radius:20px}
+    /* ---------- Kopf: Periode, Umschalter, Blaettern ---------- */
+    .hist-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 24px}
+    .hist-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+    /* Woche/Monat: zwei Reiter unter einer Haarlinie, der aktive mit 3px Schwarz —
+       dieselbe Geste wie die Bereichsnavigation. */
+    .umschalt{display:flex;gap:18px;border-bottom:1px solid var(--hair)}
+    .umschalt a{
+        display:inline-flex;align-items:center;min-height:44px;
+        text-decoration:none;font-size:15px;font-weight:500;color:var(--ink-2);
+        border-bottom:3px solid transparent;margin-bottom:-1px;
+    }
+    .umschalt a:hover{color:var(--ink)}
+    .umschalt a[aria-current]{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+    .blaettern{display:flex;gap:8px}
+    .blaettern .btn svg.i{width:18px;height:18px}
+    .blaettern .is-disabled{opacity:.4;pointer-events:none}
+
+    /* ---------- Der Kasten: Durchschnitt der Periode ---------- */
+    .hist-kasten{max-width:520px}
+    .hist-kasten .kasten-sub{font-size:15px;color:var(--ink-2);padding:8px 0 10px;border-bottom:1px solid var(--ink)}
+    .hist-kasten .schnitt{
+        display:flex;align-items:flex-end;justify-content:space-between;gap:10px;
+        padding:12px 0;border-bottom:5px solid var(--ink);
+    }
+    .schnitt-k{font-weight:800;font-size:var(--t-m);line-height:1.2}
+    .schnitt-k small{display:block;font-weight:400;font-size:var(--t-s);color:var(--faint);margin-top:2px}
+    .hist-kasten .tab thead th{text-align:right;padding-left:10px}
+    .hist-kasten .tab thead th:first-child{text-align:left;padding-left:0}
+    .hist-kasten .tab tbody th small{font-weight:400;font-size:var(--t-s);color:var(--faint);margin-left:4px}
+    .hist-kasten .tab td{color:var(--ink-2);padding-left:10px}
+    .hist-kasten .tab tr.energie > *{border-bottom:3px solid var(--ink);font-size:var(--t-m)}
+    .hist-kasten .tab tbody tr:last-child > *{border-bottom:0}
+    .hist-kasten .note{font-size:var(--t-s);color:var(--ink-2);padding-top:10px;border-top:1px solid var(--ink)}
+    .hist-kasten .note b{font-variant-numeric:tabular-nums}
+
+    /* ---------- Tage ---------- */
+    .tage th,.tage td{font-variant-numeric:tabular-nums}
+    .tage thead th small{font-weight:400;color:var(--faint)}
+    .tage thead th.r{text-align:right}
+    .tage tbody th a{text-decoration:none;font-weight:700;display:inline-flex;align-items:center;min-height:24px}
+    .tage tbody th a:hover{text-decoration:underline;text-decoration-color:var(--ink)}
+    .tage tbody tr:hover > *{background:var(--tint)}
+    .tage td.kc{font-weight:700;color:var(--ink)}
+    .tage td{color:var(--ink-2)}
+    .tage tr.leer td{color:var(--faint);font-weight:400}
+    .tage .erreicht{display:inline-flex;vertical-align:-3px;margin-left:6px}
+    .tage .erreicht svg.i{width:16px;height:16px;stroke-width:2.4}
+    .tage tfoot th,.tage tfoot td{
+        padding:10px 10px 10px 0;border-top:2px solid var(--ink);border-bottom:0;font-weight:800;color:var(--ink);text-align:left;
+    }
+    /* Am Handy passt die Tabelle ohne Querscrollen: die Mahlzeiten-Spalte faellt weg,
+       sie steht ohnehin im Kasten. */
+    @media(max-width:560px){
+        .tage .mz{display:none}
+        .tage th,.tage td{padding-right:8px}
+    }
+    .tage tfoot td.r{text-align:right}
+    .tage tfoot th:last-child,.tage tfoot td:last-child{padding-right:0}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-head">
-    <div>
-        <span class="sec-tag">Verlauf</span>
-        <h1 class="page-h">{{ period_label }}</h1>
-    </div>
-    <div class="hist-top">
-        <div class="tabs">
-            <a href="/history?view=week" class="tab{% if view == 'week' %} is-active{% endif %}">Woche</a>
-            <a href="/history?view=month" class="tab{% if view == 'month' %} is-active{% endif %}">Monat</a>
+{# Der Schnitt zaehlt nur erfasste Tage bis heute. Ueber alle Tage der Periode
+   geteilt, druecken kuenftige und leere Tage die Zahl nach unten — die eine grosse
+   Zahl der Seite waere dann falsch. Kein Tagesziel-Vergleich pro Tag: vergangene Tage
+   am heutigen Ziel zu messen ist irrefuehrend (siehe Kommentar im Router). #}
+{% set _erfasst = [] %}{% for day in series %}{% if day.meal_count and day.date.isoformat() <= today %}{% set _ = _erfasst.append(day) %}{% endif %}{% endfor %}
+{% set _n = _erfasst | length %}
+<main class="page">
+    <div class="hist-head">
+        <div>
+            <h1 class="page-h">{{ period_label }}</h1>
+            <p class="page-lede">Verlauf, {% if view == 'month' %}Monat{% else %}Woche{% endif %}. Tipp auf einen Tag, um ihn zu öffnen.</p>
         </div>
-        <div class="day-nav">
-            <a href="/history?view={{ view }}&d={{ prev_anchor }}" class="nav-btn">‹ Zurück</a>
-            {% if next_anchor %}
-            <a href="/history?view={{ view }}&d={{ next_anchor }}" class="nav-btn">Weiter ›</a>
-            {% else %}
-            <span class="nav-btn is-disabled" aria-hidden="true">Weiter ›</span>
-            {% endif %}
+        <div class="hist-ctl">
+            <nav class="umschalt" aria-label="Zeitraum">
+                <a href="/history?view=week"{% if view == 'week' %} aria-current="page"{% endif %}>Woche</a>
+                <a href="/history?view=month"{% if view == 'month' %} aria-current="page"{% endif %}>Monat</a>
+            </nav>
+            <div class="blaettern">
+                <a href="/history?view={{ view }}&d={{ prev_anchor }}" class="btn line sm"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>Zurück</a>
+                {% if next_anchor %}
+                <a href="/history?view={{ view }}&d={{ next_anchor }}" class="btn line sm">Weiter<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></a>
+                {% else %}
+                <span class="btn line sm is-disabled" aria-hidden="true">Weiter<svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span>
+                {% endif %}
+            </div>
         </div>
     </div>
-</div>
 
-<h2 class="sub-h" style="margin-top:0">Ø pro Tag</h2>
-<div class="totals-grid totals-grid--compact">
-    <div class="totals-card totals-card--cal">
-        <div class="label">kcal</div>
-        <div class="value">{{ summary.avg.calories | de_num(0) }}</div>
-    </div>
-    <div class="totals-card">
-        <div class="label">Protein</div>
-        <div class="value">{{ summary.avg.protein | de_num }}<span class="unit">g</span></div>
-    </div>
-    <div class="totals-card">
-        <div class="label">Kohlenhydrate</div>
-        <div class="value">{{ summary.avg.carbs | de_num }}<span class="unit">g</span></div>
-    </div>
-    <div class="totals-card">
-        <div class="label">Fett</div>
-        <div class="value">{{ summary.avg.fat | de_num }}<span class="unit">g</span></div>
-    </div>
-</div>
-
-{% if adherence %}
-<div class="accent-block accent-block--slim" style="margin-top:18px">
-    <div class="adherence">
-        <span class="big">{{ adherence.protein_hit }}/{{ adherence.logged_days }}</span>
-        <strong>Tage Proteinziel erreicht</strong>
-        <span class="adherence-target">(≥ {{ adherence.protein_target }}g)</span>
-    </div>
-</div>
-{% endif %}
-
-<h2 class="sub-h">Tage im Detail</h2>
-<div class="row-list">
-    {% for day in series %}
-    <div class="row-item row-item--link" onclick="window.location='/dashboard?d={{ day.date.isoformat() }}'">
-        <span class="row-day">{{ day.date | de_short }}</span>
-        <span class="row-macros">{{ day.calories | de_num(0) }} kcal · {{ day.protein | de_num }}g P · {{ day.carbs | de_num }}g KH · {{ day.fat | de_num }}g F</span>
-        {% if adherence and day.meal_count > 0 and day.protein >= adherence.protein_target %}
-        <span class="goal-tick" title="Proteinziel erreicht">✓</span>
+    <section class="kasten hist-kasten" aria-labelledby="schnitt-h">
+        <h2 class="kasten-h" id="schnitt-h">Ø pro erfasstem Tag</h2>
+        <p class="kasten-sub">{{ _n }} {% if _n == 1 %}erfasster Tag{% else %}erfasste Tage{% endif %} · {{ summary.total.meal_count }} {% if summary.total.meal_count == 1 %}Mahlzeit{% else %}Mahlzeiten{% endif %}</p>
+        <div class="schnitt">
+            <p class="schnitt-k">Energie<small>Durchschnitt</small></p>
+            <p class="big">{% if _n %}{{ ((_erfasst | sum(attribute='calories')) / _n) | de_num(0) }}{% else %}—{% endif %}<small>kcal</small></p>
+        </div>
+        <table class="tab">
+            <thead>
+                <tr>
+                    <th scope="col"><span class="sr-only">Nährwert</span></th>
+                    <th scope="col" class="r">Ø</th>
+                    <th scope="col" class="r">Summe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, name, unit in [('calories','Energie','kcal'), ('protein','Eiweiß','g'), ('carbs','Kohlenhydrate','g'), ('fat','Fett','g')] %}
+                {% set digits = 0 if key == 'calories' else 1 %}
+                <tr{% if key == 'calories' %} class="energie"{% endif %}>
+                    <th scope="row">{{ name }}<small>{{ unit }}</small></th>
+                    <td class="r">{% if _n %}{{ ((_erfasst | sum(attribute=key)) / _n) | de_num(digits) }}{% else %}—{% endif %}</td>
+                    <td class="r">{{ summary.total[key] | de_num(digits) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if adherence %}
+        <p class="note"><b>{{ adherence.protein_hit }}/{{ adherence.logged_days }}</b> Tage Proteinziel erreicht (≥ {{ adherence.protein_target }} g)</p>
         {% endif %}
-        <span class="row-count">{{ day.meal_count }} Mahlz.</span>
-    </div>
-    {% endfor %}
-    <div class="row-item row-item--total">
-        <span class="row-day">Total ({{ summary.days }} Tage)</span>
-        <span class="row-macros">{{ summary.total.calories | de_num(0) }} kcal · {{ summary.total.protein | de_num }}g P · {{ summary.total.carbs | de_num }}g KH · {{ summary.total.fat | de_num }}g F</span>
-        <span class="row-count">{{ summary.total.meal_count }} Mahlz.</span>
-    </div>
-</div>
+    </section>
+
+    <section aria-labelledby="tage-h">
+        <h2 class="sec-h" id="tage-h">Tage im Detail <span>{{ summary.days }} Tage</span></h2>
+        <div>
+            <table class="tab tage">
+                <thead>
+                    <tr>
+                        <th scope="col">Tag</th>
+                        <th scope="col" class="r">kcal</th>
+                        <th scope="col" class="r">Eiweiß <small>g</small></th>
+                        <th scope="col" class="r">KH <small>g</small></th>
+                        <th scope="col" class="r">Fett <small>g</small></th>
+                        <th scope="col" class="r mz">Mahlzeiten</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in series %}
+                    {% set kuenftig = day.date.isoformat() > today %}
+                    <tr{% if day.meal_count == 0 %} class="leer"{% endif %}>
+                        <th scope="row">
+                            {%- if kuenftig -%}{{ day.date | de_short }}
+                            {%- else -%}<a href="/dashboard?d={{ day.date.isoformat() }}">{{ day.date | de_short }}</a>{%- endif -%}
+                            {%- if adherence and day.meal_count > 0 and day.protein >= adherence.protein_target -%}
+                            <span class="erreicht" title="Proteinziel erreicht"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="sr-only">Proteinziel erreicht</span></span>
+                            {%- endif -%}
+                        </th>
+                        {% for key in ['calories', 'protein', 'carbs', 'fat'] %}
+                        {% set digits = 0 if key == 'calories' else 1 %}
+                        <td class="r{% if key == 'calories' %} kc{% endif %}">{% if kuenftig %}—{% else %}{{ day[key] | de_num(digits) }}{% endif %}</td>
+                        {% endfor %}
+                        <td class="r mz">{% if kuenftig %}—{% else %}{{ day.meal_count }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="row">Summe</th>
+                        <td class="r">{{ summary.total.calories | de_num(0) }}</td>
+                        <td class="r">{{ summary.total.protein | de_num }}</td>
+                        <td class="r">{{ summary.total.carbs | de_num }}</td>
+                        <td class="r">{{ summary.total.fat | de_num }}</td>
+                        <td class="r mz">{{ summary.total.meal_count }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+</main>
 {% endblock %}

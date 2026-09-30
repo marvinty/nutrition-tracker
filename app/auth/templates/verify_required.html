@@ -1,43 +1,58 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block title %}E-Mail bestätigen — MacroMic{% endblock %}
 
-{% block nav %}
-<nav id="nav">
-    <div class="wrap nav-in">
-        <a class="brand" href="/">{% include "_wordmark.html" %}</a>
-        <div class="nav-actions">
-            <form method="post" action="/logout">
-                {{ csrf_field() }}
-                <button type="submit" class="btn sm ghost">Abmelden</button>
-            </form>
-        </div>
-    </div>
+{% block extra_head %}
+<style>
+    /* Formularseite: eine Spalte von 420px, Hauptaktion schwarz in voller Breite,
+       Nebenwege als Textlinks darunter. */
+    .page.auth{max-width:calc(420px + 2 * var(--gut))}
+    .page.auth > * + *{margin-top:20px}
+    .auth-form{display:grid;gap:14px}
+    .auth-form .btn{width:100%;margin-top:6px}
+    .auth-links{font-size:15px;color:var(--ink-2);padding-top:14px;border-top:1px solid var(--hair)}
+    .auth-links p + p{margin-top:6px}
+    .auth-links a{color:var(--ink);text-decoration-color:currentColor}
+    @media(pointer:coarse){.auth-links a{display:inline-block;padding:10px 0}}
+    .top-links form{margin:0}
+    .top-links button{font-size:15px;font-weight:500;color:var(--ink-2);min-height:44px}
+    .top-links button:hover{color:var(--ink)}
+</style>
+{% endblock %}
+
+{#- Der Nutzer ist hier angemeldet, nur gesperrt; der Kontext traegt aber kein
+    `username`. Deshalb Abmelden statt FAQ/Anmelden, wie bisher. -#}
+{% block topright %}
+<nav class="top-links" aria-label="Konto">
+    <form method="post" action="/logout">
+        {{ csrf_field() }}
+        <button type="submit">Abmelden</button>
+    </form>
 </nav>
 {% endblock %}
 
 {% block content %}
-<div class="auth-wrap">
-    <div class="card auth-card">
-        <h1 class="auth-title">Bitte <em>bestätigen</em>.</h1>
-        <p class="auth-lede">
+<main class="page narrow auth">
+    <header>
+        <h1 class="page-h">Bitte bestätigen.</h1>
+        <p class="page-lede">
             Wir haben einen Bestätigungslink an <strong>{{ email }}</strong> geschickt.
             Klick ihn an, dann geht es weiter.
         </p>
-        {% if sent %}
-        <p class="status">Neue Mail ist unterwegs. Schau auch im Spam-Ordner nach.</p>
-        {% elif throttled %}
-        <p class="status">Gerade erst verschickt — bitte warte eine Minute.</p>
-        {% elif failed %}
-        <p class="status error">Mail konnte nicht verschickt werden. Bitte versuch es gleich nochmal oder wende dich an den Support.</p>
-        {% endif %}
-        <form method="post" action="/verify-email/resend" class="auth-form">
-            {{ csrf_field() }}
-            <button type="submit" class="btn block">Mail erneut senden</button>
-        </form>
-        <p class="auth-footer">
-            Falsche Adresse angegeben? Melde dich beim Support, wir korrigieren das.
-        </p>
+    </header>
+    {% if sent %}
+    <p class="notice ok" role="status">Neue Mail ist unterwegs. Schau auch im Spam-Ordner nach.</p>
+    {% elif throttled %}
+    <p class="notice" role="status">Gerade erst verschickt — bitte warte eine Minute.</p>
+    {% elif failed %}
+    <p class="notice error" role="alert">Mail konnte nicht verschickt werden. Bitte versuch es gleich nochmal oder wende dich an den Support.</p>
+    {% endif %}
+    <form method="post" action="/verify-email/resend" class="auth-form">
+        {{ csrf_field() }}
+        <button type="submit" class="btn">Mail erneut senden</button>
+    </form>
+    <div class="auth-links">
+        <p>Falsche Adresse angegeben? Melde dich beim Support, wir korrigieren das.</p>
     </div>
-</div>
+</main>
 {% endblock %}

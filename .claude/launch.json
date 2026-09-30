@@ -6,6 +6,13 @@
       "runtimeExecutable": "docker",
       "runtimeArgs": ["compose", "up", "--build"],
       "port": 8000
+    },
+    {
+      "name": "nutrition-tracker-8010",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["APP_PORT=8010", "docker", "compose", "up", "--build"],
+      "port": 8010,
+      "autoPort": false
     }
   ]
 }

@@ -1,198 +1,76 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Admin — MacroMic{% endblock %}</title>
-    <link rel="icon" href="/static/brand/macromic-mark.svg">
-    <link rel="preload" href="/static/fonts/newsreader-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/static/fonts/inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/static/fonts.css">
-    <style>
-        /* Same design system as the user-facing app (DESIGN.md). The admin side is
-           marked by a dark nav bar — a dark panel on --text, which the system allows —
-           rather than by a separate palette. */
-        :root{
-            --bg:#eeece4;
-            --surface:#fbf8f2;
-            --surface-2:#f2ede2;
-            --text:#2b241f;
-            --text-muted:#7a7164;
-            --text-subtle:#a39a8d;
-            --accent:#c96442;
-            --accent-hover:#b4553a;
-            --accent-soft:#f2e2d6;
-            --border:#e4dcc9;
-            --danger:#a33520;
-            --danger-soft:#f4ded6;
-            --serif:'Newsreader',Georgia,serif;
-            --sans:'Inter',system-ui,-apple-system,sans-serif;
-            --r-btn:11px;
-            --r-card:20px;
-        }
-        *{box-sizing:border-box;margin:0;padding:0}
-        html{-webkit-text-size-adjust:100%}
-        body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;
-            line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-        a{color:var(--accent);text-decoration:none}
-        a:hover{color:var(--accent-hover)}
-        :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-        .wrap{width:100%;max-width:1100px;margin:0 auto;padding:0 32px}
-        .hidden{display:none!important}
+{% extends "base_app.html" %}
 
-        /* dark admin bar */
-        .admin-bar{background:var(--text);color:#f4efe6}
-        .admin-in{display:flex;align-items:center;justify-content:space-between;gap:18px;
-            min-height:64px;flex-wrap:wrap;padding:10px 0}
-        .admin-bar .brand{display:flex;align-items:center;gap:12px}
-        /* The dark variant of the mark — the bar's background is --text, the exact
-           tone macromic-wordmark-dark.svg was drawn against. */
-        .admin-bar .brand-mark{height:26px;width:auto;display:block}
-        .admin-bar .brand .tag{font-family:var(--sans);font-size:10px;font-weight:600;
-            text-transform:uppercase;letter-spacing:.1em;background:var(--accent);color:#fff;
-            border-radius:99px;padding:3px 10px}
-        .admin-bar .actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-        .admin-bar .who{color:#8a7f6f;font-size:13px;margin-right:6px}
-        .admin-bar form{margin:0}
-        .admin-bar .pill{padding:7px 15px;border:none;border-radius:99px;background:rgba(255,255,255,.09);
-            color:#d8cdbd;font:inherit;font-size:14px;font-weight:500;cursor:pointer;
-            transition:background .2s,color .2s}
-        .admin-bar .pill:hover{background:rgba(255,255,255,.17);color:#fff}
-        .admin-bar .pill.is-active{background:var(--accent);color:#fff}
+{% block title %}Admin — MacroMic{% endblock %}
 
-        main{padding:40px 0 72px}
-        .sec-tag{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
-        h1.page-h{font-family:var(--serif);font-weight:500;letter-spacing:-.03em;line-height:1.05;
-            font-size:clamp(34px,5vw,52px);margin:8px 0 28px}
-        h1.page-h em{font-style:italic;color:var(--accent)}
-        h3{font-family:var(--serif);font-weight:500;font-size:22px;letter-spacing:-.01em;margin:40px 0 16px}
+{% block extra_head %}
+<style>
+    /* Admin: dieselbe Naehrwert-Oberflaeche wie die App, nur als Datenbereich.
+       Markiert wird er durch das Wort "Admin" neben der Wortmarke und die eigenen
+       Reiter, nicht durch eine eigene Palette. */
+    .admin-tag{font-size:15px;font-weight:500;color:var(--faint);margin-left:6px}
+    .admin-who{font-size:var(--t-s);color:var(--faint)}
+    .top-links form{margin:0}
 
-        .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:28px}
-        .card.feat{background:var(--surface-2)}
+    /* Dichte Tabellen: kleinere Schrift, knappere Zeilen, kein Umbruch — breite
+       Tabellen scrollen in .tab-scroll, statt Zellen zu quetschen. */
+    .tab{font-size:15px}
+    .tab td,.tab tbody th{padding:8px 12px 8px 0;white-space:nowrap}
+    .tab thead th{padding-right:12px}
+    .tab td{color:var(--ink-2)}
+    .tab td.name{color:var(--ink);font-weight:600}
+    .tab td.name a{text-decoration:none}
+    .tab td.name a:hover{text-decoration:underline}
+    .tab tbody tr:hover > *{background:var(--tint)}
+    .tab td form{margin:0}
+    /* Die Stellen, an denen Umbrechen besser ist als Scrollen: Freitext. */
+    .tab td.wrap-cell{white-space:normal;min-width:280px;overflow-wrap:anywhere}
+    .sec-h + *{margin-top:12px}
+    .count-note{font-size:var(--t-s);color:var(--faint);margin-top:10px}
+    .page > .tab-scroll + .count-note{margin-top:10px}
 
-        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;
-            padding:0 22px;border-radius:var(--r-btn);background:var(--accent);color:#fff;
-            font-family:inherit;font-weight:500;font-size:15px;border:none;cursor:pointer;
-            white-space:nowrap;transition:background .2s,transform .2s}
-        .btn:hover:not(:disabled){background:var(--accent-hover);color:#fff;transform:translateY(-1px)}
-        .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
-        .btn.ghost:hover:not(:disabled){background:var(--surface);color:var(--text);border-color:var(--text-subtle)}
+    /* Zustaende als Text, nicht als Pille: aktiv in Schwarz, erledigt grau,
+       Fehler rot. */
+    .state{font-weight:600;color:var(--ink)}
+    .state--used_up,.state--expired,.state--revoked{font-weight:500;color:var(--faint)}
+    .state--fail{color:var(--red)}
 
-        input[type=text],input[type=password],input[type=number]{font-family:inherit;font-size:15px;
-            padding:0 14px;height:44px;border:1px solid var(--border);border-radius:var(--r-btn);
-            background:var(--surface);color:var(--text);width:100%}
-        input::placeholder{color:var(--text-subtle)}
-        input:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-        label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-subtle)}
-        .status{min-height:1.3em;font-size:14px;color:var(--text-muted);margin-top:12px}
-        .status.error{color:var(--danger);font-weight:500}
-        .empty{color:var(--text-subtle);font-style:italic}
-        .muted{color:var(--text-subtle)}
+    /* Tarif direkt in der Zeile aendern */
+    .tier-form{display:flex;align-items:center;gap:10px}
+    .tier-form select{
+        min-height:36px;padding:4px 32px 4px 8px;font:inherit;font-size:15px;color:var(--ink);
+        background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f0f0d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center/16px;
+        border:1.5px solid var(--ink);border-radius:0;-webkit-appearance:none;appearance:none;
+    }
+    .tier-form select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
 
-        /* data table */
-        .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-card);
-            background:var(--surface)}
-        table.data{width:100%;border-collapse:collapse;font-size:15px}
-        table.data th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;
-            letter-spacing:.07em;color:var(--text-subtle);padding:16px 16px 12px;white-space:nowrap}
-        table.data td{padding:14px 16px;border-top:1px solid var(--border);color:var(--text-muted);
-            white-space:nowrap}
-        table.data td.name{color:var(--text);font-weight:500}
-        table.data td.num,table.data th.num{text-align:right}
-        table.data td.num{font-family:var(--serif);font-variant-numeric:tabular-nums;font-size:16px}
-        table.data tr:hover td{background:var(--surface-2)}
-        table.data td form{margin:0}
-        .count-note{font-size:14px;color:var(--text-subtle);margin-top:16px}
+    /* Codes und Variablennamen: Tabellenziffern und etwas Sperrung, damit sich
+       O und 0 auseinanderhalten lassen. */
+    code,.code{font-family:inherit;font-size:inherit}
+    .code{font-weight:600;font-variant-numeric:tabular-nums slashed-zero;letter-spacing:.04em;color:var(--ink)}
 
-        .tier{display:inline-block;padding:3px 11px;border-radius:99px;font-size:11px;font-weight:600;
-            text-transform:uppercase;letter-spacing:.05em;background:var(--surface-2);color:var(--text-muted)}
-        .tier--pro,.tier--active{background:var(--accent-soft);color:var(--accent)}
-        .tier--used_up,.tier--expired,.tier--revoked{background:var(--surface-2);color:var(--text-subtle)}
-        .tier-form{display:flex;align-items:center;gap:8px}
-        .tier-form select{font-family:inherit;font-size:14px;padding:0 8px;height:34px;
-            border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)}
-        .tier-form select:focus-visible{outline:none;border-color:var(--accent);
-            box-shadow:0 0 0 3px var(--accent-soft)}
+    /* Eine KI-Anfrage mit vollem Prompt und voller Antwort, standardmaessig
+       zugeklappt: ausgeklappt wuerden die Zeilen die Tabelle begraben. */
+    .log-detail summary{cursor:pointer;font-size:var(--t-s);color:var(--ink-2);padding:4px 0}
+    .log-detail summary:hover{color:var(--ink)}
+    .log-detail h4{font-size:var(--t-s);font-weight:700;margin:12px 0 4px}
+    .log-text{
+        font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--t-s);line-height:1.5;color:var(--ink);
+        background:var(--tint);border:1px solid var(--hair);padding:10px 12px;
+        white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto;
+    }
+    .log-detail .log-text{margin-top:4px}
+    .msg{white-space:pre-wrap;color:var(--ink)}
 
-        code,.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;letter-spacing:.04em}
-        .code{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
-            padding:4px 10px;color:var(--text)}
+    @media(max-width:420px){
+        .admin-who .who-name{display:none}
+    }
+    @media(pointer:coarse){
+        .tier-form select{min-height:44px}
+    }
+</style>
+{% block admin_head %}{% endblock %}
+{% endblock %}
 
-        /* settings panel */
-        .panel-row{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
-        .panel-note{font-size:14px;color:var(--text-subtle);margin-top:6px;max-width:52ch}
-        .panel-note--warn{color:var(--danger);margin-top:16px;max-width:none}
+{% block nav %}{% include "_admin_bar.html" %}{% endblock %}
 
-        .invite-form{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
-        .invite-field{display:flex;flex-direction:column;gap:6px}
-        .invite-field--wide{flex:1;min-width:200px}
-
-        .row-btn{border:none;background:none;color:var(--text-subtle);font:inherit;font-size:13px;
-            padding:5px 10px;border-radius:8px;cursor:pointer}
-        .row-btn:hover{background:var(--accent-soft);color:var(--accent)}
-
-        /* user detail: profile facts as a definition list */
-        .kv{display:grid;grid-template-columns:auto 1fr;gap:12px 28px;align-items:baseline}
-        .kv dt{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-            color:var(--text-subtle);white-space:nowrap}
-        .kv dd{color:var(--text);font-size:15px}
-        .back-link{font-size:14px;color:var(--text-muted)}
-        .back-link:hover{color:var(--accent)}
-
-        /* costs page: the four headline figures. Serif and tabular so the amounts
-           line up under each other, the same treatment the numeric table cells get. */
-        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:24px}
-        .stats .stat-k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-            color:var(--text-subtle)}
-        .stats .stat-v{font-family:var(--serif);font-variant-numeric:tabular-nums;font-size:30px;
-            letter-spacing:-.02em;color:var(--text);margin-top:6px}
-        .stats .stat-note{font-size:13px;color:var(--text-subtle);margin-top:4px}
-        /* Shown only when some calls could not be priced — the total is then a lower
-           bound, and saying so beats a confident wrong number. */
-        .notice{background:var(--danger-soft);border-radius:var(--r-card);padding:16px 20px;
-            font-size:14px;color:var(--text);margin-top:24px}
-
-        /* one AI request's full prompt and response, collapsed by default: the
-           rows are long enough that expanding them all would bury the table */
-        .log-detail{margin-top:10px}
-        .log-detail summary{cursor:pointer;font-size:13px;color:var(--text-subtle)}
-        .log-detail summary:hover{color:var(--accent)}
-        .log-detail h4{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-            color:var(--text-subtle);margin:14px 0 6px}
-        .log-detail pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
-            line-height:1.5;background:var(--surface-2);border:1px solid var(--border);
-            border-radius:8px;padding:12px 14px;color:var(--text);
-            white-space:pre-wrap;word-break:break-word;max-height:340px;overflow:auto}
-        /* the log table is the one place where wrapping beats a horizontal scroll */
-        table.data td.wrap-cell{white-space:normal;min-width:280px}
-
-        .badge{display:inline-block;padding:3px 11px;border-radius:99px;font-size:11px;font-weight:600;
-            text-transform:uppercase;letter-spacing:.05em}
-        .badge--ok{background:var(--accent-soft);color:var(--accent)}
-        .badge--fail{background:var(--danger-soft);color:var(--danger)}
-
-        /* admin login */
-        .auth-wrap{min-height:calc(100vh - 64px);display:grid;place-items:center;padding:40px 0}
-        .auth-card{width:100%;max-width:420px}
-        .auth-title{font-family:var(--serif);font-weight:500;font-size:34px;letter-spacing:-.03em;
-            line-height:1.1;margin-bottom:6px}
-        .auth-sub{font-size:15px;color:var(--text-subtle);margin-bottom:26px}
-        .auth-form{display:flex;flex-direction:column;gap:14px}
-        .auth-form .btn{margin-top:6px;width:100%}
-
-        @media(max-width:640px){
-            .wrap{padding:0 18px}
-            main{padding:28px 0 56px}
-            .card{padding:20px}
-            .panel-row{align-items:stretch}
-            .invite-form{align-items:stretch}
-            .invite-form .btn{width:100%}
-            .admin-bar .who{display:none}
-        }
-        @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-    </style>
-</head>
-<body>
-{% block content %}{% endblock %}
-</body>
-</html>
+{% block footer %}{% endblock %}

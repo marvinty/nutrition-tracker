@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}MacroMic{% endblock %}</title>
+    <link rel="icon" href="/static/brand/macromic-mark.svg">
+    <link rel="preload" href="/static/fonts/archivo-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/static/fonts-app.css">
+    <style>
+        /* Naehrwert-Oberflaeche: die eine Grundschale aller Seiten (DESIGN.md).
+           Tokens und gemeinsame Bausteine stehen hier; Seiten ergaenzen nur, was
+           ihnen allein gehoert. */
+        :root{
+            --bg:#ffffff;
+            --ink:#0f0f0d;         /* Schrift, Rahmen, die schwarzen Tabellenbalken */
+            --ink-2:#45453f;       /* zweite Ebene: Sekundaeres, Werte ohne Gewicht */
+            --faint:#6b6b64;       /* dritte Ebene; 5,4:1 auf Weiss, tiefer nicht */
+            --hair:#dcdcd6;        /* Haarlinie zwischen Zeilen */
+            --tint:#f3f3ef;        /* Hover- und Ruheflaechen */
+            --blue:#1f3fd1;        /* Kobalt: Sprachtaste, Fokus, frisch gebucht */
+            --blue-2:#1733b5;
+            --blue-soft:#eef1fd;
+            --red:#b3261e;         /* nur Fehler und laufende Aufnahme */
+            --red-soft:#fbeceb;
+            /* Schraffur fuer "ueber Ziel": eine Textur, damit der Zustand nicht an
+               einer Farbe haengt. */
+            --hatch:repeating-linear-gradient(-45deg,transparent 0 5px,rgba(15,15,13,.14) 5px 7px);
+
+            --f:'Archivo',ui-sans-serif,system-ui,sans-serif;
+            --t-s:13px;   /* Meta, Makrozeile, Hinweise */
+            --t-b:16px;   /* Lesetext und Eingaben */
+            --t-m:18px;   /* betonte Zeilen, Rueckfrage, kcal */
+            --t-l:24px;   /* Abschnittsueberschrift */
+            --t-xl:44px;  /* "Naehrwerte" */
+            --t-xxl:76px; /* die eine grosse Zahl */
+            --gut:20px;
+            --wide:1120px;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        html{-webkit-text-size-adjust:100%}
+        body{
+            background:var(--bg);color:var(--ink);
+            font-family:var(--f);font-size:var(--t-b);line-height:1.45;
+            -webkit-font-smoothing:antialiased;
+        }
+        /* Auch die Flaechen, die der Browser stellt, gehoeren zur Gestaltung. */
+        ::selection{background:var(--blue);color:#fff}
+        :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+        ::-webkit-scrollbar{width:10px;height:10px}
+        ::-webkit-scrollbar-thumb{background:var(--hair);border:2px solid var(--bg)}
+        ::-webkit-scrollbar-track{background:var(--bg)}
+        a{color:inherit;text-underline-offset:3px;text-decoration-thickness:1px;text-decoration-color:var(--hair)}
+        a:hover{text-decoration-color:currentColor}
+        button{font:inherit;color:inherit;background:none;border:0;border-radius:0;cursor:pointer}
+        input{font:inherit;color:inherit;caret-color:var(--blue)}
+        .hidden{display:none!important}
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+            clip:rect(0 0 0 0);white-space:nowrap;border:0}
+        svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
+            stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+        /* ---------- Kopf ---------- */
+        .top{
+            max-width:var(--wide);margin:0 auto;padding:12px var(--gut) 0;
+            display:flex;align-items:center;justify-content:space-between;gap:12px;
+        }
+        .mark{font-weight:800;font-size:var(--t-m);letter-spacing:-.01em;text-decoration:none}
+        .nav{
+            max-width:var(--wide);margin:0 auto;padding:4px var(--gut) 0;
+            display:flex;flex-wrap:wrap;column-gap:18px;
+        }
+        .nav-line{border-bottom:1px solid var(--hair)}
+        .nav a{
+            text-decoration:none;font-size:15px;font-weight:500;color:var(--ink-2);
+            padding:10px 0 11px;border-bottom:3px solid transparent;margin-bottom:-1px;
+        }
+        .nav a:hover{color:var(--ink)}
+        .nav a[aria-current]{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+
+        /* ---------- Knoepfe ---------- */
+        .btn{
+            display:inline-flex;align-items:center;justify-content:center;gap:8px;
+            min-height:44px;padding:0 18px;font-weight:700;text-decoration:none;
+            background:var(--ink);color:#fff;border:1.5px solid var(--ink);
+            transition:background .15s ease-out,color .15s ease-out;
+        }
+        .btn:hover:not(:disabled){background:#2b2b27}
+        .btn:disabled{opacity:.4;cursor:not-allowed}
+        .btn.line{background:transparent;color:var(--ink)}
+        .btn.line:hover:not(:disabled){background:var(--tint)}
+        .btn.sm{min-height:40px;padding:0 14px;font-size:15px}
+        .link-btn{
+            font-size:var(--t-s);color:var(--ink-2);padding:6px 0;
+            text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--hair);
+        }
+        .link-btn:hover{color:var(--ink);text-decoration-color:var(--ink)}
+
+        /* ---------- Zustandszeilen ---------- */
+        .status{display:block;font-size:var(--t-s);color:var(--ink-2);margin-top:8px}
+        .status:empty{display:none}
+        .status.error{color:var(--red);font-weight:600}
+        .verify-banner{
+            max-width:var(--wide);margin:14px auto 0;padding:0 var(--gut);
+        }
+        .verify-banner > div{
+            display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;
+            padding:12px 14px;background:var(--red-soft);border:1px solid var(--red);
+            font-size:var(--t-s);
+        }
+        .verify-banner form{margin:0}
+
+
+        /* ---------- Gemeinsame Bausteine fuer alle Seiten ---------- */
+        /* Seitenrahmen. Eine Spalte fuer Lese- und Formularseiten (.narrow), die volle
+           Breite fuer Tabellen und Auswertungen. */
+        .page{max-width:var(--wide);margin:0 auto;padding:28px var(--gut) 64px}
+        .page.narrow{max-width:760px}
+        .page > * + *{margin-top:28px}
+        /* Seitenueberschrift: dieselbe schmale, schwere Lage wie "Naehrwerte" im
+           Dashboard-Kasten. Genau eine pro Seite. */
+        .page-h{font-size:var(--t-xl);font-weight:900;font-stretch:72%;line-height:.95;letter-spacing:-.01em;text-wrap:balance}
+        .page-lede{font-size:var(--t-b);color:var(--ink-2);max-width:62ch;margin-top:8px}
+        /* Abschnitt: 2px schwarze Linie unter der Ueberschrift, wie "Mahlzeiten". */
+        .sec-h{
+            font-size:var(--t-l);font-weight:800;font-stretch:85%;line-height:1.15;
+            display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+            padding-bottom:8px;border-bottom:2px solid var(--ink);
+        }
+        .sec-h span{font-size:15px;font-weight:500;font-stretch:100%;color:var(--faint)}
+        .sub-h{font-size:var(--t-m);font-weight:800;line-height:1.25}
+        /* Der Kasten: 2px schwarzer Rahmen. Hoechstens einer pro Ansicht, fuer die
+           Zusammenfassung, um die sich die Seite dreht. Kein Karten-Raster. */
+        .kasten{border:2px solid var(--ink);padding:12px 14px 14px}
+        .kasten-h{font-size:28px;font-weight:900;font-stretch:72%;line-height:1;padding-bottom:10px;border-bottom:8px solid var(--ink)}
+        .big{font-weight:800;font-stretch:70%;font-size:var(--t-xxl);line-height:.82;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .big small{font-size:var(--t-l);font-stretch:85%;font-weight:700;letter-spacing:0;margin-left:4px}
+        .num{font-variant-numeric:tabular-nums}
+        .muted{color:var(--faint)}
+        .hatch{background:var(--hatch)}
+
+        /* Formulare: Feld mit 1,5px schwarzer Kante, Label darueber. */
+        .feld{display:flex;flex-direction:column;gap:4px;min-width:0}
+        .feld > label,.feld-l{font-size:var(--t-s);font-weight:600;color:var(--ink-2)}
+        .feld .hint{font-size:var(--t-s);color:var(--faint)}
+        .inp,
+        .feld input:not([type=checkbox]):not([type=radio]),
+        .feld select,.feld textarea{
+            width:100%;min-height:48px;padding:10px 12px;font:inherit;font-size:var(--t-b);
+            color:var(--ink);background:var(--bg);border:1.5px solid var(--ink);border-radius:0;
+            -webkit-appearance:none;appearance:none;
+        }
+        .feld textarea{min-height:110px;resize:vertical;line-height:1.45}
+        .feld select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f0f0d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:38px}
+        .inp::placeholder,.feld input::placeholder,.feld textarea::placeholder{color:var(--faint);opacity:1}
+        .inp:focus,.feld input:focus,.feld select:focus,.feld textarea:focus{
+            outline:none;border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+        .inp:disabled,.feld input:disabled{border-color:var(--hair);color:var(--faint);cursor:not-allowed}
+        .felder{display:grid;gap:14px}
+        .felder.zwei{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .felder.vier{grid-template-columns:repeat(4,minmax(0,1fr))}
+        .aktionen{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+        input[type=checkbox],input[type=radio]{accent-color:var(--ink);width:18px;height:18px}
+
+        /* Tabelle: Kopf 13px fett ueber 1px Schwarz, Haarlinien zwischen den Zeilen,
+           Zahlen rechtsbuendig in Tabellenziffern. */
+        .tab{width:100%;border-collapse:collapse}
+        .tab thead th{font-size:var(--t-s);font-weight:700;text-align:left;padding:8px 10px 6px 0;
+            border-bottom:1px solid var(--ink);white-space:nowrap}
+        .tab td,.tab tbody th{padding:10px 10px 10px 0;border-bottom:1px solid var(--hair);text-align:left;vertical-align:top}
+        .tab tbody th{font-weight:700}
+        .tab .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .tab th:last-child,.tab td:last-child{padding-right:0}
+        .tab-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+        /* Hinweise: Fehler rot gerahmt, Erfolg kobaltblau hinterlegt, neutral grau. */
+        .notice{padding:12px 14px;font-size:15px;background:var(--tint)}
+        .notice.error{background:var(--red-soft);border:1px solid var(--red);color:var(--ink)}
+        .notice.ok{background:var(--blue-soft)}
+        .empty{padding:22px 0;color:var(--faint);border-bottom:1px solid var(--hair)}
+
+        /* ---------- Fuss ---------- */
+        .site-foot{max-width:var(--wide);margin:0 auto;padding:0 var(--gut) 32px}
+        .foot{
+            margin-top:48px;padding-top:14px;border-top:1px solid var(--hair);
+            display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;
+            font-size:var(--t-s);color:var(--faint);
+        }
+        .foot a{color:var(--ink-2)}
+        .foot form{margin:0}
+        .foot .who{margin-right:auto;display:flex;align-items:center;gap:12px}
+
+        .top-links{display:flex;align-items:center;gap:6px 16px;font-size:15px;font-weight:500}
+        .top-links a{text-decoration:none;color:var(--ink-2)}
+        .top-links a:hover{color:var(--ink)}
+        .top-links a[aria-current]{color:var(--ink);font-weight:700}
+        .top-links .btn{color:#fff}
+
+        @media(min-width:960px){
+            :root{--gut:32px}
+            .page-h{font-size:56px}
+        }
+        @media(max-width:560px){
+            .felder.zwei{grid-template-columns:minmax(0,1fr)}
+            .felder.vier{grid-template-columns:repeat(2,minmax(0,1fr))}
+        }
+        @media(max-width:380px){
+            :root{--gut:16px;--t-xxl:66px}
+            .nav{column-gap:14px}
+            .nav a{font-size:14px}
+        }
+        @media(pointer:coarse){
+            .link-btn{display:inline-flex;align-items:center;min-height:44px}
+        }
+        @media(prefers-reduced-motion:reduce){
+            *{animation:none!important;transition:none!important}
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{# Angemeldet: Kopf plus die fuenf Bereiche. Oeffentlich (Landing, FAQ, Rechtliches,
+   Anmeldung): nur der Kopf mit Anmelden/Registrieren. Seiten mit eigenem Kopf
+   (Admin) ersetzen den ganzen Block. #}
+{% set _signed_in = username is defined and username %}
+{% block nav %}
+<header class="top">
+    <a class="mark" href="{% if _signed_in %}/dashboard{% else %}/{% endif %}">MacroMic</a>
+    {% block topright %}
+    {% if not _signed_in %}
+    <nav class="top-links" aria-label="Konto">
+        <a href="/faq"{% if active_page == 'faq' %} aria-current="page"{% endif %}>FAQ</a>
+        <a href="/login"{% if active_page == 'login' %} aria-current="page"{% endif %}>Anmelden</a>
+    </nav>
+    {% endif %}
+    {% endblock %}
+</header>
+{% if _signed_in %}
+<div class="nav-line">
+    <nav class="nav" aria-label="Bereiche">
+        <a href="/dashboard"{% if active_page == 'dashboard' %} aria-current="page"{% endif %}>Heute</a>
+        <a href="/history"{% if active_page == 'history' %} aria-current="page"{% endif %}>Verlauf</a>
+        <a href="/weight"{% if active_page == 'weight' %} aria-current="page"{% endif %}>Gewicht</a>
+        <a href="/recipes"{% if active_page == 'recipes' %} aria-current="page"{% endif %}>Rezepte</a>
+        <a href="/goals"{% if active_page == 'goals' %} aria-current="page"{% endif %}>Ziele</a>
+    </nav>
+</div>
+{% endif %}
+{% endblock %}
+
+{# Waehrend der Karenzzeit, bevor ein unbestaetigtes Konto gesperrt wird. Die
+   Adresse kommt vorberechnet aus resolve_user und nicht vom User-Objekt: eine
+   Fehlerseite kann rendern, nachdem die Session zurueckgerollt wurde, und ein
+   ORM-Zugriff loest dann DetachedInstanceError aus. #}
+{% set _verify_email = request.state.verify_banner if (request and request.state is defined) else None %}
+{% if _verify_email %}
+<div class="verify-banner">
+    <div>
+        <span>Bitte bestätige deine E-Mail-Adresse <strong>{{ _verify_email }}</strong>,
+        sonst wird dein Konto bald gesperrt.</span>
+        <form method="post" action="/verify-email/resend">
+            {{ csrf_field() }}
+            <button type="submit" class="link-btn">Mail erneut senden</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+{% block footer %}
+<div class="site-foot">
+<footer class="foot">
+    {% if _signed_in %}
+    <span class="who">
+        <span>Angemeldet als <strong>{{ username }}</strong></span>
+        <form method="post" action="/logout">
+            {{ csrf_field() }}
+            <button type="submit" class="link-btn">Abmelden</button>
+        </form>
+    </span>
+    <a href="/faq">FAQ</a>
+    <a href="/feedback">Feedback geben</a>
+    {% else %}
+    <span class="who">MacroMic</span>
+    <a href="/faq">FAQ</a>
+    {% endif %}
+    <a href="/impressum">Impressum</a>
+    <a href="/datenschutz">Datenschutz</a>
+</footer>
+</div>
+{% endblock %}
+
+<script>
+/* Der CSRF-Token an jedes veraendernde fetch derselben Herkunft. Zentral gepatcht
+   und nicht an jeder Aufrufstelle, weil das Dashboard acht davon hat und eine
+   vergessene wuerde erst zur Laufzeit auffallen, in irgendeinem Ablauf. Nur
+   same-origin und nur unsichere Methoden, es geht also nichts an Dritte. */
+(function(){
+    var token = (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/) || [])[1];
+    if(!token) return;
+    var unsafe = {POST:1, PUT:1, PATCH:1, DELETE:1};
+    var original = window.fetch;
+    window.fetch = function(input, init){
+        init = init || {};
+        var method = (init.method || (typeof input === 'object' && input.method) || 'GET').toUpperCase();
+        var url = typeof input === 'string' ? input : (input && input.url) || '';
+        var sameOrigin = !/^https?:\/\//i.test(url) || url.indexOf(window.location.origin) === 0;
+        if(unsafe[method] && sameOrigin){
+            var headers = new Headers(init.headers || (typeof input === 'object' && input.headers) || {});
+            if(!headers.has('X-CSRF-Token')) headers.set('X-CSRF-Token', decodeURIComponent(token));
+            init = Object.assign({}, init, {headers: headers});
+        }
+        return original.call(this, input, init);
+    };
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

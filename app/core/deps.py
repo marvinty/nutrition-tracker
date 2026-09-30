@@ -53,7 +53,7 @@ async def resolve_user(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> Optional[User]:
-    # base.html reads this to decide whether to show the "confirm your address" banner,
+    # base_app.html reads this to decide whether to show the "confirm your address" banner,
     # which saves threading a flag through every page's context dict. It is deliberately
     # a plain value (the address, or None) rather than the User object: an error page can
     # render *after* the request session was rolled back — consume_credits does exactly

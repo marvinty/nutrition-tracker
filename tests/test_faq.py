@@ -1,7 +1,7 @@
 """Tests for the public FAQ page at ``/faq``.
 
 Same direct-call style as test_landing.py. Unlike most of the suite these actually
-render a template that extends ``base.html``, so they double as the only guard
+render a template that extends ``base_app.html``, so they double as the only guard
 against a Jinja syntax error or a broken block in the shared layout.
 """
 import os
@@ -21,7 +21,7 @@ class _State:
 
 
 class _Request:
-    """Stand-in for Request. base.html reads request.state for the verify banner
+    """Stand-in for Request. base_app.html reads request.state for the verify banner
     and the CSRF token, so the stub carries a state object."""
 
     state = _State()

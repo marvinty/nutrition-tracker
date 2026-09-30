@@ -1,20 +1,26 @@
-{# Shared header for every admin page. Expects `admin_name` and `active_page`. #}
-<div class="admin-bar">
-    <div class="wrap admin-in">
-        <div class="brand">
-            {% with variant = "dark" %}{% include "_wordmark.html" %}{% endwith %}
-            <span class="tag">Admin</span>
-        </div>
-        <div class="actions">
-            <a class="pill {% if active_page == 'users' %}is-active{% endif %}" href="/admin/users">Nutzer</a>
-            <a class="pill {% if active_page == 'costs' %}is-active{% endif %}" href="/admin/costs">Kosten</a>
-            <a class="pill {% if active_page == 'invites' %}is-active{% endif %}" href="/admin/invites">Einladungen</a>
-            <a class="pill {% if active_page == 'feedback' %}is-active{% endif %}" href="/admin/feedback">Feedback</a>
-            <span class="who">{{ admin_name }}</span>
-            <form method="post" action="/admin/logout">
-                {{ csrf_field() }}
-                <button type="submit" class="pill">Abmelden</button>
-            </form>
-        </div>
+{# Kopf jeder Admin-Seite, ersetzt den nav-Block von base_app. Angemeldet (admin_name
+   gesetzt): Wortmarke, Abmelden rechts, darunter die Reiter ueber `active_page`.
+   Auf der Anmeldeseite nur die Wortmarke. #}
+{% set _admin = admin_name is defined and admin_name %}
+<header class="top">
+    <a class="mark" href="/admin/users">MacroMic<span class="admin-tag">Admin</span></a>
+    {% if _admin %}
+    <div class="top-links admin-who">
+        <span class="who-name">{{ admin_name }}</span>
+        <form method="post" action="/admin/logout">
+            {{ csrf_field() }}
+            <button type="submit" class="link-btn">Abmelden</button>
+        </form>
     </div>
+    {% endif %}
+</header>
+{% if _admin %}
+<div class="nav-line">
+    <nav class="nav" aria-label="Admin-Bereiche">
+        <a href="/admin/users"{% if active_page == 'users' %} aria-current="page"{% endif %}>Nutzer</a>
+        <a href="/admin/costs"{% if active_page == 'costs' %} aria-current="page"{% endif %}>Kosten</a>
+        <a href="/admin/invites"{% if active_page == 'invites' %} aria-current="page"{% endif %}>Einladungen</a>
+        <a href="/admin/feedback"{% if active_page == 'feedback' %} aria-current="page"{% endif %}>Feedback</a>
+    </nav>
 </div>
+{% endif %}

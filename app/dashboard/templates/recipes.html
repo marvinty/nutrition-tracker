@@ -1,113 +1,186 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
-{% block title %}Rezepte{% endblock %}
+{% block title %}Rezepte · MacroMic{% endblock %}
 
 {% block extra_head %}
 <style>
-    .rp-hint{font-size:14px;color:var(--text-subtle);margin-top:12px;text-wrap:pretty}
-    .rp-active-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;
-        margin-bottom:18px;flex-wrap:wrap}
-    .rp-badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
-        letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
-    .rp-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);
-        animation:pulse 1.6s ease-in-out infinite}
-    .rp-name{font-family:var(--serif);font-weight:500;font-size:28px;letter-spacing:-.02em;margin-top:6px}
-    .rp-servings{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-    .rp-servings label{margin:0}
-    input.rp-num{width:84px;height:40px;font-size:15px;padding:0 12px;flex:none}
-    .rp-macros{font-size:14px;color:var(--text-muted)}
-    .rp-macros strong{color:var(--accent);font-weight:600}
-    .rp-ing-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-    .rp-ing{display:flex;align-items:center;gap:14px;background:var(--surface);
-        border:1px solid var(--border);border-radius:12px;padding:12px 16px}
-    .rp-ing__main{flex:1;min-width:0}
-    .rp-ing__desc{font-size:15px}
-    .rp-ing__sub{font-size:13px;color:var(--text-subtle);margin-top:2px}
-    .rp-ing__cal{font-family:var(--serif);font-size:16px;color:var(--accent);white-space:nowrap}
-    .rp-ing__del{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
-        border:none;background:none;color:var(--text-subtle);border-radius:50%;cursor:pointer;
-        font-size:19px;line-height:1;flex:none}
-    .rp-ing__del:hover{background:var(--danger-soft);color:var(--danger)}
-    .rp-total{font-size:14px;color:var(--text-muted);margin-top:16px}
+    .rp-sec > .sec-h + *{margin-top:14px}
 
-    .rp-card{display:flex;flex-direction:column;gap:12px;background:var(--surface);
-        border:1px solid var(--border);border-radius:14px;padding:18px 20px}
-    .rp-card__head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
-    .rp-card__name{font-family:var(--serif);font-size:20px;letter-spacing:-.01em}
-    .rp-card__meta{font-size:13px;color:var(--text-subtle)}
-    .rp-card__macros{font-size:14px;color:var(--text-muted)}
-    .rp-track{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .rp-track label{margin:0}
-    .rp-track input[type=date]{width:auto;height:38px;font-size:14px;flex:1;min-width:140px}
-    .rp-track button{display:inline-flex;align-items:center;justify-content:center;height:38px;
-        padding:0 16px;border:none;border-radius:10px;background:var(--accent);color:#fff;
-        font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s,color .2s}
-    .rp-track button:hover:not(:disabled){background:var(--accent-hover)}
-    .rp-track button:disabled{opacity:.5;cursor:not-allowed}
-    .rp-track button.rp-ghost{background:var(--surface-2);color:var(--text-muted)}
-    .rp-track button.rp-ghost:hover:not(:disabled){background:var(--border);color:var(--text)}
-    .rp-track button.rp-danger{background:none;color:var(--text-subtle)}
-    .rp-track button.rp-danger:hover:not(:disabled){background:var(--danger-soft);color:var(--danger)}
+    /* ---------- Anlegen ---------- */
+    .rp-create{display:grid;grid-template-columns:minmax(0,1fr) 7em;gap:14px}
+    .rp-create + .aktionen{margin-top:14px}
+    .feld input[type=number]{font-variant-numeric:tabular-nums}
+
+    /* ---------- Rezeptmodus ---------- */
+    .rp-active .sec-h strong{font-weight:inherit;overflow-wrap:anywhere;min-width:0}
+    .rp-active .sec-h span{flex:none}
+    .rp-servings{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 16px}
+    .rp-servings .feld{width:7em}
+    .rp-per{font-size:15px;color:var(--ink-2);padding-bottom:12px}
+    .rp-per strong{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+
+    /* Eingabezeile wie im Dashboard: Feld mit Pfeil, daneben die Sprachtaste. */
+    .rp-row{display:flex;gap:8px;align-items:stretch;margin-top:18px}
+    .field{
+        flex:1;min-width:0;display:flex;align-items:center;height:56px;
+        border:1.5px solid var(--ink);background:var(--bg);
+    }
+    .field:focus-within{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+    .field input{
+        flex:1;min-width:0;height:100%;border:0;background:none;outline:none;
+        padding:0 12px;font-size:var(--t-b);
+    }
+    .field input::placeholder{color:var(--faint);opacity:1}
+    .send{width:48px;height:100%;display:grid;place-items:center;color:var(--ink)}
+    .send:hover:not(:disabled){background:var(--tint)}
+    .send:disabled{color:var(--hair);cursor:not-allowed}
+    /* Die Sprachtaste: Kobaltquadrat, waehrend der Aufnahme schwarze Stopptaste;
+       das Feld daneben meldet die laufende Aufnahme mit dem roten Punkt. */
+    .mic{
+        width:56px;height:56px;flex:none;display:grid;place-items:center;
+        background:var(--blue);color:#fff;transition:background .15s ease-out;
+    }
+    .mic:hover:not(:disabled){background:var(--blue-2)}
+    .mic:disabled{background:var(--hair);cursor:not-allowed}
+    .mic svg.i{width:26px;height:26px}
+    .mic .stop{display:none}
+    .mic.is-recording{background:var(--ink)}
+    .mic.is-recording .go{display:none}
+    .mic.is-recording .stop{display:block}
+    .rec{
+        flex:1;min-width:0;height:56px;display:flex;align-items:center;gap:10px;
+        padding:0 12px;border:1.5px solid var(--ink);font-weight:600;
+    }
+    .rec i{width:10px;height:10px;border-radius:50%;background:var(--red);flex:none;
+        animation:rec-blink 1.2s steps(1,end) infinite}
+    .rec .t{margin-left:auto;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums}
+    @keyframes rec-blink{50%{opacity:.25}}
+
+    /* ---------- Zeilen: Zutaten und gespeicherte Rezepte ---------- */
+    /* Wie "Mahlzeiten" im Dashboard: Name, kcal rechts, Makrozeile darunter. */
+    .rp-ing-list{margin-top:18px}
+    .rp-ing-list:not(:empty){border-top:1px solid var(--ink)}
+    .rp-ing,.rp-item{
+        display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;
+        padding:14px 0;border-bottom:1px solid var(--hair);
+    }
+    .rp-ing__desc,.rp-item__name{font-weight:500;line-height:1.35;overflow-wrap:anywhere}
+    .rp-item__name{font-weight:700;font-size:var(--t-m);line-height:1.3}
+    .rp-ing__cal,.rp-item__cal{
+        font-weight:800;font-size:var(--t-m);text-align:right;white-space:nowrap;
+        font-variant-numeric:tabular-nums;
+    }
+    .rp-ing__cal small,.rp-item__cal small{font-weight:500;font-size:var(--t-s);color:var(--faint);margin-left:3px}
+    .rp-ing__sub,.rp-item__mx{
+        grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;
+        gap:2px 12px;margin-top:5px;font-size:var(--t-s);color:var(--faint);
+    }
+    .rp-mx b{font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+    .rp-mx > span{white-space:nowrap}
+    .rp-ing__del{
+        width:40px;height:40px;display:grid;place-items:center;margin:-10px 0;
+        color:var(--faint);border:1px solid var(--hair);
+    }
+    .rp-ing__del:hover{color:var(--red);border-color:var(--red)}
+    .rp-ing__del svg.i{width:18px;height:18px}
+    .rp-finish{margin-top:18px}
+    .rp-total{font-size:15px;color:var(--ink-2);margin-top:12px;font-variant-numeric:tabular-nums}
+
+    /* Portionsweise loggen: kleine Felder in einer Zeile, bricht auf dem Handy um. */
+    .rp-track{
+        grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px;margin-top:12px;
+    }
+    .rp-track .feld{width:6.5em}
+    .rp-track .feld.tag{width:auto;flex:1 1 150px;max-width:12em}
+    .rp-track .feld input:not([type=checkbox]){min-height:44px;padding:8px 10px}
+    .rp-track .rp-links{display:flex;gap:4px 16px;align-items:center;margin-left:auto}
+    .rp-track .rp-danger:hover{color:var(--red);text-decoration-color:var(--red)}
     .rp-track .status{flex-basis:100%;margin:0}
 
-    @media(max-width:640px){
-        #create-form #recipe-name{flex-basis:100%}
-        .rp-name{font-size:24px}
+    @media(max-width:430px){
+        .rp-create{grid-template-columns:minmax(0,1fr) 6em}
+        .rp-track .rp-links{margin-left:0}
+    }
+    @media(pointer:coarse){
+        .rp-ing__del{width:44px;height:44px}
+    }
+    @media(prefers-reduced-motion:reduce){
+        .rec i{opacity:1}
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-head">
+<main class="page narrow">
     <div>
-        <span class="sec-tag">Vorbereitet</span>
-        <h1 class="page-h"><em>Rezepte</em></h1>
-    </div>
-</div>
-
-<div class="card feat">
-    <div id="create-box">
-        <form id="create-form" class="log-form">
-            <input type="text" id="recipe-name" placeholder="Rezeptname, z.B. Spaghetti Bolognese" required>
-            <input type="number" id="recipe-servings" class="rp-num" min="1" value="1" aria-label="Portionen">
-            <button type="submit" id="create-btn" class="btn">Starten</button>
-        </form>
-        <p class="rp-hint">Starte den Rezeptmodus und diktiere die Zutaten beim Kochen per Text oder Sprache — du kannst mehrere auf einmal nennen („200g Nudeln und 20g Olivenöl"), sie werden einzeln erfasst. Der Modus bleibt aktiv, bis du auf Fertig tippst.</p>
-        <p id="create-status" class="status"></p>
+        <h1 class="page-h">Rezepte</h1>
+        <p class="page-lede">Starte den Rezeptmodus und diktiere die Zutaten beim Kochen per Text oder Sprache — du kannst mehrere auf einmal nennen („200g Nudeln und 20g Olivenöl"), sie werden einzeln erfasst. Der Modus bleibt aktiv, bis du auf Fertig tippst.</p>
     </div>
 
-    <div id="active-box" class="hidden">
-        <div class="rp-active-head">
-            <div>
-                <span class="rp-badge">Rezeptmodus</span>
-                <div id="active-name" class="rp-name"></div>
+    <section id="create-box" class="rp-sec" aria-labelledby="create-h">
+        <h2 class="sec-h" id="create-h">Neues Rezept</h2>
+        <form id="create-form">
+            <div class="rp-create">
+                <div class="feld">
+                    <label for="recipe-name">Rezeptname</label>
+                    <input type="text" id="recipe-name" placeholder="z.B. Spaghetti Bolognese" required>
+                </div>
+                <div class="feld">
+                    <label for="recipe-servings">Portionen</label>
+                    <input type="number" id="recipe-servings" min="1" value="1" inputmode="numeric">
+                </div>
             </div>
-            <button type="button" id="finish-btn" class="btn sm ghost">Fertig</button>
-        </div>
+            <div class="aktionen">
+                <button type="submit" id="create-btn" class="btn">Starten</button>
+            </div>
+        </form>
+        <p id="create-status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="active-box" class="rp-sec rp-active hidden" aria-labelledby="active-h">
+        <h2 class="sec-h" id="active-h"><strong id="active-name"></strong><span>Rezeptmodus</span></h2>
 
         <div class="rp-servings">
-            <label for="active-servings">Portionen</label>
-            <input type="number" id="active-servings" class="rp-num" min="1" value="1">
-            <span id="active-per" class="rp-macros"></span>
+            <div class="feld">
+                <label for="active-servings">Portionen</label>
+                <input type="number" id="active-servings" min="1" value="1" inputmode="numeric">
+            </div>
+            <p id="active-per" class="rp-per"></p>
         </div>
 
-        <form id="ingredient-form" class="log-form">
-            <input type="text" id="ingredient-input" placeholder="z.B. 200g Nudeln und 20g Olivenöl" autocomplete="off">
-            <button type="submit" id="ingredient-btn" class="btn">Hinzufügen</button>
-            <button type="button" id="record-btn" class="btn ghost rec" aria-pressed="false" aria-label="Zutat per Sprache aufnehmen">Sprachaufnahme</button>
-            <span id="record-indicator" class="rec-indicator hidden">Aufnahme läuft…</span>
+        <form id="ingredient-form" class="rp-row">
+            <label class="field" id="ingredient-field">
+                <span class="sr-only">Zutat</span>
+                <input type="text" id="ingredient-input" placeholder="z.B. 200g Nudeln und 20g Olivenöl" autocomplete="off" enterkeyhint="send">
+                <button type="submit" id="ingredient-btn" class="send" aria-label="Hinzufügen"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5 18.5 12 13 17.5"/></svg></button>
+            </label>
+            <div id="record-indicator" class="rec hidden" role="status"><i aria-hidden="true"></i>Aufnahme läuft<span class="t" id="rec-time">0:00</span></div>
+            <button type="button" id="record-btn" class="mic" aria-pressed="false" aria-label="Zutat per Sprache aufnehmen">
+                <svg class="i go" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+                <svg class="i stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" fill="currentColor" stroke="none"/></svg>
+            </button>
         </form>
-        <p id="ingredient-status" class="status"></p>
+        <p id="ingredient-status" class="status" role="status" aria-live="polite"></p>
 
         <div id="ingredient-list" class="rp-ing-list"></div>
         <p class="rp-total" id="active-total"></p>
-    </div>
-</div>
 
-<h2 class="sub-h">Gespeicherte Rezepte</h2>
-<div id="recipes-list" class="row-list"></div>
-<p id="recipes-empty" class="empty hidden">Noch keine Rezepte.</p>
+        <div class="aktionen rp-finish">
+            <button type="button" id="finish-btn" class="btn line">Fertig</button>
+        </div>
+    </section>
 
+    <section class="rp-sec" aria-labelledby="saved-h">
+        <h2 class="sec-h" id="saved-h">Gespeicherte Rezepte <span id="recipes-count"></span></h2>
+        <div>
+            <div id="recipes-list"></div>
+            <p id="recipes-empty" class="empty hidden">Noch keine Rezepte.</p>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
 <script>
     const TODAY = "{{ today }}";
 
@@ -130,7 +203,7 @@
         return rounded.toFixed(digits).replace('.', ',');
     }
     function macroLine(m) {
-        return `${deNum(m.calories, 0)} kcal · ${deNum(m.protein)}g P · ${deNum(m.carbs)}g KH · ${deNum(m.fat)}g F`;
+        return `${deNum(m.calories, 0)} kcal · ${deNum(m.protein)} g Eiweiß · ${deNum(m.carbs)} g KH · ${deNum(m.fat)} g Fett`;
     }
     function el(tag, cls, text) {
         const e = document.createElement(tag);
@@ -138,6 +211,26 @@
         if (text !== undefined) e.textContent = text;
         return e;
     }
+    // kcal rechts in der Zeile: Zahl fett, Einheit klein daneben.
+    function kcalCell(cls, value, unit) {
+        const p = el('p', cls, value != null ? deNum(value, 0) : '—');
+        if (value != null) p.appendChild(el('small', null, unit));
+        return p;
+    }
+    // Makrozeile wie im Dashboard: Wert fett, Einheit dahinter; der Umbruch faellt
+    // zwischen zwei Makros, nie zwischen Zahl und Einheit.
+    function macroSpan(m) {
+        const wrap = el('span', 'rp-mx');
+        [['protein', 'g Eiweiß'], ['carbs', 'g KH'], ['fat', 'g Fett']].forEach(([key, label], i) => {
+            if (i > 0) wrap.appendChild(document.createTextNode(' · '));
+            const s = el('span');
+            s.appendChild(el('b', null, deNum(m[key])));
+            if (m[key] != null) s.appendChild(document.createTextNode(' ' + label));
+            wrap.appendChild(s);
+        });
+        return wrap;
+    }
+    const TRASH_SVG = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16M9.5 6.5V4h5v2.5M6.5 6.5l1 13.5h9l1-13.5M10 10.5v6M14 10.5v6"/></svg>';
 
     // ---------- active recipe (recipe mode) ----------
     let active = null;  // the RecipeRead currently being built, or null
@@ -177,20 +270,18 @@
         ingredientList.replaceChildren();
         active.ingredients.forEach((ing) => {
             const row = el('div', 'rp-ing');
-            const main = el('div', 'rp-ing__main');
-            main.appendChild(el('div', 'rp-ing__desc', ing.description));
-            const sub = [
-                ing.protein != null ? `${deNum(ing.protein)}g P` : '—',
-                ing.carbs != null ? `${deNum(ing.carbs)}g KH` : '—',
-                ing.fat != null ? `${deNum(ing.fat)}g F` : '—',
-            ].join(' · ');
-            main.appendChild(el('div', 'rp-ing__sub', sub));
-            row.appendChild(main);
-            row.appendChild(el('span', 'rp-ing__cal', ing.calories != null ? `${deNum(ing.calories, 0)} kcal` : '—'));
-            const del = el('button', 'rp-ing__del', '×');
+            row.appendChild(el('p', 'rp-ing__desc', ing.description));
+            row.appendChild(kcalCell('rp-ing__cal', ing.calories, 'kcal'));
+            const sub = el('div', 'rp-ing__sub');
+            sub.appendChild(macroSpan(ing));
+            const del = el('button', 'rp-ing__del');
+            del.type = 'button';
             del.title = 'Zutat entfernen';
+            del.setAttribute('aria-label', `Zutat „${ing.description}" entfernen`);
+            del.innerHTML = TRASH_SVG;
             del.addEventListener('click', () => removeIngredient(ing.id));
-            row.appendChild(del);
+            sub.appendChild(del);
+            row.appendChild(sub);
             ingredientList.appendChild(row);
         });
     }
@@ -283,7 +374,29 @@
     // add ingredient by voice
     const recordBtn = document.getElementById('record-btn');
     const indicator = document.getElementById('record-indicator');
-    let mediaRecorder = null, chunks = [], isRecording = false;
+    const ingredientField = document.getElementById('ingredient-field');
+    const recTime = document.getElementById('rec-time');
+    let mediaRecorder = null, chunks = [], isRecording = false, recTimer = null;
+
+    // Die Taste zeigt nur ein Symbol; der Zustand steht im aria-label und in
+    // aria-pressed, sichtbar im Aufnahmefeld, das waehrenddessen das Eingabefeld ersetzt.
+    function setRecording(on) {
+        isRecording = on;
+        recordBtn.setAttribute('aria-label', on ? 'Aufnahme beenden und auswerten' : 'Zutat per Sprache aufnehmen');
+        recordBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        recordBtn.classList.toggle('is-recording', on);
+        indicator.classList.toggle('hidden', !on);
+        ingredientField.classList.toggle('hidden', on);
+        clearInterval(recTimer);
+        if (on) {
+            const start = Date.now();
+            recTime.textContent = '0:00';
+            recTimer = setInterval(() => {
+                const s = Math.floor((Date.now() - start) / 1000);
+                recTime.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+            }, 500);
+        }
+    }
 
     recordBtn.addEventListener('click', async () => {
         if (!isRecording) {
@@ -299,10 +412,7 @@
                 mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
                 mediaRecorder.onstop = () => uploadIngredient(new Blob(chunks, { type: 'audio/webm' }), stream);
                 mediaRecorder.start();
-                isRecording = true;
-                recordBtn.textContent = 'Aufnahme stoppen';
-                recordBtn.setAttribute('aria-pressed', 'true');
-                indicator.classList.remove('hidden');
+                setRecording(true);
                 ingredientStatus.textContent = '';
                 ingredientStatus.className = 'status';
             } catch (err) {
@@ -311,10 +421,7 @@
             }
         } else {
             mediaRecorder.stop();
-            isRecording = false;
-            recordBtn.textContent = 'Sprachaufnahme';
-            recordBtn.setAttribute('aria-pressed', 'false');
-            indicator.classList.add('hidden');
+            setRecording(false);
         }
     });
 
@@ -340,6 +447,7 @@
     // ---------- saved recipes ----------
     const recipesList = document.getElementById('recipes-list');
     const recipesEmpty = document.getElementById('recipes-empty');
+    const recipesCount = document.getElementById('recipes-count');
 
     async function loadRecipes() {
         let recipes;
@@ -347,42 +455,68 @@
             recipes = await api('/api/recipes');
         } catch (err) {
             recipesList.replaceChildren();
+            recipesCount.textContent = '';
             recipesEmpty.textContent = err.message;
             recipesEmpty.classList.remove('hidden');
             return;
         }
         recipesList.replaceChildren();
+        recipesCount.textContent = recipes.length ? String(recipes.length) : '';
         recipesEmpty.classList.toggle('hidden', recipes.length > 0);
         recipes.forEach((r) => recipesList.appendChild(recipeCard(r)));
     }
 
     function recipeCard(r) {
-        const card = el('div', 'rp-card');
+        const card = el('article', 'rp-item');
+        const has = r.ingredients.length > 0;
 
-        const head = el('div', 'rp-card__head');
-        head.appendChild(el('span', 'rp-card__name', r.name));
-        head.appendChild(el('span', 'rp-card__meta', `${r.servings} Portion${r.servings === 1 ? '' : 'en'} · ${r.ingredients.length} Zutat${r.ingredients.length === 1 ? '' : 'en'}`));
-        card.appendChild(head);
+        card.appendChild(el('h3', 'rp-item__name', r.name));
+        card.appendChild(kcalCell('rp-item__cal', has ? r.per_portion.calories : null, 'kcal/Portion'));
 
-        card.appendChild(el('div', 'rp-card__macros', r.ingredients.length
-            ? `Pro Portion: ${macroLine(r.per_portion)}`
-            : 'Noch keine Zutaten'));
+        const mx = el('div', 'rp-item__mx');
+        if (has) {
+            const pp = el('span');
+            pp.appendChild(document.createTextNode('Pro Portion: '));
+            pp.appendChild(macroSpan(r.per_portion));
+            mx.appendChild(pp);
+        } else {
+            mx.appendChild(el('span', null, 'Noch keine Zutaten'));
+        }
+        mx.appendChild(el('span', null, `${r.servings} Portion${r.servings === 1 ? '' : 'en'} · ${r.ingredients.length} Zutat${r.ingredients.length === 1 ? '' : 'en'}`));
+        card.appendChild(mx);
 
         const track = el('div', 'rp-track');
-        track.appendChild(el('label', null, 'Loggen'));
-        const portions = el('input', 'rp-num');
+        const pField = el('div', 'feld');
+        const pLabel = el('label', null, 'Portionen');
+        const portions = el('input');
         portions.type = 'number'; portions.min = '0.25'; portions.step = '0.25'; portions.value = '1';
-        track.appendChild(portions);
+        portions.inputMode = 'decimal';
+        portions.id = `rp${r.id}-portions`; pLabel.htmlFor = portions.id;
+        pField.append(pLabel, portions);
+        track.appendChild(pField);
+
+        const dField = el('div', 'feld tag');
+        const dLabel = el('label', null, 'Tag');
         const dateInput = el('input');
         dateInput.type = 'date'; dateInput.value = TODAY; dateInput.max = TODAY;
-        track.appendChild(dateInput);
-        const logBtn = el('button', null, 'Portion loggen');
+        dateInput.id = `rp${r.id}-day`; dLabel.htmlFor = dateInput.id;
+        dField.append(dLabel, dateInput);
+        track.appendChild(dField);
+
+        const logBtn = el('button', 'btn sm', 'Portion loggen');
+        logBtn.type = 'button';
         track.appendChild(logBtn);
-        const continueBtn = el('button', 'rp-ghost', 'Weiter bearbeiten');
-        track.appendChild(continueBtn);
-        const delBtn = el('button', 'rp-danger', 'Löschen');
-        track.appendChild(delBtn);
+
+        const links = el('span', 'rp-links');
+        const continueBtn = el('button', 'link-btn', 'Weiter bearbeiten');
+        continueBtn.type = 'button';
+        const delBtn = el('button', 'link-btn rp-danger', 'Löschen');
+        delBtn.type = 'button';
+        links.append(continueBtn, delBtn);
+        track.appendChild(links);
+
         const status = el('p', 'status');
+        status.setAttribute('role', 'status');
         track.appendChild(status);
         card.appendChild(track);
 
@@ -397,7 +531,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ portions: p, log_date: dateInput.value || null }),
                 });
-                status.textContent = `${p} Portion(en) ins Tagebuch geloggt`;
+                status.textContent = `${deNum(p, 2)} Portion(en) ins Tagebuch geloggt`;
                 status.className = 'status';
             } catch (err) {
                 status.textContent = err.message; status.className = 'status error';

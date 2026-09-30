@@ -31,8 +31,8 @@ from app.services import rate_limit_service as rl
 from app.services.settings_service import is_signup_closed, set_signup_closed
 from app.services.signup_code_service import create_code, list_codes, revoke_code
 
-# Admin templates first, plus the dashboard templates for the shared _wordmark.html
-# partial — the same two-directory arrangement auth and landing already use.
+# Admin templates first, plus the dashboard templates for the shared base_app.html
+# shell — the same two-directory arrangement auth and landing already use.
 _dashboard_templates = Path(__file__).parent.parent / "dashboard" / "templates"
 templates = register_csrf_field(
     Jinja2Templates(
