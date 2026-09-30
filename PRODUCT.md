@@ -88,9 +88,8 @@ nicht entschieden.
 - Name **MacroMic**, Claim „Sag einfach, was du gegessen hast."
 - Du-Ansprache. Ton direkt, selbstbewusst, leicht trocken. Kein Marketing-Sprech,
   keine Superlative, keine Emojis.
-- Wortmarke und Monogramm liegen als SVG vor (siehe BRAND.md); Space Grotesk ausschließlich
-  für die Wortmarke. Offener Punkt: Text in der Wortmarke in Pfade umwandeln, dann ist die
-  Marke font-unabhängig.
+- Wortmarke und Monogramm liegen als SVG aus reinen Pfaden vor (Archivo, Schwarz/Weiß;
+  siehe BRAND.md) und sind damit font-unabhängig.
 - Farbwelt und Komponenten sind in DESIGN.md verbindlich festgehalten („nichts dazuerfinden").
   Kein Dark Mode.
 

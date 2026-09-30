@@ -47,7 +47,5 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## Offene Entscheidungen
 
-- Wortmarke: im Kopf als Text in Archivo 800 gesetzt; die SVG-Wortmarke traegt noch die
-  Farben der alten Welt. Umzeichnen oder neue Farbvariante — vor dem Launch klaeren.
-- Favicon `static/brand/macromic-mark.svg` traegt noch Terrakotta auf Creme (alte Welt) —
-  Markenentscheidung, mit der Wortmarke zusammen klaeren.
+- Keine. Wortmarke und Favicon wurden am 2026-09-30 in der neuen Welt neu gezeichnet
+  (Archivo als Pfade, Schwarz/Weiss, ohne Mikrofon-Motiv; Nutzerentscheidung).

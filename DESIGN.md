@@ -541,15 +541,13 @@ blinkende Aufnahmepunkt, solange wirklich aufgenommen wird. Zustandswechsel an K
 - „Zugang aktuell nur mit Invite-Code." steht, solange Codes nötig sind, auf der Landing
   Page neben dem CTA und auf `/register` als Feldhinweis.
 
-## Offene Entscheidungen
-- **Wortmarke und Favicon.** Im Kopf steht die Wortmarke als Text in Archivo 800. Die
-  SVGs in `app/static/brand/` (Wortmarken und `macromic-mark.svg`, das als Favicon
-  eingebunden ist) tragen noch Terrakotta auf Creme aus der gelöschten alten Welt;
-  [BRAND.md](BRAND.md) ist entsprechend veraltet. Umzeichnen oder neue Farbvariante —
-  Markenentscheidung, vor dem Launch klären. Bis dahin: nicht auflösen, die SVG-Farben
-  nicht in die Oberfläche übernehmen.
-- **Space Grotesk** liegt nur noch unter `app/static/fonts/`, weil die Wortmarken-SVGs sie
-  als inline-`<text>` brauchen. Nie für UI-Text; fällt mit der Markenentscheidung weg.
+## Marke
+Wortmarke und Monogramm sind aus Archivo gebaut und liegen als **reine Pfade** unter
+`app/static/brand/` (siehe [BRAND.md](BRAND.md)) — sie brauchen keine Schrift. Im Kopf
+steht die Wortmarke als Text in Archivo 800, 18px, −0,01em; das SVG ist dieselbe Form für
+Kontexte ohne Webfont (Mail, Print, Präsentation). Favicon: weißes „M“ (Archivo 900, 72 %
+Breite) auf schwarzem Quadrat, rechte Winkel, kein weiteres Motiv. Keine Farbvariante
+außer Schwarz und Weiß; Kobalt gehört der Sprachtaste, nicht der Marke.
 
 ## Detector-Ausnahmen
 `.impeccable/config.json` unterdrückt die Regel `side-tab` für `dashboard.html`,

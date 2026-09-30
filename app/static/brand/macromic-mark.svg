@@ -1,11 +1,1 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="macromic">
-  
-  <rect x="0" y="0" width="100" height="100" rx="20" fill="#c96442"></rect>
-  <text x="50" y="66" text-anchor="middle" font-family="&#39;Space Grotesk&#39;,ui-sans-serif,system-ui,sans-serif" font-size="58" font-weight="600" fill="#fbf8f2" letter-spacing="-6">mm</text>
-  <g fill="#fbf8f2">
-    <rect x="30" y="76" width="5" height="8" rx="2.5"></rect>
-    <rect x="41" y="72" width="5" height="16" rx="2.5"></rect>
-    <rect x="52" y="76" width="5" height="8" rx="2.5"></rect>
-    <rect x="63" y="73" width="5" height="14" rx="2.5"></rect>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="MacroMic"><rect width="100" height="100" fill="#0f0f0d"/><path fill="#ffffff" d="M18.51 82V18H43.35L47.44 40.6Q47.72 42.28 48.19 44.98Q48.65 47.67 49.16 50.56Q49.67 53.44 50.05 55.77H50.88Q51.26 53.91 51.72 51.26Q52.19 48.6 52.65 45.81Q53.12 43.02 53.49 40.6L57.4 18H81.49V82H64.47V62.37Q64.47 57.72 64.65 53.58Q64.84 49.44 64.98 46.28Q65.12 43.12 65.12 41.53H64.28Q64.09 42.84 63.72 44.65Q63.35 46.47 63.07 48.14Q62.79 49.81 62.51 50.93L56.56 82H42.98L37.12 50.93Q36.93 49.81 36.56 48.14Q36.19 46.47 35.91 44.65Q35.63 42.84 35.35 41.53H34.6Q34.7 43.86 34.84 47.4Q34.98 50.93 35.07 54.84Q35.16 58.74 35.16 62.37V82Z"/></svg>

@@ -1,35 +1,35 @@
-# MacroMic — Wortmarke (Richtung 02 · Präzisionswerkzeug / Grotesk)
+# MacroMic — Marke
 
-Handoff für Claude Code. Dies sind fertige Brand-Assets, kein Code-Refactor.
+Die Marke folgt der Oberfläche „Nährwerte“ (siehe [DESIGN.md](DESIGN.md)): Schwarz auf
+Weiß, Archivo, rechte Winkel. Keine weitere Markenfarbe.
 
-## Dateien
-
-Lege den Ordner `brand/` nach `app/static/brand/` (oder wo eure statischen Assets liegen):
+## Dateien (`app/static/brand/`)
 
 | Datei | Verwendung |
 |---|---|
-| `macromic-wordmark.svg` | **Primär.** Farbig, gedacht auf Creme (#fbf8f2). Header + Landing Page. |
-| `macromic-wordmark-mono.svg` | Einfarbig (#2b241f). Für Kontexte ohne Farbe (Rechnung, Print, Wasserzeichen). |
-| `macromic-wordmark-dark.svg` | Dark Mode — helle Schrift auf dunklem Grund (#2b241f). |
-| `macromic-mark.svg` | Monogramm / App-Icon / Favicon. Quadratisch, lesbar bis 32×32px. |
+| `macromic-wordmark.svg` | Wortmarke „MacroMic“, Schwarz `#0f0f0d`. Überall, wo keine Webfont lädt: Mail, Print, Präsentation, Social. |
+| `macromic-wordmark-white.svg` | Dieselbe Wortmarke in Weiß, für dunkle Flächen. |
+| `macromic-mark.svg` | Monogramm: weißes „M“ auf schwarzem Quadrat. Favicon und App-Icon. |
+| `apple-touch-icon.png` | Das Monogramm als 180×180-PNG für den iOS-Homescreen. |
 
-## Palette (bereits in den SVGs)
+Alle SVGs bestehen aus **Pfaden, nicht aus Text** — sie rendern ohne Schrift identisch.
 
-- Terracotta `#c96442` · Terracotta dunkel `#a33520` · Warmgrau `#7a7164`
-- Creme `#fbf8f2` · Fast-Schwarz `#2b241f`
+## Aufbau
 
-## Einbau
+- **Wortmarke:** Archivo, Gewicht 800, normale Breite, Laufweite −0,01em, Kerning aus der
+  Schrift. Entspricht exakt der Kopfzeile der App, dort als Text gesetzt.
+- **Monogramm:** Archivo, Gewicht 900, Breite 72 % — die Lage der Seitenüberschriften.
+  Versalhöhe 64 % der Fläche, zentriert, Quadrat ohne Rundung. Lesbar ab 16px.
+- Kein Mikrofon- oder Wellenmotiv; die Sprachfunktion zeigt die App selbst.
 
-- Wortmarke inline oder als `<img>` einbinden; `width` setzen, `height:auto` (viewBox skaliert sauber).
-- Favicon: `<link rel="icon" href="/static/brand/macromic-mark.svg">`.
-- Dark-Mode-Umschaltung: per `prefers-color-scheme` bzw. eurem Theme-Toggle zwischen `-wordmark.svg` und `-wordmark-dark.svg` wechseln.
+## Regeln
 
-## WICHTIG — Font vor echtem Launch fixieren
+- Nur Schwarz oder Weiß. Keine Tönung, kein Verlauf, kein Schatten, kein Radius.
+- Wortmarke nicht nachbauen, verzerren oder in eine andere Schrift setzen.
+- Schutzraum: mindestens die Höhe des „M“ der Wortmarke auf allen Seiten.
 
-Die SVGs nutzen bewusst einen generischen Font-Stack (`Space Grotesk, system-ui, sans-serif`), damit sie ohne externe Fonts überall rendern. Für einen wirklich pixel-identischen Auftritt:
+## Neu erzeugen
 
-1. SVG in Figma/Inkscape öffnen, echten Font setzen (`Space Grotesk` ist gratis via Google Fonts, kommerziell nutzbar).
-2. **Text in Pfade umwandeln** (Text → Outline / Object to Path).
-3. Exportieren. Danach ist das SVG font-unabhängig und produktionsreif.
-
-Für den Validierungs-Test (Landing, Demo-Video, Stripe) reichen die Dateien so wie sie sind.
+Die Pfade wurden mit fontTools und HarfBuzz aus `app/static/fonts/archivo-normal-latin.woff2`
+instanziert (wght/wdth wie oben). Ändert sich die Schrift, werden die Dateien neu erzeugt
+statt von Hand editiert; das PNG ist eine 180px-Rasterung von `macromic-mark.svg`.
