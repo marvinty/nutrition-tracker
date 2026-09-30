@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.config import settings
 from app.core.security import hash_password
+from app.core.time import today_local
 from app.models.base import Base
 from app.models.admin_token import AdminToken  # noqa: F401 — register with Base.metadata
 from app.models.admin_user import AdminUser
@@ -385,13 +386,17 @@ async def test_user_detail_counts_only_live_sessions(session):
 
 @pytest.mark.asyncio
 async def test_credit_days_ignore_global_row_and_order_newest_first(session):
-    today = datetime(2026, 7, 18).date()
+    # Relativ zu heute: list_user_credit_days zeigt nur die letzten 30 Tage ab
+    # today_local(). Ein festes Datum faellt irgendwann aus dem Fenster, und der Test
+    # wird rot, ohne dass sich am Code etwas geaendert hat.
+    today = today_local()
     session.add(User(username="alice", password_hash="x"))
     await session.commit()
     session.add_all(
         [
             AiUsage(user_id="alice", day=today - timedelta(days=2), count=3),
             AiUsage(user_id="alice", day=today, count=5),
+            AiUsage(user_id="alice", day=today - timedelta(days=40), count=9),
             AiUsage(user_id=GLOBAL_KEY, day=today, count=400),
         ]
     )
